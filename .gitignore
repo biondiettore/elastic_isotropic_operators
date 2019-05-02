@@ -1,0 +1,9 @@
+obj/*
+*.pyc
+build/
+*.H
+*.H@
+*.H@@
+*.H@@@
+local/
+*.ipynb_check*
