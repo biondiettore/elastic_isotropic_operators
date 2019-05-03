@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ELASTIC_ISO_DOUBLE)
+project(ELASTIC_ISO_FLOAT)
 
 #Adding include files
 #include_directories(${hypercube_DIRNAME_include})
@@ -48,14 +48,14 @@ link_directories(${Generic-cpp_BINARY_DIR}
 							  )
 
 #Compiling the project library
-add_library(ELASTIC_ISO_DOUBLE_NL ${SOURCE})
+add_library(ELASTIC_ISO_FLOAT_NL ${SOURCE})
 
 #Compiling the project executables
 # add_executable(padElasticFileGpuMain ${SRC_DIR}/padElasticFileGpuMain.cpp)
 # target_link_libraries(padElasticFileGpuMain genericCpp OpenMP::OpenMP_CXX)
-target_link_libraries(ELASTIC_ISO_DOUBLE_NL genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
+target_link_libraries(ELASTIC_ISO_FLOAT_NL genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
 
 #Adding libray and header files to install destination
-install(TARGETS ELASTIC_ISO_DOUBLE_NL DESTINATION lib)
+install(TARGETS ELASTIC_ISO_FLOAT_NL DESTINATION lib)
 # install(TARGETS padElasticFileGpuMain DESTINATION bin)
 install(FILES ${HEADERS} DESTINATION include)
