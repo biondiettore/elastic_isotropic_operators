@@ -208,7 +208,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			elasticParam = elasticParam.getCpp()
 		if("getCpp" in dir(paramP)):
 			paramP = paramP.getCpp()
-		self.pyOp = pyElastic_iso_double_nl.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
 	def forward(self,add,model,data):
@@ -217,7 +217,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -227,7 +227,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.forwardWavefield(add,model,data)
 		return
 
@@ -237,7 +237,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
@@ -247,24 +247,24 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.adjointWavefield(add,model,data)
 		return
 
 	def getWavefield(self):
 		wavefield = self.pyOp.getWavefield()
-		return SepVector.doubleVector(fromCpp=wavefield)
+		return SepVector.floatVector(fromCpp=wavefield)
 
 	# def setVel(self,elasticParam):
 	# 	#Checking if getCpp is present
 	# 	if("getCpp" in dir(elasticParam)):
 	# 		elasticParam = elasticParam.getCpp()
-	# 	with pyElastic_iso_double_nl.ostream_redirect():
+	# 	with pyElastic_iso_float_nl.ostream_redirect():
 	# 		self.pyOp.setVel(elasticParam)
 	# 	return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result

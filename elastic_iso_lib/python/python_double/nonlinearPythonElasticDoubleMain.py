@@ -35,6 +35,7 @@ if __name__ == '__main__':
         modelDMat=modelDouble.getNdArray()
         modelSMat=modelFloat.getNdArray()
         modelDMat[0,:,0,:]=modelSMat
+        print(modelDMat.shape)
 
         domain_hyper=nonlinearElasticOp.domain.getHyper()
         model_hyper=modelDouble.getHyper()

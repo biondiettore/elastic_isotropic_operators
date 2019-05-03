@@ -3,16 +3,16 @@ import sys
 import genericIO
 import SepVector
 import Hypercube
-import Elastic_iso_float
+import Elastic_iso_float_nl
 import numpy as np
 import time
 
 if __name__ == '__main__':
     # Initialize operator
-    modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_double.nonlinearOpInitFloat(sys.argv)
+    modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_nl.nonlinearOpInitFloat(sys.argv)
 
     # Construct nonlinear operator object
-    nonlinearElasticOp=Elastic_iso_double.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+    nonlinearElasticOp=Elastic_iso_float_nl.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
     # Forward
     if (parObject.getInt("adj",0) == 0):
@@ -31,7 +31,10 @@ if __name__ == '__main__':
             print("**** ERROR: User did not provide data file name ****\n")
             quit()
         #modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
-        modelFloat=genericIO.defaultIO.getVector(modelFile)
+        modelTemp=genericIO.defaultIO.getVector(modelFile)
+        modelFMat=modelFloat.getNdArray()
+        modelTMat=modelTemp.getNdArray()
+        modelFMat[0,:,0,:]=modelTMat
         # modelDMat=modelFloat.getNdArray()
         # modelSMat=modelFloat.getNdArray()
         # modelDMat[0,:,0,:]=modelSMat
