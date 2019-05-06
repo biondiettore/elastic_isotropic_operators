@@ -9,9 +9,9 @@ import os
 
 # operators
 import Elastic_iso_double_we
-import SpaceInterpMulti
-import Stagger
-import PadTruncateSource
+import SpaceInterpMultiDouble
+import StaggerDouble
+import PadTruncateSourceDouble
 import pyOperator as Op
 
 

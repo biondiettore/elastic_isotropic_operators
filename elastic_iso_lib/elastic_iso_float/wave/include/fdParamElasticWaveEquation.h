@@ -6,6 +6,7 @@
 #include "float3DReg.h"
 #include "ioModes.h"
 #include <iostream>
+#include <stagger.h>
 
 using namespace SEP;
 //! This class is meant to analyze the finite difference parameters of a given elastic prop.

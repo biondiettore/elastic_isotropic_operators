@@ -4,7 +4,6 @@
 #include <math.h>
 #include <iomanip>
 #include <iostream>
-#include <stagger.h>
 #include <cstring>
 using namespace SEP;
 

@@ -6,7 +6,7 @@ import Hypercube
 import Elastic_iso_double_we
 import numpy as np
 import time
-import Stagger
+import StaggerDouble
 
 if __name__ == '__main__':
     # Initialize operator
@@ -72,4 +72,50 @@ if __name__ == '__main__':
 
     # Adjoint
     else:
-        raise NotImplementedError("ERROR! Adjoint operator not implemented yet!")
+        # Check that model was provided
+        modelFile=parObject.getString("model","noModelFile")
+        if (modelFile == "noModelFile"):
+            print("**** ERROR: User did not provide model file ****\n")
+            quit()
+        dataFile=parObject.getString("data","noDataFile")
+        if (dataFile == "noDataFile"):
+            print("**** ERROR: User did not provide data file name ****\n")
+            quit()
+        #modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
+        dataFloat=genericIO.defaultIO.getVector(dataFile)
+        dataDMat=dataDouble.getNdArray()
+        dataSMat=dataFloat.getNdArray()
+        dataDMat[:]=dataSMat
+
+        domain_hyper=waveEquationElasticOp.domain.getHyper()
+        model_hyper=modelDouble.getHyper()
+        range_hyper=waveEquationElasticOp.range.getHyper()
+        data_hyper=dataDouble.getHyper()
+
+        #run dot product
+        if (parObject.getInt("dp",0)==1):
+            waveEquationElasticOp.dotTest(verb=True)
+
+        #run Nonlinear forward without wavefield saving
+        waveEquationElasticOp.adjoint(False,modelDouble,dataDouble)
+
+        # #if flag is set, stagger wfld back to normal grid
+        # if(parObject.getInt("staggerBack",0)==1):
+        #     print("Applying stagger adjoint")
+        #     dataDoubleShifted=SepVector.getSepVector(dataDouble.getHyper(),storage="dataDouble")
+        #     wavefieldStaggerOp=Stagger.stagger_wfld(dataDoubleShifted,dataDouble)
+        #     wavefieldStaggerOp.adjoint(False,dataDoubleShifted,dataDouble)
+        #     dataDouble=dataDoubleShifted
+
+        #if flag is set, interp sources
+
+        #write data to disk
+        modelFloat=SepVector.getSepVector(modelDouble.getHyper(),storage="dataFloat")
+        modelFloatNp=modelFloat.getNdArray()
+        modelDoubleNp=modelDouble.getNdArray()
+        modelFloatNp[:]=modelDoubleNp
+        genericIO.defaultIO.writeVector(modelFile,modelFloat)
+
+        print("-------------------------------------------------------------------")
+        print("--------------------------- All done ------------------------------")
+        print("-------------------------------------------------------------------\n")

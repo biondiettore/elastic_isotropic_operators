@@ -12,7 +12,7 @@ namespace py = pybind11;
 using namespace SEP;
 
 
-PYBIND11_MODULE(pyPadTruncateSource, clsGeneric) {
+PYBIND11_MODULE(pyPadTruncateSourceDouble, clsGeneric) {
   //Necessary to redirect std::cout into python stdout
 	py::add_ostream_redirect(clsGeneric, "ostream_redirect");
 

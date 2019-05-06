@@ -1,5 +1,5 @@
-#ifndef STAGGERWFLD_H
-#define STAGGERWFLD_H 1
+#ifndef WAVE_EQUATION_ELASTIC_H
+#define WAVE_EQUATION_ELASTIC_H 1
 
 #include <double4DReg.h>
 #include <double3DReg.h>

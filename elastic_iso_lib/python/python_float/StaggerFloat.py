@@ -1,6 +1,6 @@
 #Python module encapsulating PYBIND11 module
 #It seems necessary to allow std::cout redirection to screen
-import pyStagger
+import pyStaggerFloat
 import pyOperator as Op
 
 #
@@ -92,7 +92,7 @@ class stagger_wfld(Op.Operator):
 			domain = domain.getCpp()
 		if("getCpp" in dir(range)):
 			range = range.getCpp()
-		self.pyOp = pyStagger.staggerWfld(domain,range)
+		self.pyOp = pyStaggerFloat.staggerWfld(domain,range)
 		return
 
 	def forward(self,add,model,data):
@@ -101,7 +101,7 @@ class stagger_wfld(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyStagger.ostream_redirect():
+		with pyStaggerFloat.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -111,12 +111,12 @@ class stagger_wfld(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyStagger.ostream_redirect():
+		with pyStaggerFloat.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pyStagger.ostream_redirect():
+		with pyStaggerFloat.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result

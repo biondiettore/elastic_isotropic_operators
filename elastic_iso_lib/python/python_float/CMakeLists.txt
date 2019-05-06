@@ -38,17 +38,17 @@ if (pybind11_FOUND)
   pybind11_add_module(pyElastic_iso_float_nl MODULE pyElastic_iso_float_nl.cpp)
   target_link_libraries(pyElastic_iso_float_nl PRIVATE ELASTIC_ISO_FLOAT_NL ${LIBS})
 
-  # pybind11_add_module(pyElastic_iso_float_we MODULE pyElastic_iso_float_we.cpp)
-  # target_link_libraries(pyElastic_iso_float_we PRIVATE ELASTIC_ISO_FLOAT_WE ${LIBS})
+  pybind11_add_module(pyElastic_iso_float_we MODULE pyElastic_iso_float_we.cpp)
+  target_link_libraries(pyElastic_iso_float_we PRIVATE ELASTIC_ISO_FLOAT_WE ${LIBS})
   #
-  # pybind11_add_module(pyStaggerFloat MODULE pyStaggerFloat.cpp)
-  # target_link_libraries(pyStaggerFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
+  pybind11_add_module(pyStaggerFloat MODULE pyStaggerFloat.cpp)
+  target_link_libraries(pyStaggerFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
   #
-  # pybind11_add_module(pySpaceInterpMultiFloat MODULE pySpaceInterpMultiFloat.cpp)
-  # target_link_libraries(pySpaceInterpMultiFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
-  #
-  # pybind11_add_module(pyPadTruncateSourceFloat MODULE pyPadTruncateSourceFloat.cpp)
-  # target_link_libraries(pyPadTruncateSourceFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
+  pybind11_add_module(pySpaceInterpMultiFloat MODULE pySpaceInterpMultiFloat.cpp)
+  target_link_libraries(pySpaceInterpMultiFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
+
+  pybind11_add_module(pyPadTruncateSourceFloat MODULE pyPadTruncateSourceFloat.cpp)
+  target_link_libraries(pyPadTruncateSourceFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
   # pybind11_add_module(pyElastic_iso_float_born MODULE pyElastic_iso_float_born.cpp)
   # target_link_libraries(pyElastic_iso_float_born PRIVATE ELASTIC_ISO_FLOAT_BORN ${LIBS})
   # pybind11_add_module(pyElastic_iso_float_born_ext MODULE pyElastic_iso_float_born_ext.cpp)
@@ -62,24 +62,25 @@ if (pybind11_FOUND)
   install( TARGETS pyElastic_iso_float_nl DESTINATION lib/python) #Module for non-linear operator
   install( FILES Elastic_iso_float_nl.py DESTINATION lib/python)
 
-  # install( TARGETS pyElastic_iso_float_we DESTINATION lib/python) #Module for non-linear operator
-  # install( FILES Elastic_iso_float_we.py DESTINATION lib/python)
+  install( TARGETS pyElastic_iso_float_we DESTINATION lib/python) #Module for non-linear operator
+  install( FILES Elastic_iso_float_we.py DESTINATION lib/python)
   #
-  # install( TARGETS pyStaggerFloat  DESTINATION lib/python)
-  # install( FILES StaggerFloat.py DESTINATION lib/python)
-  #
-  # install( TARGETS pySpaceInterpMultiFloat  DESTINATION lib/python)
-  # install( FILES SpaceInterpMultiFloat.py DESTINATION lib/python)
-  #
-  # install( TARGETS pyPadTruncateSourceFloat  DESTINATION lib/python)
-  # install( FILES PadTruncateSourceFloat.py DESTINATION lib/python)
-  #
-  # install( FILES wriUtilFloat.py DESTINATION lib/python)
+  install( TARGETS pyStaggerFloat  DESTINATION lib/python)
+  install( FILES StaggerFloat.py DESTINATION lib/python)
+
+  install( TARGETS pySpaceInterpMultiFloat  DESTINATION lib/python)
+  install( FILES SpaceInterpMultiFloat.py DESTINATION lib/python)
+
+  install( TARGETS pyPadTruncateSourceFloat  DESTINATION lib/python)
+  install( FILES PadTruncateSourceFloat.py DESTINATION lib/python)
+
+  install( FILES wriUtilFloat.py DESTINATION lib/python)
 
 
   #Installing Python executables
+  install( FILES waveReconMainFloat.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES nonlinearPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
-  # install( FILES waveEquationPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
+  install( FILES waveEquationPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
 
 else(pybind11_FOUND)
   MESSAGE("WARNING!Did not find pybid11. Not compiling ${PROJECT-NAME}")

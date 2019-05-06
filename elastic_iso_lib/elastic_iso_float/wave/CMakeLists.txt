@@ -45,7 +45,7 @@ add_library(ELASTIC_ISO_FLOAT_WE ${SOURCE})
 #Compiling the project executables
 #add_executable(nonlinearPropElasticShotsGpuMain ${EXECS})
 #target_link_libraries(nonlinearPropElasticShotsGpuMain ELASTIC_ISO_FLOAT_NL genericCpp OpenMP::OpenMP_CXX)
-target_link_libraries(ELASTIC_ISO_FLOAT_WE genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
+target_link_libraries(ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
 
 #Adding libray and header files to install destination
 install(TARGETS ELASTIC_ISO_FLOAT_WE DESTINATION lib)

@@ -12,16 +12,16 @@ namespace py = pybind11;
 using namespace SEP;
 
 
-PYBIND11_MODULE(pySpaceInterpMulti, clsGeneric) {
+PYBIND11_MODULE(pySpaceInterpMultiFloat, clsGeneric) {
   //Necessary to redirect std::cout into python stdout
 	py::add_ostream_redirect(clsGeneric, "ostream_redirect");
 
     py::class_<spaceInterpMulti, std::shared_ptr<spaceInterpMulti>>(clsGeneric,"spaceInterpMulti")  //
-      .def(py::init<const std::shared_ptr<double1DReg>, const std::shared_ptr<double1DReg>, const std::shared_ptr<SEP::hypercube>, int&, std::string , int>(),"Initlialize spaceInterpMulti")
+      .def(py::init<const std::shared_ptr<float1DReg>, const std::shared_ptr<float1DReg>, const std::shared_ptr<SEP::hypercube>, int&, std::string , int>(),"Initlialize spaceInterpMulti")
 
-      .def("forward",(void (spaceInterpMulti::*)(const bool, const std::shared_ptr<double3DReg>, std::shared_ptr<double3DReg>)) &spaceInterpMulti::forward,"Forward")
+      .def("forward",(void (spaceInterpMulti::*)(const bool, const std::shared_ptr<float3DReg>, std::shared_ptr<float3DReg>)) &spaceInterpMulti::forward,"Forward")
 
-      .def("adjoint",(void (spaceInterpMulti::*)(const bool, std::shared_ptr<double3DReg>, const std::shared_ptr<double3DReg>)) &spaceInterpMulti::adjoint,"Adjoint")
+      .def("adjoint",(void (spaceInterpMulti::*)(const bool, std::shared_ptr<float3DReg>, const std::shared_ptr<float3DReg>)) &spaceInterpMulti::adjoint,"Adjoint")
 
       .def("dotTest",(bool (spaceInterpMulti::*)(const bool, const float)) &spaceInterpMulti::dotTest,"Dot-Product Test")
 

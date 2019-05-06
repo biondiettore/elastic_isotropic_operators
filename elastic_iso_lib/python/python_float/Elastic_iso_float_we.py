@@ -1,6 +1,6 @@
 #Python module encapsulating PYBIND11 module
 #It seems necessary to allow std::cout redirection to screen
-import pyElastic_iso_double_we
+import pyElastic_iso_float_we
 import pyOperator as Op
 #Other necessary modules
 import genericIO
@@ -10,7 +10,7 @@ import numpy as np
 import sys
 
 ############################# Wave Equation ####################################
-def waveEquationOpInitDouble(args):
+def waveEquationOpInitFloat(args):
 	"""Function to correctly initialize wave equation operator
 	   The function will return the necessary variables for operator construction
 	"""
@@ -25,10 +25,10 @@ def waveEquationOpInitDouble(args):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
 	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
-	elasticParamDouble=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataDouble")
-	elasticParamDoubleNp=elasticParamDouble.getNdArray()
-	elasticParamFloatNp=elasticParamFloat.getNdArray()
-	elasticParamDoubleNp[:]=elasticParamFloatNp
+	# elasticParamDouble=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataDouble")
+	# elasticParamDoubleNp=elasticParamDouble.getNdArray()
+	# elasticParamFloatNp=elasticParamFloat.getNdArray()
+	# elasticParamDoubleNp[:]=elasticParamFloatNp
 
 	# Time Axis
 	nts=parObject.getInt("nts",-1)
@@ -53,14 +53,14 @@ def waveEquationOpInitDouble(args):
 
 	# Allocate model
 	modelHyper=Hypercube.hypercube(axes=[zAxis,xAxis,wavefieldAxis,timeAxis])
-	modelDouble=SepVector.getSepVector(modelHyper,storage="dataDouble")
+	modelFloat=SepVector.getSepVector(modelHyper,storage="dataFloat")
 
 	# Allocate data
 	dataHyper=Hypercube.hypercube(axes=[zAxis,xAxis,wavefieldAxis,timeAxis])
-	dataDouble=SepVector.getSepVector(dataHyper,storage="dataDouble")
+	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
 
 	# Outputs
-	return modelDouble,dataDouble,elasticParamDouble,parObject
+	return modelFloat,dataFloat,elasticParamFloat,parObject
 
 class waveEquationElasticGpu(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module for elastic wave equation"""
@@ -78,7 +78,7 @@ class waveEquationElasticGpu(Op.Operator):
 			domain = domain.getCpp()
 		if("getCpp" in dir(range)):
 			range = range.getCpp()
-		self.pyOp = pyElastic_iso_double_we.waveEquationElasticGpu(domain,range,elasticParam,paramP)
+		self.pyOp = pyElastic_iso_float_we.waveEquationElasticGpu(domain,range,elasticParam,paramP)
 		return
 
 	def forward(self,add,model,data):
@@ -87,7 +87,7 @@ class waveEquationElasticGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_we.ostream_redirect():
+		with pyElastic_iso_float_we.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -97,12 +97,12 @@ class waveEquationElasticGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_we.ostream_redirect():
+		with pyElastic_iso_float_we.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pyElastic_iso_double_we.ostream_redirect():
+		with pyElastic_iso_float_we.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result

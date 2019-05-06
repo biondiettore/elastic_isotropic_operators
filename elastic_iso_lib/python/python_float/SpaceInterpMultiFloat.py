@@ -1,6 +1,6 @@
 #Python module encapsulating PYBIND11 module
 #It seems necessary to allow std::cout redirection to screen
-import pySpaceInterpMultiDouble
+import pySpaceInterpMultiFloat
 import pyOperator as Op
 #Other necessary modules
 import genericIO
@@ -23,9 +23,9 @@ def space_interp_multi_init_source(args):
 	if (elasticParamFile == "noElasticParamFile"):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
-	elasticParamFloat=genericIO.defaultIO.getVector(elasticParamFile)
-	elasticParam=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataDouble")
-	elasticParamDoubleNp=elasticParam.getNdArray()
+	elasticParam=genericIO.defaultIO.getVector(elasticParamFile)
+	# elasticParam=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataDouble")
+	# elasticParamDoubleNp=elasticParam.getNdArray()
 
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
@@ -61,12 +61,12 @@ def space_interp_multi_init_source(args):
 
 	# sources _zCoord and _xCoord
 	zCoordHyper=Hypercube.hypercube(axes=[sourceAxis])
-	zCoordDouble=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
+	zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
 	xCoordHyper=Hypercube.hypercube(axes=[sourceAxis])
-	xCoordDouble=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+	xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
 
-	xCoordDMat=xCoordDouble.getNdArray()
-	zCoordDMat=zCoordDouble.getNdArray()
+	xCoordDMat=xCoordFloat.getNdArray()
+	zCoordDMat=zCoordFloat.getNdArray()
 
 	for ishot in range(nExp):
 		#Setting z and x position of the source for the given experiment
@@ -74,7 +74,7 @@ def space_interp_multi_init_source(args):
 		xCoordDMat[ishot]= ox+oxSource*dx
 		oxSource=oxSource+spacingShots # Shift source
 
-	return zCoordDouble,xCoordDouble,centerGridHyper
+	return zCoordFloat,xCoordFloat,centerGridHyper
 
 def space_interp_multi_init_rec(args):
 	"""Function to correctly initialize space interp for multiple component wflds
@@ -90,9 +90,9 @@ def space_interp_multi_init_rec(args):
 	if (elasticParamFile == "noElasticParamFile"):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
-	elasticParamFloat=genericIO.defaultIO.getVector(elasticParamFile)
-	elasticParam=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataDouble")
-	elasticParamDoubleNp=elasticParam.getNdArray()
+	elasticParam=genericIO.defaultIO.getVector(elasticParamFile)
+	# elasticParam=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataFloat")
+	# elasticParamDoubleNp=elasticParam.getNdArray()
 
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
@@ -127,19 +127,19 @@ def space_interp_multi_init_rec(args):
 
 	# sources _zCoord and _xCoord
 	zCoordHyper=Hypercube.hypercube(axes=[receiverAxis])
-	zCoordDouble=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
+	zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
 	xCoordHyper=Hypercube.hypercube(axes=[receiverAxis])
-	xCoordDouble=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+	xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
 
-	xCoordDMat=xCoordDouble.getNdArray()
-	zCoordDMat=zCoordDouble.getNdArray()
+	xCoordDMat=xCoordFloat.getNdArray()
+	zCoordDMat=zCoordFloat.getNdArray()
 
 	for irec in range(nxReceiver):
 		#Setting z and x position of the source for the given experiment
 		zCoordDMat[irec]= oz + ozReceiver*dz + dzReceiver*dz*irec
 		xCoordDMat[irec]= ox + oxReceiver*dx + dxReceiver*dx*irec
 
-	return zCoordDouble,xCoordDouble,centerGridHyper
+	return zCoordFloat,xCoordFloat,centerGridHyper
 
 class space_interp_multi(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module"""
@@ -151,7 +151,7 @@ class space_interp_multi(Op.Operator):
 		# 	domain = domain.getCpp()
 		# if("getCpp" in dir(range)):
 		# 	range = range.getCpp()
-		self.pyOp = pySpaceInterpMulti.spaceInterpMulti(zCoord.getCpp(),xCoord.getCpp(),elasticParamHypercube.getCpp(),nt,interpMethod,nFilt)
+		self.pyOp = pySpaceInterpMultiFloat.spaceInterpMulti(zCoord.getCpp(),xCoord.getCpp(),elasticParamHypercube.getCpp(),nt,interpMethod,nFilt)
 		return
 
 	def forward(self,add,model,data):
@@ -160,7 +160,7 @@ class space_interp_multi(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiFloat.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -170,27 +170,27 @@ class space_interp_multi(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiFloat.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiFloat.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
 
 	def getNDeviceIrreg(self):
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiFloat.ostream_redirect():
 			result = self.pyOp.getNDeviceIrreg()
 		return result
 
 	def getNDeviceReg(self):
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiFloat.ostream_redirect():
 			result = self.pyOp.getNDeviceReg()
 		return result
 
 	def getRegPosUniqueVector(self):
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiFloat.ostream_redirect():
 			result = self.pyOp.getRegPosUniqueVector()
 		return result

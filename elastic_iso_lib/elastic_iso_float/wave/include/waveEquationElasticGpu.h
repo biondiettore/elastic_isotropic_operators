@@ -1,13 +1,13 @@
-#ifndef STAGGERWFLD_H
-#define STAGGERWFLD_H 1
+#ifndef WAVE_EQUATION_ELASTIC_H
+#define WAVE_EQUATION_ELASTIC_H 1
 
 #include <float4DReg.h>
 #include <float3DReg.h>
 //#include <staggerWfld.h>
 #include "ioModes.h"
-#include "fdParamElasticWaveEquation.h"
 #include <operator.h>
 #include "waveEquationElasticGpuFunctions.h"
+#include "fdParamElasticWaveEquation.h"
 
 using namespace SEP;
 //! Apply the elastic wave equation to a wavefield
