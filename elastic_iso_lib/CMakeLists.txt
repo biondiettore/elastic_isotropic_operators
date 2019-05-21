@@ -30,8 +30,8 @@ endif()
 #Adding genericIO submodule
 #execute_process(COMMAND git submodule add http://cees-gitlab.Stanford.EDU/bob/genericIO.git external/genericIO WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 #Updating genericIO library
-  execute_process(COMMAND git submodule update --init --recursive --remote external/genericIO WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-  execute_process(COMMAND git checkout e2e3a5b15e95c64a748d15359b6b20146f80f6c7 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/genericIO) #checkout stable version
+  #execute_process(COMMAND git submodule update --init --recursive --remote external/genericIO WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  #execute_process(COMMAND git checkout e2e3a5b15e95c64a748d15359b6b20146f80f6c7 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/genericIO) #checkout stable version
   add_subdirectory(external/genericIO)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/external/genericIO)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/external/genericIO/external/sepVector)
