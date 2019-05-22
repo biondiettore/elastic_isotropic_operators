@@ -32,7 +32,7 @@ if (pybind11_FOUND)
 				 ${SEPlib_LIBDIR}
   )
 
-  set(LIBS genericCpp buffers jsonCpp hypercube  ${OpenMP_EXE_LINKER_FLAGS} ${TBB_LIBRARIES} ${GENERIC_EXPORT_LIBS})
+  set(LIBS genericCpp sepVector sep3d sep buffers jsonCpp hypercube  ${OpenMP_EXE_LINKER_FLAGS} ${TBB_LIBRARIES} ${GENERIC_EXPORT_LIBS})
 
   #Compiling and adding module to library
   pybind11_add_module(pyElastic_iso_double_nl MODULE pyElastic_iso_double_nl.cpp)

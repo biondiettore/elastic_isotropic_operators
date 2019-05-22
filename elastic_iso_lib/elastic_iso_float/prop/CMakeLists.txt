@@ -11,14 +11,14 @@ set(SRC_DIR src)
 set(SOURCE ${SRC_DIR}/fdParamElastic.cpp
            ${SRC_DIR}/nonlinearPropElasticShotsGpu.cpp
            ${SRC_DIR}/nonlinearPropElasticGpu.cpp
-           ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
+           # ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
            ${SRC_DIR}/spaceInterpGpu.cpp
            # ${SRC_DIR}/spaceSincInterpGpu.cpp
            ${SRC_DIR}/interpTimeLinTbb.cpp
            ${SRC_DIR}/secondTimeDerivative.cpp
-           ${SRC_DIR}/kernelsGpuElastic.cu
-           ${SRC_DIR}/stagger.cpp
-				   ${SRC_DIR}/cudaErrors.cu)
+           # ${SRC_DIR}/kernelsGpuElastic.cu
+         ${SRC_DIR}/stagger.cpp)
+				   # ${SRC_DIR}/cudaErrors.cu)
 
 #Executables to be compiled
 # set(EXECS  ${SRC_DIR}/nonlinearPropElasticShotsGpuMain.cpp)
@@ -29,6 +29,8 @@ set(HEADERS ${INC_DIR}/fdParamElastic.h
             ${INC_DIR}/nonlinearPropElasticGpu.h
             ${INC_DIR}/nonlinearPropElasticGpuFunctions.h
             ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
+            ${SRC_DIR}/kernelsGpuElastic.cu
+            ${SRC_DIR}/cudaErrors.cu
             ${INC_DIR}/operator.h
             ${INC_DIR}/spaceInterpGpu.h
             # ${INC_DIR}/spaceSincInterpGpu.h

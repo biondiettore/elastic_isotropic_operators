@@ -12,9 +12,9 @@ set(SRC_DIR src)
 set(SOURCE ${SRC_DIR}/staggerWfld.cpp
 					 ${SRC_DIR}/padTruncateSource.cpp
 				   ${SRC_DIR}/waveEquationElasticGpu.cpp
-				 	 ${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
-				   ${SRC_DIR}/waveEquationElasticGpuFunctions.cu
-			     ${SRC_DIR}/cudaErrors.cu
+				 	 # ${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
+				   # ${SRC_DIR}/waveEquationElasticGpuFunctions.cu
+			     # ${SRC_DIR}/cudaErrors.cu
 				   ${SRC_DIR}/fdParamElasticWaveEquation.cpp
 				 	 ${SRC_DIR}/spaceInterpMulti.cpp)
 
@@ -29,7 +29,10 @@ set(HEADERS ${INC_DIR}/staggerWfld.h
 					  ${INC_DIR}/varDeclareWaveEquation.h
 					  ${INC_DIR}/waveEquationElasticGpuFunctions.h
 					  ${INC_DIR}/fdParamElasticWaveEquation.h
-					  ${INC_DIR}/spaceInterpMulti.h)
+					  ${INC_DIR}/spaceInterpMulti.h
+						${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
+						${SRC_DIR}/waveEquationElasticGpuFunctions.cu
+						${SRC_DIR}/cudaErrors.cu)
 
 #SEP LIBRARY DIRECTORIES
 link_directories(${Generic-cpp_BINARY_DIR}
@@ -37,6 +40,7 @@ link_directories(${Generic-cpp_BINARY_DIR}
 								 ${buffers-lib_BINARY_DIR}
 								 ${json_BINARY_DIR}
 							   ${sepVector-lib_BINARY_DIR}
+								 ${SEPlib_LIBDIR}
 							  )
 
 #Compiling the project library

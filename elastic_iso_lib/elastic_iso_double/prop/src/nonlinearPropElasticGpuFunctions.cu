@@ -1,7 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include "nonlinearPropElasticGpuFunctions.h"
-#include "varDeclare.h"
+//#include "varDeclare.h"
 #include "kernelsGpuElastic.cu"
 #include "cudaErrors.cu"
 #include <vector>
@@ -591,7 +591,7 @@ void propShotsElasticFwdGpuWavefield(double *modelRegDtw_vx, double *modelRegDtw
     //                      c) allocate and initialize(0) data (recevier recordings arrays) to device
     //                      d) allocate and copy wavefield time slices to gpu
 
-    
+
 
     setupFwdGpu(modelRegDtw_vx, modelRegDtw_vz, modelRegDtw_sigmaxx, modelRegDtw_sigmazz, modelRegDtw_sigmaxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId);
 

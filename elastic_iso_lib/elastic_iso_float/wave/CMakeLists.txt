@@ -12,9 +12,9 @@ set(SRC_DIR src)
 set(SOURCE ${SRC_DIR}/staggerWfld.cpp
 					 ${SRC_DIR}/padTruncateSource.cpp
 				   ${SRC_DIR}/waveEquationElasticGpu.cpp
-				 	 ${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
-				   ${SRC_DIR}/waveEquationElasticGpuFunctions.cu
-			     ${SRC_DIR}/cudaErrors.cu
+				 	 # ${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
+				   # ${SRC_DIR}/waveEquationElasticGpuFunctions.cu
+			     # ${SRC_DIR}/cudaErrors.cu
 				   ${SRC_DIR}/fdParamElasticWaveEquation.cpp
 				 	 ${SRC_DIR}/spaceInterpMulti.cpp)
 
@@ -26,6 +26,9 @@ set(INC_DIR include)
 set(HEADERS ${INC_DIR}/staggerWfld.h
 						${INC_DIR}/padTruncateSource.h
 					  ${INC_DIR}/waveEquationElasticGpu.h
+						${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
+ 				   ${SRC_DIR}/waveEquationElasticGpuFunctions.cu
+ 			     ${SRC_DIR}/cudaErrors.cu
 					  ${INC_DIR}/varDeclareWaveEquation.h
 					  ${INC_DIR}/waveEquationElasticGpuFunctions.h
 					  ${INC_DIR}/fdParamElasticWaveEquation.h
@@ -37,6 +40,7 @@ link_directories(${Generic-cpp_BINARY_DIR}
 								 ${buffers-lib_BINARY_DIR}
 								 ${json_BINARY_DIR}
 							   ${sepVector-lib_BINARY_DIR}
+								 ${SEPlib_LIBDIR}
 							  )
 
 #Compiling the project library
@@ -45,7 +49,7 @@ add_library(ELASTIC_ISO_FLOAT_WE ${SOURCE})
 #Compiling the project executables
 #add_executable(nonlinearPropElasticShotsGpuMain ${EXECS})
 #target_link_libraries(nonlinearPropElasticShotsGpuMain ELASTIC_ISO_FLOAT_NL genericCpp OpenMP::OpenMP_CXX)
-target_link_libraries(ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
+target_link_libraries(ELASTIC_ISO_FLOAT_WE genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
 
 #Adding libray and header files to install destination
 install(TARGETS ELASTIC_ISO_FLOAT_WE DESTINATION lib)
