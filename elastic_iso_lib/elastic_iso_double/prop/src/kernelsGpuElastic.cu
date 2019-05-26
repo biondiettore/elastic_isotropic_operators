@@ -834,3 +834,41 @@ __global__ void interpWavefield(double* dev_wavefieldDts_all,
   dev_wavefieldDts_all[iGlobalWavefield_sigmaxz_its] += dev_p0_sigmaxz[iGlobal] * dev_interpFilter[it2]; // its
   dev_wavefieldDts_all[iGlobalWavefield_sigmaxz_its + t_slice] += dev_p0_sigmaxz[iGlobal] * dev_interpFilter[dev_hInterpFilter+it2]; // its+1
 }
+
+__global__ void interpWavefieldStreams(double* dev_wavefieldDts_left, double* dev_wavefieldDts_right,
+                                double* dev_p0_vx, double* dev_p0_vz, double* dev_p0_sigmaxx, double* dev_p0_sigmazz, double* dev_p0_sigmaxz,
+                                int its,int it2){
+  unsigned long long int izGlobal = FAT + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate
+  unsigned long long int ixGlobal = FAT + blockIdx.y * BLOCK_SIZE + threadIdx.y; // Global x-coordinate
+  unsigned long long int iGlobal = dev_nz * ixGlobal + izGlobal; // 1D array index for the model on the global memory
+  //Vx its
+  unsigned long long int iGlobalWavefield_vx_its = iGlobal;
+  //Vz its
+  unsigned long long int iGlobalWavefield_vz_its = iGlobal + (dev_nz * dev_nx);
+  //SIGMAxx its
+  unsigned long long int iGlobalWavefield_sigmaxx_its = iGlobal + 2 * (dev_nz * dev_nx);
+  //SIGMAzz its
+  unsigned long long int iGlobalWavefield_sigmazz_its = iGlobal + 3 * (dev_nz * dev_nx);
+  //SIGMAxz its
+  unsigned long long int iGlobalWavefield_sigmaxz_its = iGlobal + 4 * (dev_nz * dev_nx);
+
+	//interpolating Vx
+  dev_wavefieldDts_left[iGlobalWavefield_vx_its] += dev_p0_vx[iGlobal] * dev_interpFilter[it2]; // its
+  dev_wavefieldDts_right[iGlobalWavefield_vx_its] += dev_p0_vx[iGlobal] * dev_interpFilter[dev_hInterpFilter+it2]; // its+1
+
+	//interpolating Vz
+  dev_wavefieldDts_left[iGlobalWavefield_vz_its] += dev_p0_vz[iGlobal] * dev_interpFilter[it2]; // its
+  dev_wavefieldDts_right[iGlobalWavefield_vz_its] += dev_p0_vz[iGlobal] * dev_interpFilter[dev_hInterpFilter+it2]; // its+1
+
+	//interpolating SIGMAxx
+  dev_wavefieldDts_left[iGlobalWavefield_sigmaxx_its] += dev_p0_sigmaxx[iGlobal] * dev_interpFilter[it2]; // its
+  dev_wavefieldDts_right[iGlobalWavefield_sigmaxx_its] += dev_p0_sigmaxx[iGlobal] * dev_interpFilter[dev_hInterpFilter+it2]; // its+1
+
+	//interpolating SIGMAzz
+  dev_wavefieldDts_left[iGlobalWavefield_sigmazz_its] += dev_p0_sigmazz[iGlobal] * dev_interpFilter[it2]; // its
+  dev_wavefieldDts_right[iGlobalWavefield_sigmazz_its] += dev_p0_sigmazz[iGlobal] * dev_interpFilter[dev_hInterpFilter+it2]; // its+1
+
+	//interpolating SIGMAxz
+  dev_wavefieldDts_left[iGlobalWavefield_sigmaxz_its] += dev_p0_sigmaxz[iGlobal] * dev_interpFilter[it2]; // its
+  dev_wavefieldDts_right[iGlobalWavefield_sigmaxz_its] += dev_p0_sigmaxz[iGlobal] * dev_interpFilter[dev_hInterpFilter+it2]; // its+1
+}

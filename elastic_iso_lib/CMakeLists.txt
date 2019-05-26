@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(INSTALL_CMAKE_ENV OFF)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 message("${CMAKE_MODULE_PATH} CMAKE PATH")
@@ -31,7 +31,7 @@ endif()
 #execute_process(COMMAND git submodule add http://cees-gitlab.Stanford.EDU/bob/genericIO.git external/genericIO WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 #Updating genericIO library
   execute_process(COMMAND git submodule update --init --recursive --remote external/genericIO WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-  execute_process(COMMAND git checkout 23d475bfd271fde6d8683090df6e27367faf5904 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/genericIO) #checkout stable version
+  #execute_process(COMMAND git checkout 23d475bfd271fde6d8683090df6e27367faf5904 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/genericIO) #checkout stable version
   add_subdirectory(external/genericIO)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/external/genericIO)
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/external/genericIO/external/sepVector)

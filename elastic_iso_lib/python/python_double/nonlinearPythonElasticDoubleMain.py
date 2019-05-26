@@ -3,16 +3,16 @@ import sys
 import genericIO
 import SepVector
 import Hypercube
-import Elastic_iso_double
+import Elastic_iso_double_nl
 import numpy as np
 import time
 
 if __name__ == '__main__':
     # Initialize operator
-    modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_double.nonlinearOpInitDouble(sys.argv)
+    modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_double_nl.nonlinearOpInitDouble(sys.argv)
 
     # Construct nonlinear operator object
-    nonlinearElasticOp=Elastic_iso_double.nonlinearPropElasticShotsGpu(modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+    nonlinearElasticOp=Elastic_iso_double_nl.nonlinearPropElasticShotsGpu(modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
     # Forward
     if (parObject.getInt("adj",0) == 0):
@@ -35,8 +35,7 @@ if __name__ == '__main__':
         modelDMat=modelDouble.getNdArray()
         modelSMat=modelFloat.getNdArray()
         modelDMat[0,:,0,:]=modelSMat
-        print(modelDMat.shape)
-
+		
         domain_hyper=nonlinearElasticOp.domain.getHyper()
         model_hyper=modelDouble.getHyper()
         range_hyper=nonlinearElasticOp.range.getHyper()

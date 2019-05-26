@@ -8,17 +8,15 @@ include_directories(include)
 
 #Files to be compiled
 set(SRC_DIR src)
-set(SOURCE ${SRC_DIR}/fdParamElastic.cpp
+set(SOURCE_NL ${SRC_DIR}/fdParamElastic.cpp
            ${SRC_DIR}/nonlinearPropElasticShotsGpu.cpp
            ${SRC_DIR}/nonlinearPropElasticGpu.cpp
-           # ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
+           ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
            ${SRC_DIR}/spaceInterpGpu.cpp
            # ${SRC_DIR}/spaceSincInterpGpu.cpp
            ${SRC_DIR}/interpTimeLinTbb.cpp
            ${SRC_DIR}/secondTimeDerivative.cpp
-           # ${SRC_DIR}/kernelsGpuElastic.cu
-         ${SRC_DIR}/stagger.cpp)
-         # ${SRC_DIR}/cudaErrors.cu)
+         	 ${SRC_DIR}/stagger.cpp)
 
 #Executables to be compiled
 # set(EXECS  ${SRC_DIR}/nonlinearPropElasticShotsGpuMain.cpp)
@@ -50,7 +48,7 @@ link_directories(${Generic-cpp_BINARY_DIR}
 )
 
 #Compiling the project library
-add_library(ELASTIC_ISO_DOUBLE_NL ${SOURCE})
+add_library(ELASTIC_ISO_DOUBLE_NL ${SOURCE_NL})
 
 #Compiling the project executables
 # add_executable(padElasticFileGpuMain ${SRC_DIR}/padElasticFileGpuMain.cpp)

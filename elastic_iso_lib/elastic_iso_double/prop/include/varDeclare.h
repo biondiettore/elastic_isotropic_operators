@@ -67,6 +67,8 @@ double **dev_modelRegDtw_vx, **dev_modelRegDtw_vz, **dev_modelRegDtw_sigmaxx, **
 double **dev_dataRegDts_vx, **dev_dataRegDts_vz, **dev_dataRegDts_sigmaxx, **dev_dataRegDts_sigmazz, **dev_dataRegDts_sigmaxz; // Data on device at coarse time-sampling (converted to regular grid)
 // double **dev_interpFilterTime; // Time interpolation filter (second order) to interpolate wavefields and data as we propagate
 double *dev_wavefieldDts_all;
+double **dev_wavefieldDts_left, **dev_wavefieldDts_right, **dev_pStream; //Left, right, and temp time slices for saving the wavefield using streams
+double **pin_wavefieldSlice; //Pinnned memory to allow ansync memory copy
 // double **dev_wavefieldDts_vx,**dev_wavefieldDts_vz,**dev_wavefieldDts_sigmaxx,**dev_wavefieldDts_sigmazz,**dev_wavefieldDts_sigmaxz
 // , **dev_BornSrcWavefield, *dev_BornSecWavefield;
 double **dev_tomoSrcWavefieldDt2, **dev_tomoScatWavefield1, **dev_tomoScatWavefield2, **dev_tomoRecWavefield;
@@ -81,7 +83,7 @@ double **dev_reflectivityScale; // scale = -2.0 / (vel*vel*vel)
 double **dev_modelBorn, **dev_modelBornExt; // Reflectivity model for Born / Born extended
 double **dev_modelTomo;  // Model for tomo
 double **dev_extReflectivity; // Extended reflectivity for tomo
-cudaStream_t *stream1, *stream2; // Streams
+cudaStream_t *compStream, *transferStream;
 
 
 /************************************* HOST DECLARATION *********************************/
