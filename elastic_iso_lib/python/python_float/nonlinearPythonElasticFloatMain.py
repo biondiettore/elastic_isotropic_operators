@@ -35,9 +35,6 @@ if __name__ == '__main__':
         modelFMat=modelFloat.getNdArray()
         modelTMat=modelTemp.getNdArray()
         modelFMat[0,:,0,:]=modelTMat
-        # modelDMat=modelFloat.getNdArray()
-        # modelSMat=modelFloat.getNdArray()
-        # modelDMat[0,:,0,:]=modelSMat
 
         domain_hyper=nonlinearElasticOp.domain.getHyper()
         model_hyper=modelFloat.getHyper()
@@ -54,19 +51,11 @@ if __name__ == '__main__':
             nonlinearElasticOp.forwardWavefield(False,modelFloat,dataFloat)
             #save wavefield to disk
             wavefieldFloat = nonlinearElasticOp.getWavefield()
-            # wavefieldFloat=SepVector.getSepVector(wavefieldFloat.getHyper(),storage="dataFloat")
-            # wavefieldFloatNp=wavefieldFloat.getNdArray()
-            # wavefieldFloatNp=wavefieldFloat.getNdArray()
-            # wavefieldFloatNp[:]=wavefieldFloatNp
             genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
         else:
             #run Nonlinear forward without wavefield saving
             nonlinearElasticOp.forward(False,modelFloat,dataFloat)
         #write data to disk
-        # dataFloat=SepVector.getSepVector(dataFloat.getHyper(),storage="dataFloat")
-        # dataFloatNp=dataFloat.getNdArray()
-        # dataFloatNp=dataFloat.getNdArray()
-        # dataFloatNp[:]=dataFloatNp
         genericIO.defaultIO.writeVector(dataFile,dataFloat)
 
         print("-------------------------------------------------------------------")
