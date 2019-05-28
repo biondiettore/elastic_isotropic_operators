@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
-project(SEIS_UTILS_DOUBLE-lib)
+project(SEIS_UTILS_FLOAT-lib)
 
 # include folder for ACOUSTIC_ISO_DOUBLE library
-include_directories(../../elastic_iso_double/include)
+include_directories(../../elastic_iso_float/include)
 
 #Adding python programs
 #add_subdirectory(python)
@@ -26,19 +26,12 @@ link_directories(${Generic-cpp_BINARY_DIR}
 				 ${SEPlib_LIBDIR}
 )
 
-#Compiling the project library
-add_library(SEIS_UTILS_DOUBLE_LIB ${SOURCE})
-# Compiling the project executables (if any)
+#Compiling the project library (if any)
 
-# Data muting program
-# add_executable(dataTaperDoubleMain ${SRC_DIR}/dataTaperDoubleMain.cpp)
-# target_link_libraries(dataTaperDoubleMain genericCpp OpenMP::OpenMP_CXX)
+# Compiling the project executables (if any)
+add_executable(padElasticFileGpuMain ${SRC_DIR}/padElasticFileGpuMain.cpp)
+
 
 #Adding libray and header files to install destination
-add_executable(padElasticFileGpuMain ${SRC_DIR}/padElasticFileGpuMain.cpp)
 target_link_libraries(padElasticFileGpuMain genericCpp OpenMP::OpenMP_CXX)
 install(TARGETS padElasticFileGpuMain DESTINATION bin)
-
-install(TARGETS SEIS_UTILS_DOUBLE_LIB DESTINATION lib)
-# install(TARGETS dataTaperDoubleMain DESTINATION bin)
-# install(FILES ${HEADERS} DESTINATION include)

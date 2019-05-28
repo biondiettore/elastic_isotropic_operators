@@ -55,9 +55,10 @@ add_subdirectory(elastic_iso_float)
 add_subdirectory(python/python_double)
 add_subdirectory(python/python_float)
 
-# include folder for Seismic utilities
-add_subdirectory(seis_utils/seis_utils_double/)
-#add_subdirectory(seis_utils/seis_utils_float/)
+# include folders for Seismic utilities
+add_subdirectory(seis_utils/seis_utils_float/)
+add_subdirectory(seis_utils/python/)
+
 
 # include folder for pySolver
 execute_process(COMMAND git submodule update --init --recursive --remote external/python-solver WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
