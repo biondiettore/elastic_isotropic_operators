@@ -8,8 +8,8 @@
 #define FAT 4
 #define COEFF_SIZE 4 // Laplacian coefficient array for 10th order
 #define PI_CUDA M_PI // Import the number "Pi" from the math library
-#define PAD_MAX 200 // Maximum number of points for padding (on one side)
-#define SUB_MAX 50 // Maximum subsampling value
+#define PAD_MAX 700 // Maximum number of points for padding (on one side)
+#define SUB_MAX 150 // Maximum subsampling value
 
 #define min2(v1,v2) (((v1)<(v2))?(v1):(v2)) /* Minimum function */
 #define max2(v1,v2) (((v1)>(v2))?(v1):(v2)) /* Minimum function */
