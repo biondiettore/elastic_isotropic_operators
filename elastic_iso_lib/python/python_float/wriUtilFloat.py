@@ -68,7 +68,6 @@ def forcing_term_op_init(args):
 	priorModel = SepVector.getSepVector(SPK_adj.getDomain().getHyper(),storage="dataFloat")
 	waveletFile=parObject.getString("wavelet")
 	waveletFloat=genericIO.defaultIO.getVector(waveletFile)
-	print("waveletFloat.norm()=",waveletFloat.norm())
 	waveletSMat=waveletFloat.getNdArray()
 	waveletSMatT=np.transpose(waveletSMat)
 	priorModelMat=priorModel.getNdArray()

@@ -23,14 +23,14 @@ def forcing_term_op_init(args):
 	parObject=ioDef.getParamObj()
 
 	# Interp operator init
-	zCoord,xCoord,centerHyper = SpaceInterpMulti.space_interp_multi_init_source(args)
+	zCoord,xCoord,centerHyper = SpaceInterpMultiDouble.space_interp_multi_init_source(args)
 
 	#interp operator instantiate
 	#check which source injection interp method
 	sourceInterpMethod = parObject.getString("sourceInterpMethod","linear")
 	sourceInterpNumFilters = parObject.getInt("sourceInterpNumFilters",4)
 	nt = parObject.getInt("nts")
-	spaceInterpMultiOp = SpaceInterpMulti.space_interp_multi(zCoord,xCoord,centerHyper,nt,sourceInterpMethod,sourceInterpNumFilters)
+	spaceInterpMultiOp = SpaceInterpMultiDouble.space_interp_multi(zCoord,xCoord,centerHyper,nt,sourceInterpMethod,sourceInterpNumFilters)
 
 
 	# pad truncate init
@@ -49,7 +49,7 @@ def forcing_term_op_init(args):
 	padTruncateDummyData = SepVector.getSepVector(regWfldHyper,storage="dataDouble")
 	sourceGridPositions = spaceInterpMultiOp.getRegPosUniqueVector()
 
-	padTruncateSourceOp = PadTruncateSource.pad_truncate_source(padTruncateDummyModel,padTruncateDummyData,sourceGridPositions)
+	padTruncateSourceOp = PadTruncateSourceDouble.pad_truncate_source(padTruncateDummyModel,padTruncateDummyData,sourceGridPositions)
 
 	#stagger op
 	staggerDummyModel = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataDouble")
@@ -85,14 +85,14 @@ def data_extraction_op_init(args):
 	parObject=ioDef.getParamObj()
 
 	# Interp operator init
-	zCoord,xCoord,centerHyper = SpaceInterpMulti.space_interp_multi_init_rec(args)
+	zCoord,xCoord,centerHyper = SpaceInterpMultiDouble.space_interp_multi_init_rec(args)
 
 	#interp operator instantiate
 	#check which rec injection interp method
 	recInterpMethod = parObject.getString("recInterpMethod","linear")
 	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
 	nt = parObject.getInt("nts")
-	spaceInterpMultiOp = SpaceInterpMulti.space_interp_multi(zCoord,xCoord,centerHyper,nt,recInterpMethod,recInterpNumFilters)
+	spaceInterpMultiOp = SpaceInterpMultiDouble.space_interp_multi(zCoord,xCoord,centerHyper,nt,recInterpMethod,recInterpNumFilters)
 
 	# pad truncate init
 	dts = parObject.getFloat("dts",0.0)
@@ -109,13 +109,13 @@ def data_extraction_op_init(args):
 	padTruncateDummyModel = SepVector.getSepVector(regRecHyper,storage="dataDouble")
 	padTruncateDummyData = SepVector.getSepVector(regWfldHyper,storage="dataDouble")
 	recGridPositions = spaceInterpMultiOp.getRegPosUniqueVector()
-	padTruncateRecOp = PadTruncateSource.pad_truncate_source(padTruncateDummyModel,padTruncateDummyData,recGridPositions)
+	padTruncateRecOp = PadTruncateSourceDouble.pad_truncate_source(padTruncateDummyModel,padTruncateDummyData,recGridPositions)
 	padTruncateRecOp = Op.Transpose(padTruncateRecOp)
 
 	#stagger op
 	staggerDummyModel = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataDouble")
 	input = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataDouble")
-	wavefieldStaggerOp=Stagger.stagger_wfld(staggerDummyModel,input)
+	wavefieldStaggerOp=StaggerDouble.stagger_wfld(staggerDummyModel,input)
 	wavefieldStaggerOp=Op.Transpose(wavefieldStaggerOp)
 
 	#chain operators

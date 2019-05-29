@@ -41,7 +41,7 @@ if __name__ == '__main__':
 	############################# Initialization ###############################
 	# Data extraction
 	if(pyinfo): print("--------------------------- Data extraction init --------------------------------")
-	dataSamplingOp = wri_util.data_extraction_op_init(sys.argv)
+	dataSamplingOp = wriUtilDouble.data_extraction_op_init(sys.argv)
 
 	# Wave equation op init
 	if(pyinfo): print("--------------------------- Wave equation op init --------------------------------")
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
 	# forcing term op
 	if(pyinfo): print("--------------------------- forcing term op init --------------------------------")
-	forcingTermOp,prior = wri_util.forcing_term_op_init(sys.argv)
+	forcingTermOp,prior = wriUtilDouble.forcing_term_op_init(sys.argv)
 
 	# scale prior
 	prior.scale(1/(elasticParamDouble.getHyper().getAxis(1).d*elasticParamDouble.getHyper().getAxis(2).d))

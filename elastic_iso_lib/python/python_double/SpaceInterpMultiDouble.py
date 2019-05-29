@@ -151,7 +151,7 @@ class space_interp_multi(Op.Operator):
 		# 	domain = domain.getCpp()
 		# if("getCpp" in dir(range)):
 		# 	range = range.getCpp()
-		self.pyOp = pySpaceInterpMulti.spaceInterpMulti(zCoord.getCpp(),xCoord.getCpp(),elasticParamHypercube.getCpp(),nt,interpMethod,nFilt)
+		self.pyOp = pySpaceInterpMultiDouble.spaceInterpMulti(zCoord.getCpp(),xCoord.getCpp(),elasticParamHypercube.getCpp(),nt,interpMethod,nFilt)
 		return
 
 	def forward(self,add,model,data):
@@ -160,7 +160,7 @@ class space_interp_multi(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiDouble.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -170,27 +170,27 @@ class space_interp_multi(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiDouble.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiDouble.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
 
 	def getNDeviceIrreg(self):
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiDouble.ostream_redirect():
 			result = self.pyOp.getNDeviceIrreg()
 		return result
 
 	def getNDeviceReg(self):
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiDouble.ostream_redirect():
 			result = self.pyOp.getNDeviceReg()
 		return result
 
 	def getRegPosUniqueVector(self):
-		with pySpaceInterpMulti.ostream_redirect():
+		with pySpaceInterpMultiDouble.ostream_redirect():
 			result = self.pyOp.getRegPosUniqueVector()
 		return result

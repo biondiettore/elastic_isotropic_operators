@@ -39,7 +39,7 @@ if (pybind11_FOUND)
   target_link_libraries(pyElastic_iso_double_nl PRIVATE ELASTIC_ISO_DOUBLE_NL ${LIBS})
 
   pybind11_add_module(pyElastic_iso_double_we MODULE pyElastic_iso_double_we.cpp)
-  target_link_libraries(pyElastic_iso_double_we PRIVATE ELASTIC_ISO_DOUBLE_WE ${LIBS})
+  target_link_libraries(pyElastic_iso_double_we PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
 
   pybind11_add_module(pyStaggerDouble MODULE pyStaggerDouble.cpp)
   target_link_libraries(pyStaggerDouble PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
@@ -80,6 +80,7 @@ if (pybind11_FOUND)
   #Installing Python executables
   install( FILES nonlinearPythonElasticDoubleMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES waveEquationPythonElasticDoubleMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
+  install( FILES waveReconMainDouble.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
 
 else(pybind11_FOUND)
   MESSAGE("WARNING!Did not find pybid11. Not compiling ${PROJECT-NAME}")

@@ -32,14 +32,14 @@ if (pybind11_FOUND)
 				 ${SEPlib_LIBDIR}
   )
 
-  set(LIBS genericCpp sepVector sep3d sep buffers jsonCpp hypercube  ${OpenMP_EXE_LINKER_FLAGS} ${TBB_LIBRARIES} ${GENERIC_EXPORT_LIBS})
+  set(LIBS buffers genericCpp sepVector sep3d sep jsonCpp hypercube  ${OpenMP_EXE_LINKER_FLAGS} ${TBB_LIBRARIES} ${GENERIC_EXPORT_LIBS})
 
   #Compiling and adding module to library
   pybind11_add_module(pyElastic_iso_float_nl MODULE pyElastic_iso_float_nl.cpp)
   target_link_libraries(pyElastic_iso_float_nl PRIVATE ELASTIC_ISO_FLOAT_NL ${LIBS})
 
   pybind11_add_module(pyElastic_iso_float_we MODULE pyElastic_iso_float_we.cpp)
-  target_link_libraries(pyElastic_iso_float_we PRIVATE ELASTIC_ISO_FLOAT_WE ${LIBS})
+  target_link_libraries(pyElastic_iso_float_we PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
   #
   pybind11_add_module(pyStaggerFloat MODULE pyStaggerFloat.cpp)
   target_link_libraries(pyStaggerFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})

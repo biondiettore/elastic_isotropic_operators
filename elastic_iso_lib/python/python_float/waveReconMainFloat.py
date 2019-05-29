@@ -61,6 +61,8 @@ if __name__ == '__main__':
 	if (modelInitFile=="None"):
 		modelInit=modelFloat.clone()
 		modelInit.scale(0.0)
+	else:
+		modelInit=genericIO.defaultIO.getVector(modelInitFile)
 
 	# Data
 	dataFile=parObject.getString("data")
@@ -90,18 +92,17 @@ if __name__ == '__main__':
 	print("f shape: ", prior.getNdArray().shape)
 
 	############################# Regularization ###############################
-	epsilon=0
+	epsilon=parObject.getFloat("epsScale",1.0)*parObject.getFloat("eps",1.0)
 	invProb=Prblm.ProblemL2LinearReg(modelInit,dataFloat,dataSamplingOp,epsilon,reg_op=waveEquationElasticOp,prior_model=prior)
 
 	# Evaluate Epsilon
 	if (epsilonEval==1):
 		if(pyinfo): print("--- Epsilon evaluation ---")
 		inv_log.addToLog("--- Epsilon evaluation ---")
-		epsilonOut=invProb.estimate_epsilon(True)
-		if(pyinfo): print("--- Epsilon value: ",epsilonOut," ---")
-		inv_log.addToLog("--- Epsilon value: %s ---"%(epsilonOut))
-		invProb.epsilon=epsilonOut*parObject.getFloat("epsScale",1.0)
-
+		epsilon=invProb.estimate_epsilon(True)*parObject.getFloat("epsScale",1.0)
+		invProb.epsilon=epsilon
+	if(pyinfo): print("--- Epsilon value: ",epsilon," ---")
+	inv_log.addToLog("--- Epsilon value: %s ---"%(epsilon))
 
 	############################## Solver ######################################
 	# Solver
@@ -121,4 +122,5 @@ if __name__ == '__main__':
 	# outputFloatNp=outputFloat.getNdArray()
 	# outputDoubleNp=outputDouble.getNdArray()
 	# outputFloatNp[:]=outputDoubleNp
-	genericIO.defaultIO.writeVector("./inv1/final_model_100.H",outputFloat)
+	folder=parObject.getString("folder","./")
+	genericIO.defaultIO.writeVector(folder+"/final_model.H",outputFloat)

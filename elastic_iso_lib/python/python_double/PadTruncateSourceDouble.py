@@ -14,7 +14,7 @@ class pad_truncate_source(Op.Operator):
 			domain = domain.getCpp()
 		if("getCpp" in dir(range)):
 			range = range.getCpp()
-		self.pyOp = pyPadTruncateSource.padTruncateSource(domain,range,gridPointIndexUnique)
+		self.pyOp = pyPadTruncateSourceDouble.padTruncateSource(domain,range,gridPointIndexUnique)
 		return
 
 	def forward(self,add,model,data):
@@ -23,7 +23,7 @@ class pad_truncate_source(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyPadTruncateSource.ostream_redirect():
+		with pyPadTruncateSourceDouble.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -33,12 +33,12 @@ class pad_truncate_source(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyPadTruncateSource.ostream_redirect():
+		with pyPadTruncateSourceDouble.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pyPadTruncateSource.ostream_redirect():
+		with pyPadTruncateSourceDouble.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
