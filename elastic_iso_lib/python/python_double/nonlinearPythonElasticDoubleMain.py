@@ -3,16 +3,16 @@ import sys
 import genericIO
 import SepVector
 import Hypercube
-import Elastic_iso_double
+import Elastic_iso_double_nl
 import numpy as np
 import time
 
 if __name__ == '__main__':
     # Initialize operator
-    modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_double.nonlinearOpInitDouble(sys.argv)
+    modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_double_nl.nonlinearOpInitDouble(sys.argv)
 
     # Construct nonlinear operator object
-    nonlinearElasticOp=Elastic_iso_double.nonlinearPropElasticShotsGpu(modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+    nonlinearElasticOp=Elastic_iso_double_nl.nonlinearPropElasticShotsGpu(modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
     # Forward
     if (parObject.getInt("adj",0) == 0):
@@ -24,30 +24,21 @@ if __name__ == '__main__':
         # Check that model was provided
         modelFile=parObject.getString("model","noModelFile")
         if (modelFile == "noModelFile"):
-            print("**** ERROR: User did not provide model file ****\n")
-            quit()
+            raise IOError("**** ERROR: User did not provide model file ****\n")
         dataFile=parObject.getString("data","noDataFile")
         if (dataFile == "noDataFile"):
-            print("**** ERROR: User did not provide data file name ****\n")
-            quit()
+            raise IOError("**** ERROR: User did not provide data file name ****\n")
         #modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
         modelFloat=genericIO.defaultIO.getVector(modelFile)
         modelDMat=modelDouble.getNdArray()
         modelSMat=modelFloat.getNdArray()
         modelDMat[0,:,0,:]=modelSMat
-        print(modelDMat.shape)
-
-        domain_hyper=nonlinearElasticOp.domain.getHyper()
-        model_hyper=modelDouble.getHyper()
-        range_hyper=nonlinearElasticOp.range.getHyper()
-        data_hyper=dataDouble.getHyper()
 
         #check if we want to save wavefield
         if (parObject.getInt("saveWavefield",0) == 1):
             wfldFile=parObject.getString("wfldFile","noWfldFile")
             if (wfldFile == "noWfldFile"):
-                print("**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****\n")
-                quit()
+                raise IOError("**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****")
             #run Nonlinear forward with wavefield saving
             nonlinearElasticOp.forwardWavefield(False,modelDouble,dataDouble)
             #save wavefield to disk

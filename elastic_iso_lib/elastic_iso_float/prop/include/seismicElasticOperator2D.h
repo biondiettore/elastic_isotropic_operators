@@ -32,7 +32,7 @@ class seismicElasticOperator2D : public Operator <V1, V2> {
 		int _nReceiversRegCenterGrid,_nReceiversRegXGrid,_nReceiversRegZGrid,_nReceiversRegXZGrid;
 		int _nReceiversIrregCenterGrid,_nReceiversIrregXGrid,_nReceiversIrregZGrid,_nReceiversIrregXZGrid;
 		int _nts;
-		int _saveWavefield;
+		int _saveWavefield,_useStreams;
 		int _iGpu, _nGpu, _iGpuId;
 		std::shared_ptr<interpTimeLinTbb> _timeInterp;
 		std::shared_ptr<secondTimeDerivative> _secTimeDer;

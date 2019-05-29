@@ -10,7 +10,7 @@ using namespace SEP;
 /*!
  Used for creating the staggered grid elastic parameters used for leastic wave prop
 */
-class staggerX : public Operator<SEP::float2DReg, SEP::float2DReg> {
+class staggerX : public Operator<float2DReg, float2DReg> {
 
 	private:
 
@@ -22,19 +22,19 @@ class staggerX : public Operator<SEP::float2DReg, SEP::float2DReg> {
 		/*!
     * Overloaded constructors from operator
     */
-		staggerX(const std::shared_ptr<SEP::float2DReg> model, const std::shared_ptr<SEP::float2DReg> data);
+		staggerX(const std::shared_ptr<float2DReg> model, const std::shared_ptr<float2DReg> data);
 
     //! FWD
 		/*!
     * this interpolates a grid of values 1/2 grid point to the right
     */
-    void forward(const bool add, const std::shared_ptr<SEP::float2DReg> model, std::shared_ptr<SEP::float2DReg> data) const;
+    void forward(const bool add, const std::shared_ptr<float2DReg> model, std::shared_ptr<float2DReg> data) const;
 
     //! ADJ
     /*!
     * this interpolates a grid of values 1/2 grid point to the left
     */
-		void adjoint(const bool add, std::shared_ptr<SEP::float2DReg> model, const std::shared_ptr<SEP::float2DReg> data) const;
+		void adjoint(const bool add, std::shared_ptr<float2DReg> model, const std::shared_ptr<float2DReg> data) const;
 
 		//! Desctructor
     /*!
@@ -60,19 +60,19 @@ class staggerZ : public Operator<SEP::float2DReg, SEP::float2DReg> {
 		/*!
     * Overloaded constructors from operator
     */
-		staggerZ(const std::shared_ptr<SEP::float2DReg> model, const std::shared_ptr<SEP::float2DReg> data);
+		staggerZ(const std::shared_ptr<float2DReg> model, const std::shared_ptr<float2DReg> data);
 
     //! FWD
 		/*!
     * this interpolates a grid of values 1/2 grid point down
     */
-    void forward(const bool add, const std::shared_ptr<SEP::float2DReg> model, std::shared_ptr<SEP::float2DReg> data) const;
+    void forward(const bool add, const std::shared_ptr<float2DReg> model, std::shared_ptr<float2DReg> data) const;
 
     //! ADJ
     /*!
     * this interpolates a grid of values 1/2 grid point up
     */
-		void adjoint(const bool add, std::shared_ptr<SEP::float2DReg> model, const std::shared_ptr<SEP::float2DReg> data) const;
+		void adjoint(const bool add, std::shared_ptr<float2DReg> model, const std::shared_ptr<float2DReg> data) const;
 
 		//! Desctructor
     /*!

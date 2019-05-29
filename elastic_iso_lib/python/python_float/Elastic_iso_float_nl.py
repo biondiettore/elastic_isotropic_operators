@@ -2,6 +2,7 @@
 #It seems necessary to allow std::cout redirection to screen
 import pyElastic_iso_float_nl
 import pyOperator as Op
+import elasticParamConvertModule as ElaConv
 #Other necessary modules
 import genericIO
 import SepVector
@@ -168,10 +169,15 @@ def nonlinearOpInitFloat(args):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
 	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
-	# elasticParamFloat=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataFloat")
-	# elasticParamFloatNp=elasticParamFloat.getNdArray()
-	# elasticParamFloatNp=elasticParamFloat.getNdArray()
-	# elasticParamFloatNp[:]=elasticParamFloatNp
+	#Converting model parameters to Rho|Lame|Mu if necessary [kg/m3|Pa|Pa]
+	# 0 ==> correct parameterization
+	# 1 ==> VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
+	mod_par = parObject.getInt("mod_par",0)
+	if(mod_par != 0):
+		convOp = ElaConv.ElasticConv(elasticParamFloat,mod_par)
+		elasticParamFloatTemp = elasticParamFloat.clone()
+		convOp.forward(False,elasticParamFloatTemp,elasticParamFloat)
+		del elasticParamFloatTemp
 
 	# Build sources/receivers geometry
 	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
