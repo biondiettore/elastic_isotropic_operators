@@ -30,13 +30,13 @@ if __name__ == '__main__':
 	#read in file if it exists
 	inputFile=parObject.getString("inputFile","noFile")
 	if (not os.path.isfile(inputFile)) or (inputFile == "noFile"):
-		raise OSError("ERROR! no inputFile specified or given file does not exist!")
+		raise IOError("ERROR! no inputFile specified or given file does not exist!")
 	model = genericIO.defaultIO.getVector(inputFile,ndims=3)
 
 	#obtain output file
 	outputFile=parObject.getString("outputFile","noFile")
 	if outputFile == "noFile":
-		raise OSError("ERROR! no outputFile specified!")
+		raise IOError("ERROR! no outputFile specified!")
 
 	if(conv_type == 1):
 		if(verbose): print("CONVERSION: VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)")
