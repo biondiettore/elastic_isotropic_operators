@@ -5,6 +5,7 @@
 #include "kernelsGpuWaveEquationElastic.cu"
 #include "cudaErrors.cu"
 #include <cstring>
+#include <assert.h>
 
 void initWaveEquationElasticGpu(float dz, float dx, int nz, int nx, int nts, float dts, int minPad, int blockSize, int nGpu, int iGpuId, int iGpuAlloc){
 
@@ -50,7 +51,8 @@ void initWaveEquationElasticGpu(float dz, float dx, int nz, int nx, int nts, flo
 
   /************************** COMPUTE COSINE DAMPING COEFFICIENTS **********************/
   // Laplacian coefficients
-	cuda_call(cudaMemcpyToSymbol(dev_zCoeff, zCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice)); // Copy derivative coefficients to device
+  // cuda_call(cudaMemcpyToSymbol(dev_zCoeff, zCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice)); // Copy derivative coefficients to device
+  cuda_call(cudaMemcpyToSymbol(dev_zCoeff, zCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice)); // Copy derivative coefficients to device
 	cuda_call(cudaMemcpyToSymbol(dev_xCoeff, xCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice));
 
 	// // Cosine damping parameters

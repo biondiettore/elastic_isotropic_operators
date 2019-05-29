@@ -1,5 +1,6 @@
 #include "waveEquationElasticGpu.h"
 #include <cstring>
+#include <cassert>
 waveEquationElasticGpu::waveEquationElasticGpu(const std::shared_ptr<float4DReg> model, const std::shared_ptr<float4DReg> data, std::shared_ptr<SEP::float3DReg> elasticParam, std::shared_ptr<paramObj> par){
 
   _par = par;
@@ -26,7 +27,9 @@ waveEquationElasticGpu::waveEquationElasticGpu(const std::shared_ptr<float4DReg>
   //create gpu list
   createGpuIdList();
   float memAvailGB = getTotalGlobalMem(_nGpu, _info, _deviceNumberInfo);
+  //std::cerr << "checkGpuMemLimits(memAvailGB):" << checkGpuMemLimits(memAvailGB) << std::endl;
   assert(checkGpuMemLimits(memAvailGB));
+  //static_assert(1==2,"this is a test");
 
   assert(data->getHyper()->getAxis(1).n == _fdParamElastic->_nz);
   assert(data->getHyper()->getAxis(2).n == _fdParamElastic->_nx);
@@ -40,6 +43,7 @@ waveEquationElasticGpu::waveEquationElasticGpu(const std::shared_ptr<float4DReg>
     initWaveEquationElasticGpu(_fdParamElastic->_dz, _fdParamElastic->_dx, _fdParamElastic->_nz, _fdParamElastic->_nx, _fdParamElastic->_nts, _fdParamElastic->_dts, _fdParamElastic->_minPad, _fdParamElastic->_blockSize, _nGpu, _gpuList[iGpu], _iGpuAlloc);
 
     //allocate on gpu
+
     allocateWaveEquationElasticGpu(_fdParamElastic->_rhox,
   												_fdParamElastic->_rhoz,
   												_fdParamElastic->_lamb2Mu,
@@ -53,8 +57,8 @@ waveEquationElasticGpu::waveEquationElasticGpu(const std::shared_ptr<float4DReg>
 
 void waveEquationElasticGpu::forward(const bool add, const std::shared_ptr<float4DReg> model, std::shared_ptr<float4DReg> data) const{
   assert(checkDomainRange(model,data));
-  if(!add) data->scale(0.);
-
+  //if(!add) data->scale(0.);
+  if(!add) std::memset(data->getVals(), 0, sizeof data->getVals());
 
   int nz = _fdParamElastic->_nz;
   int nx = _fdParamElastic->_nx;
@@ -92,7 +96,8 @@ void waveEquationElasticGpu::forward(const bool add, const std::shared_ptr<float
 
 void waveEquationElasticGpu::adjoint(const bool add, std::shared_ptr<float4DReg> model, const std::shared_ptr<float4DReg> data) const{
   assert(checkDomainRange(model,data));
-  if(!add) model->scale(0.);
+  //if(!add) model->scale(0.);
+  if(!add) std::memset(model->getVals(), 0, sizeof model->getVals());
 
   int nz = _fdParamElastic->_nz;
   int nx = _fdParamElastic->_nx;
@@ -129,8 +134,9 @@ void waveEquationElasticGpu::adjoint(const bool add, std::shared_ptr<float4DReg>
 
 bool waveEquationElasticGpu::checkGpuMemLimits(float gbLimits){
 
-  unsigned long long spaceUsedWflds = (unsigned long long)8*(unsigned long long)_fdParamElastic->_nz*(unsigned long long)_fdParamElastic->_nx*(unsigned long long)_fdParamElastic->_nts*(unsigned long long)_fdParamElastic->_nwc*(unsigned long long)2;
-  unsigned long long spaceUsedElasticParams = (unsigned long long)8*(unsigned long long)_fdParamElastic->_nz*(unsigned long long)_fdParamElastic->_nx*3;
+
+  unsigned long long spaceUsedWflds = (unsigned long long)4*(unsigned long long)_fdParamElastic->_nz*(unsigned long long)_fdParamElastic->_nx*(unsigned long long)_fdParamElastic->_nts*(unsigned long long)_fdParamElastic->_nwc*(unsigned long long)2;
+  unsigned long long spaceUsedElasticParams = (unsigned long long)4*(unsigned long long)_fdParamElastic->_nz*(unsigned long long)_fdParamElastic->_nx*3;
   unsigned long long totalSpaceUsedGB = (spaceUsedWflds+spaceUsedElasticParams)/((unsigned long long)(1024*1024*1024));
 
   if(_info==1){
