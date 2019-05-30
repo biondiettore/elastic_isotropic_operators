@@ -36,6 +36,7 @@ __constant__ int dev_nep; // number of elastic parameters on Device
 __constant__ int dev_sub; // Subsampling in time
  __constant__ int dev_nExt; // Length of extension axis
  __constant__ int dev_hExt; // Half-length of extension axis
+ __constant__ int dev_dtw_inv; // 1/dtw for computing time derivative on device
 
  __constant__ int dev_nSourcesRegCenterGrid; // Nb of source grid points on center grid
  __constant__ int dev_nSourcesRegXGrid; // Nb of source grid points on x shifted grid
