@@ -10,7 +10,6 @@
 #include "operator.h"
 #include "fdParamElastic.h"
 #include "spaceInterpGpu.h"
-#include "secondTimeDerivative.h"
 #include <omp.h>
 
 using namespace SEP;
@@ -35,7 +34,6 @@ class seismicElasticOperator2D : public Operator <V1, V2> {
 		int _saveWavefield,_useStreams;
 		int _iGpu, _nGpu, _iGpuId;
 		std::shared_ptr<interpTimeLinTbb> _timeInterp;
-		std::shared_ptr<secondTimeDerivative> _secTimeDer;
 
     //these variables hold all five compnenets of elastic source signal. Should be a 3d reg
 		std::shared_ptr<V2> _sourcesSignals, _sourcesSignalsRegDts, _sourcesSignalsRegDtsDt2, _sourcesSignalsRegDtwDt2, _sourcesSignalsRegDtw;

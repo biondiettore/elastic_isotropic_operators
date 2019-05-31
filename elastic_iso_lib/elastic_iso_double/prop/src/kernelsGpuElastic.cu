@@ -930,14 +930,14 @@ __global__ void imagingElaFwdGpu(double* dev_wavefieldVx, double* dev_wavefieldV
   //Note we assume zero wavefield for its < 0 and its > ntw
   //Scattering Vx and Vz components (- drho * dvx/dt and - drho * dvz/dt)
   if(its == 0){
-    dev_vx[iGlobal] = dev_drhox[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dtw_inv;
-    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dtw_inv;
-  } else if(its == dev_ntw){
-    dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dtw_inv;
-    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dtw_inv;
+    dev_vx[iGlobal] = dev_drhox[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
+  } else if(its == dev_nts){
+    dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
+    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
   } else {
-    dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dtw_inv;
-    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dtw_inv;
+    dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
   }
   //Scattering Sigmaxx component
   dev_sigmaxx[iGlobal] = dev_dlame[iGlobal] * (dvx_dx + dvz_dz) + 2.0 * dev_dmu[iGlobal] * dvx_dx;
@@ -1009,14 +1009,14 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
 
   //Imaging drhox and drhoz components
   if(its == 0){
-    dev_drhox[iGlobal] += dev_vx[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dtw_inv;
-    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dtw_inv;
-  } else if(its == dev_ntw){
-    dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dtw_inv;
-    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dtw_inv;
+    dev_drhox[iGlobal] += dev_vx[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
+  } else if(its == dev_nts){
+    dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
+    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
   } else {
-    dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dtw_inv;
-    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dtw_inv;
+    dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
   }
   //Imaging dlame component
   dev_dlame[iGlobal] += (dev_sigmaxx[iGlobal] + dev_sigmazz[iGlobal]) * (dvx_dx + dvz_dz);

@@ -327,7 +327,7 @@ void modelAllocateGpu(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSour
 		cuda_call(cudaMalloc((void**) &dev_modelRegDtw_sigmazz[iGpu], nSourcesRegCenterGrid*host_ntw*sizeof(double))); // Allocate input on device
 		cuda_call(cudaMalloc((void**) &dev_modelRegDtw_sigmaxz[iGpu], nSourcesRegXZGrid*host_ntw*sizeof(double))); // Allocate input on device
 }
-//copt model from host to device
+//copy model from host to device
 void modelCopyToGpu(double *modelRegDtw_vx, double *modelRegDtw_vz, double *modelRegDtw_sigmaxx, double *modelRegDtw_sigmazz, double *modelRegDtw_sigmaxz, int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int iGpu){
 		cuda_call(cudaMemcpy(dev_modelRegDtw_vx[iGpu], modelRegDtw_vx, nSourcesRegXGrid*host_ntw*sizeof(double), cudaMemcpyHostToDevice)); // Copy input signals on device
 		cuda_call(cudaMemcpy(dev_modelRegDtw_vz[iGpu], modelRegDtw_vz, nSourcesRegZGrid*host_ntw*sizeof(double), cudaMemcpyHostToDevice)); // Copy input signals on device
@@ -343,8 +343,8 @@ void modelInitializeOnGpu(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int n
 		cuda_call(cudaMemset(dev_modelRegDtw_sigmazz[iGpu], 0, nSourcesRegCenterGrid*host_ntw*sizeof(double))); // Copy input signals on device
 		cuda_call(cudaMemset(dev_modelRegDtw_sigmaxz[iGpu], 0, nSourcesRegXZGrid*host_ntw*sizeof(double))); // Copy input signals on device
 }
-		//allocate model on device
-		void dataAllocateGpu(int nReceiversRegCenterGrid, int nReceiversRegXGrid, int nReceiversRegZGrid, int nReceiversRegXZGrid, int iGpu){
+//allocate model on device
+void dataAllocateGpu(int nReceiversRegCenterGrid, int nReceiversRegXGrid, int nReceiversRegZGrid, int nReceiversRegXZGrid, int iGpu){
 		cuda_call(cudaMalloc((void**) &dev_dataRegDts_vx[iGpu], nReceiversRegXGrid*host_nts*sizeof(double))); // Allocate output on device
 		cuda_call(cudaMalloc((void**) &dev_dataRegDts_vz[iGpu], nReceiversRegZGrid*host_nts*sizeof(double))); // Allocate output on device
 		cuda_call(cudaMalloc((void**) &dev_dataRegDts_sigmaxx[iGpu], nReceiversRegCenterGrid*host_nts*sizeof(double))); // Allocate output on device

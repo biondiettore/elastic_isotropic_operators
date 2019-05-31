@@ -15,7 +15,6 @@ set(SOURCE ${SRC_DIR}/fdParamElastic.cpp
 					 ${SRC_DIR}/spaceInterpGpu.cpp
 					 # ${SRC_DIR}/spaceSincInterpGpu.cpp
 					 ${SRC_DIR}/interpTimeLinTbb.cpp
-					 ${SRC_DIR}/secondTimeDerivative.cpp
 					 ${SRC_DIR}/stagger.cpp)
 
 #Executables to be compiled
@@ -33,7 +32,6 @@ set(HEADERS ${INC_DIR}/fdParamElastic.h
 						${INC_DIR}/spaceInterpGpu.h
 						# ${INC_DIR}/spaceSincInterpGpu.h
 						${INC_DIR}/interpTimeLinTbb.h
-						${INC_DIR}/secondTimeDerivative.h
 						${INC_DIR}/seismicElasticOperator2D.h
 						${INC_DIR}/varDeclare.h
 						${INC_DIR}/stagger.h)

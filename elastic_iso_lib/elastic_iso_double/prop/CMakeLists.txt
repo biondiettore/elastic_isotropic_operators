@@ -15,8 +15,9 @@ set(SOURCE_NL ${SRC_DIR}/fdParamElastic.cpp
            ${SRC_DIR}/spaceInterpGpu.cpp
            # ${SRC_DIR}/spaceSincInterpGpu.cpp
            ${SRC_DIR}/interpTimeLinTbb.cpp
-           ${SRC_DIR}/secondTimeDerivative.cpp
          	 ${SRC_DIR}/stagger.cpp)
+
+set(SOURCE_BORN ${SRC_DIR}/BornElasticGpuFunctions.cu)
 
 #Executables to be compiled
 # set(EXECS  ${SRC_DIR}/nonlinearPropElasticShotsGpuMain.cpp)
@@ -33,7 +34,6 @@ set(HEADERS ${INC_DIR}/fdParamElastic.h
             ${INC_DIR}/spaceInterpGpu.h
             # ${INC_DIR}/spaceSincInterpGpu.h
             ${INC_DIR}/interpTimeLinTbb.h
-            ${INC_DIR}/secondTimeDerivative.h
             ${INC_DIR}/seismicElasticOperator2D.h
             ${INC_DIR}/varDeclare.h
             ${INC_DIR}/stagger.h)
@@ -49,13 +49,17 @@ link_directories(${Generic-cpp_BINARY_DIR}
 
 #Compiling the project library
 add_library(ELASTIC_ISO_DOUBLE_NL ${SOURCE_NL})
+add_library(ELASTIC_ISO_DOUBLE_BORN ${SOURCE_BORN})
 
 #Compiling the project executables
 # add_executable(padElasticFileGpuMain ${SRC_DIR}/padElasticFileGpuMain.cpp)
 # target_link_libraries(padElasticFileGpuMain genericCpp OpenMP::OpenMP_CXX)
 target_link_libraries(ELASTIC_ISO_DOUBLE_NL genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
+target_link_libraries(ELASTIC_ISO_DOUBLE_BORN genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
+
 
 #Adding libray and header files to install destination
 install(TARGETS ELASTIC_ISO_DOUBLE_NL DESTINATION lib)
+install(TARGETS ELASTIC_ISO_DOUBLE_BORN DESTINATION lib)
 # install(TARGETS padElasticFileGpuMain DESTINATION bin)
 install(FILES ${HEADERS} DESTINATION include)
