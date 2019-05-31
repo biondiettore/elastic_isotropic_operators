@@ -425,7 +425,7 @@ void dataCopyToGpu(double *dataRegDts_vx, double *dataRegDts_vz, double *dataReg
 		cuda_call(cudaMemcpy(dev_dataRegDts_vz[iGpu], dataRegDts_vz, nReceiversRegZGrid*host_nts*sizeof(double), cudaMemcpyHostToDevice));
 		cuda_call(cudaMemcpy(dev_dataRegDts_sigmaxx[iGpu], dataRegDts_sigmaxx, nReceiversRegCenterGrid*host_nts*sizeof(double), cudaMemcpyHostToDevice));
 		cuda_call(cudaMemcpy(dev_dataRegDts_sigmazz[iGpu], dataRegDts_sigmazz, nReceiversRegCenterGrid*host_nts*sizeof(double), cudaMemcpyHostToDevice));
-		cuda_call(cudaMemcpy(dev_dataRegDts_sigmaxz[iGpu], dataRegDts_sigmaxz, nReceiversRegXZGrid*host_nts*sizeof(double), cudaMemcpyHostToDevice)); 
+		cuda_call(cudaMemcpy(dev_dataRegDts_sigmaxz[iGpu], dataRegDts_sigmaxz, nReceiversRegXZGrid*host_nts*sizeof(double), cudaMemcpyHostToDevice));
 }
 void dataInitializeOnGpu(int nReceiversRegCenterGrid, int nReceiversRegXGrid, int nReceiversRegZGrid, int nReceiversRegXZGrid, int iGpu){
 		cuda_call(cudaMemset(dev_dataRegDts_vx[iGpu], 0, nReceiversRegXGrid*host_nts*sizeof(double))); // Initialize output on device
@@ -490,6 +490,47 @@ void setupBornFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
     modelCopyToGpu(drhox,drhoz,dlame,dmu,dmuxz,iGpu);
 }
 
+void launchFwdStepKernels(dim3 dimGrid, dim3 dimBlock, int iGpu){
+		kernel_exec(ker_step_fwd<<<dimGrid, dimBlock>>>(dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu], dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_rhoxDtw[iGpu], dev_rhozDtw[iGpu], dev_lamb2MuDtw[iGpu], dev_lambDtw[iGpu], dev_muxzDtw[iGpu]));
+}
+
+void launchFwdInjectSourceKernels(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int itw, int iGpu){
+		kernel_exec(ker_inject_source_centerGrid<<<1, nSourcesRegCenterGrid>>>(dev_modelRegDtw_sigmaxx[iGpu], dev_modelRegDtw_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], itw-1, dev_sourcesPositionRegCenterGrid[iGpu]));
+
+		kernel_exec(ker_inject_source_xGrid<<<1, nSourcesRegXGrid>>>(dev_modelRegDtw_vx[iGpu], dev_p0_vx[iGpu], itw-1, dev_sourcesPositionRegXGrid[iGpu]));
+		kernel_exec(ker_inject_source_zGrid<<<1, nSourcesRegZGrid>>>(dev_modelRegDtw_vz[iGpu], dev_p0_vz[iGpu], itw-1, dev_sourcesPositionRegZGrid[iGpu]));
+
+		kernel_exec(ker_inject_source_xzGrid<<<1, nSourcesRegXZGrid>>>(dev_modelRegDtw_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], itw-1, dev_sourcesPositionRegXZGrid[iGpu]));
+}
+
+void launchDampCosineEdgeKernels(dim3 dimGrid, dim3 dimBlock, int iGpu){
+		kernel_exec(dampCosineEdge<<<dimGrid, dimBlock>>>(dev_p0_vx[iGpu], dev_p1_vx[iGpu], dev_p0_vz[iGpu],  dev_p1_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p1_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p1_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_sigmaxz[iGpu]));
+}
+
+void switchPointers(int iGpu){
+		dev_temp1[iGpu] = dev_p0_vx[iGpu];
+		dev_p0_vx[iGpu] = dev_p1_vx[iGpu];
+		dev_p1_vx[iGpu] = dev_temp1[iGpu];
+
+		dev_temp1[iGpu] = dev_p0_vz[iGpu];
+		dev_p0_vz[iGpu] = dev_p1_vz[iGpu];
+		dev_p1_vz[iGpu] = dev_temp1[iGpu];
+
+		dev_temp1[iGpu] = dev_p0_sigmaxx[iGpu];
+		dev_p0_sigmaxx[iGpu] = dev_p1_sigmaxx[iGpu];
+		dev_p1_sigmaxx[iGpu] = dev_temp1[iGpu];
+
+		dev_temp1[iGpu] = dev_p0_sigmazz[iGpu];
+		dev_p0_sigmazz[iGpu] = dev_p1_sigmazz[iGpu];
+		dev_p1_sigmazz[iGpu] = dev_temp1[iGpu];
+
+		dev_temp1[iGpu] = dev_p0_sigmaxz[iGpu];
+		dev_p0_sigmaxz[iGpu] = dev_p1_sigmaxz[iGpu];
+		dev_p1_sigmaxz[iGpu] = dev_temp1[iGpu];
+
+		dev_temp1[iGpu] = NULL;
+}
+
 /****************************************************************************************/
 /*********************************** Born forward operator ******************************/
 /****************************************************************************************/
@@ -500,8 +541,42 @@ void BornShotsFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
     //                      d) allocate and copy wavefield time slices to gpu
     setupBornFwdGpu(sourceRegDtw_vx, sourceRegDtw_vz, sourceRegDtw_sigmaxx, sourceRegDtw_sigmazz, sourceRegDtw_sigmaxz, drhox, drhoz, dlame, dmu, dmuxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId);
 
+		//Finite-difference grid and blocks
+		int nblockx;
+		if(surfaceCondition==0){
+			nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
+		}
+		else if(surfaceCondition==1){
+			nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
+		}
+		int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
+		dim3 dimGrid(nblockx, nblocky);
+		dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+
 		if(useStreams == 0){
 			//Born operator w/o the use of Streams
+			/************************** Source wavefield computation ****************************/
+			for (int its = 0; its < host_nts-1; its++){
+					for (int it2 = 1; it2 < host_sub+1; it2++){
+							// Compute fine time-step index
+							int itw = its * host_sub + it2;
+
+							// Step forward
+							launchFwdStepKernels(dimGrid, dimBlock, iGpu);
+							// Inject source
+							launchFwdInjectSourceKernels(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
+
+							// Damp wavefields
+							launchDampCosineEdgeKernels(dimGrid, dimBlock, iGpu);
+
+							// Extract wavefield components
+							kernel_exec(interpWavefieldSingleComp<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_p0_vx[iGpu], its, it2));
+							kernel_exec(interpWavefieldSingleComp<<<dimGrid, dimBlock>>>(dev_wavefieldVz[iGpu], dev_p0_vz[iGpu], its, it2));
+
+							// Switch pointers
+							switchPointers(iGpu);
+					}
+			}
 
 		} else {
 			//Born operator w/ the use of Streams

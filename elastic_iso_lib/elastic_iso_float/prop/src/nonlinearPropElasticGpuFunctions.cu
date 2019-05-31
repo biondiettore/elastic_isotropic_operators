@@ -209,7 +209,7 @@ void initNonlinearElasticGpu(float dz, float dx, int nz, int nx, int nts, float 
 		}
 
 		/**************************** COPY TO CONSTANT MEMORY *******************************/
-		// Laplacian coefficients
+		// Derivative coefficients
 		cuda_call(cudaMemcpyToSymbol(dev_zCoeff, zCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice)); // Copy derivative coefficients to device
 		cuda_call(cudaMemcpyToSymbol(dev_xCoeff, xCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice));
 
@@ -534,7 +534,7 @@ void propShotsElasticFwdGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 		//                      d) allocate and copy wavefield time slices to gpu
 		setupFwdGpu(modelRegDtw_vx, modelRegDtw_vz, modelRegDtw_sigmaxx, modelRegDtw_sigmazz, modelRegDtw_sigmaxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId);
 
-		// Laplacian grid and blocks
+		// Finite-difference grid and blocks
 		int nblockx;
 		if(surfaceCondition==0){
 			nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
@@ -632,7 +632,7 @@ void propShotsElasticFwdGpuWavefield(float *modelRegDtw_vx, float *modelRegDtw_v
 		cuda_call(cudaMalloc((void**) &dev_wavefieldDts_all, 5*host_nz*host_nx*host_nts*sizeof(float))); // Allocate on device
 		cuda_call(cudaMemset(dev_wavefieldDts_all, 0, 5*host_nz*host_nx*host_nts*sizeof(float))); // Initialize wavefield on device
 
-		// Laplacian grid and blocks
+		// Finite-difference grid and blocks
 		int nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 		int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 		dim3 dimGrid(nblockx, nblocky);
@@ -736,7 +736,7 @@ void propShotsElasticFwdGpuWavefieldStreams(float *modelRegDtw_vx, float *modelR
 		cuda_call(cudaMemset(dev_pStream[iGpu], 0, 5*host_nz*host_nx*sizeof(float))); // Initialize temporary slice on device
 		cudaMemset(pin_wavefieldSlice[iGpu], 0, 5*host_nz*host_nx*sizeof(float)); // Initialize pinned memory
 
-		// Laplacian grid and blocks
+		// Finite-difference grid and blocks
 		int nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 		int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 		dim3 dimGrid(nblockx, nblocky);
