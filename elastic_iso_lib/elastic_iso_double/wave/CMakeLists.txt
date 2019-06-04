@@ -5,7 +5,7 @@ project(ELASTIC_ISO_DOUBLE)
 #include_directories(${hypercube_DIRNAME_include})
 #include_directories(${genericIO_DIRNAME_include})
 include_directories(include)
-include_directories(../prop/include)
+#include_directories(../prop/include)
 
 #Files to be compiled
 set(SRC_DIR src)
@@ -13,10 +13,11 @@ set(SOURCE ${SRC_DIR}/staggerWfld.cpp
 					 ${SRC_DIR}/padTruncateSource.cpp
 				   ${SRC_DIR}/waveEquationElasticGpu.cpp
 				 	 # ${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
-				   # ${SRC_DIR}/waveEquationElasticGpuFunctions.cu
+				   ${SRC_DIR}/waveEquationElasticGpuFunctions.cu
 			     # ${SRC_DIR}/cudaErrors.cu
 				   ${SRC_DIR}/fdParamElasticWaveEquation.cpp
-				 	 ${SRC_DIR}/spaceInterpMulti.cpp)
+				 	 ${SRC_DIR}/spaceInterpMulti.cpp
+				 ${SRC_DIR}/stagger.cpp)
 
 # #Executables to be compiled
 # set(EXECS  ${SRC_DIR}/nonlinearPropElasticShotsGpuMain.cpp)
@@ -32,7 +33,8 @@ set(HEADERS ${INC_DIR}/staggerWfld.h
 					  ${INC_DIR}/spaceInterpMulti.h
 						${SRC_DIR}/kernelsGpuWaveEquationElastic.cu
 						${SRC_DIR}/waveEquationElasticGpuFunctions.cu
-						${SRC_DIR}/cudaErrors.cu)
+						${SRC_DIR}/cudaErrors.cu
+					${INC_DIR}/stagger.h)
 
 #SEP LIBRARY DIRECTORIES
 link_directories(${Generic-cpp_BINARY_DIR}
