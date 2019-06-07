@@ -78,9 +78,11 @@ if (pybind11_FOUND)
 
 
   #Installing Python executables
+  install( FILES waveEqInvFloat.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES waveReconMainFloat.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES nonlinearPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES waveEquationPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
+  install(FILES waveletFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
 
 else(pybind11_FOUND)
   MESSAGE("WARNING!Did not find pybid11. Not compiling ${PROJECT-NAME}")
