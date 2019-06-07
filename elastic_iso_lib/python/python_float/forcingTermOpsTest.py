@@ -9,9 +9,9 @@ import os
 
 # operators
 import Elastic_iso_double_we
-import SpaceInterpMulti
-import Stagger
-import PadTruncateSource
+import SpaceInterpMultiFloat
+import StaggerFloat
+import PadTruncateSourceFloat
 import pyOperator as Op
 
 # Template for linearized waveform inversion workflow
@@ -23,7 +23,7 @@ if __name__ == '__main__':
 	parObject=ioDef.getParamObj()
 
 	# Interp operator init
-	zCoord,xCoord,centerHyper = SpaceInterpMulti.space_interp_multi_init_source(sys.argv)
+	zCoord,xCoord,centerHyper = SpaceInterpMultiFloat.space_interp_multi_init_source(sys.argv)
 	print(zCoord)
 	print(xCoord)
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 	sourceInterpMethod = parObject.getString("sourceInterpMethod","linear")
 	sourceInterpNumFilters = parObject.getInt("sourceInterpNumFilters",4)
 	nt = parObject.getInt("nts")
-	spaceInterpMultiOp = SpaceInterpMulti.space_interp_multi(zCoord,xCoord,centerHyper,nt,sourceInterpMethod,sourceInterpNumFilters)
+	spaceInterpMultiOp = SpaceInterpMultiFloat.space_interp_multi(zCoord,xCoord,centerHyper,nt,sourceInterpMethod,sourceInterpNumFilters)
 
 
 	# pad truncate init
@@ -46,17 +46,17 @@ if __name__ == '__main__':
 	irregSourceHyper=Hypercube.hypercube(axes=[irregSourceAxis,wfldAxis,tAxis])
 	regWfldHyper=Hypercube.hypercube(axes=[centerHyper.getAxis(1),centerHyper.getAxis(2),wfldAxis,tAxis])
 
-	model = SepVector.getSepVector(irregSourceHyper,storage="dataDouble")
-	padTruncateDummyModel = SepVector.getSepVector(regSourceHyper,storage="dataDouble")
-	padTruncateDummyData = SepVector.getSepVector(regWfldHyper,storage="dataDouble")
+	model = SepVector.getSepVector(irregSourceHyper,storage="dataFloat")
+	padTruncateDummyModel = SepVector.getSepVector(regSourceHyper,storage="dataFloat")
+	padTruncateDummyData = SepVector.getSepVector(regWfldHyper,storage="dataFloat")
 	sourceGridPositions = spaceInterpMultiOp.getRegPosUniqueVector()
 
-	padTruncateSourceOp = PadTruncateSource.pad_truncate_source(padTruncateDummyModel,padTruncateDummyData,sourceGridPositions)
+	padTruncateSourceOp = PadTruncateSourceFloat.pad_truncate_source(padTruncateDummyModel,padTruncateDummyData,sourceGridPositions)
 
 	#stagger op
-	staggerDummyModel = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataDouble")
-	data = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataDouble")
-	wavefieldStaggerOp=Stagger.stagger_wfld(staggerDummyModel,data)
+	staggerDummyModel = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataFloat")
+	data = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataFloat")
+	wavefieldStaggerOp=StaggerFloat.stagger_wfld(staggerDummyModel,data)
 
 	#chain operators
 	spaceInterpMultiOp.setDomainRange(padTruncateDummyModel,model)
@@ -82,9 +82,9 @@ if __name__ == '__main__':
 		#write data to disk
 		dataFloat=SepVector.getSepVector(data.getHyper(),storage="dataFloat")
 		dataFloatNp=dataFloat.getNdArray()
-		dataDoubleNp=data.getNdArray()
-		dataFloatNp[:]=dataDoubleNp/(centerHyper.getAxis(1).d*centerHyper.getAxis(2).d)
-		#dataFloatNp[:]=dataDoubleNp
+		dataFloatNp=data.getNdArray()
+		dataFloatNp[:]=dataFloatNp/(centerHyper.getAxis(1).d*centerHyper.getAxis(2).d)
+		#dataFloatNp[:]=dataFloatNp
 		genericIO.defaultIO.writeVector(parObject.getString("dataFile","./test1.H"),dataFloat)
 	#adjoint
 	else:
