@@ -252,8 +252,8 @@ void initBornGpu(double dz, double dx, int nz, int nx, int nts, double dts, int 
 		cuda_call(cudaMemcpyToSymbol(dev_nts, &nts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Copy number of coarse time parameters to device
 		cuda_call(cudaMemcpyToSymbol(dev_sub, &sub, sizeof(int), 0, cudaMemcpyHostToDevice));
 		cuda_call(cudaMemcpyToSymbol(dev_ntw, &host_ntw, sizeof(int), 0, cudaMemcpyHostToDevice)); // Copy number of coarse time parameters to device
-        double inv_dts = 1.0/dts;
-        cuda_call(cudaMemcpyToSymbol(dev_dts_inv, &inv_dts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Inverse of the time-source sampling
+    double inv_dts = 1.0/dts;
+    cuda_call(cudaMemcpyToSymbol(dev_dts_inv, &inv_dts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Inverse of the time-source sampling
 
 }
 
@@ -669,7 +669,7 @@ void BornShotsFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 			/************************** Scattered wavefield computation *************************/
 			// Initialize time slices on device
 			wavefieldInitializeOnGpu(iGpu);
-		  	SecondarySourceInitializeOnGpu(iGpu);
+		  SecondarySourceInitializeOnGpu(iGpu);
 
 			// Copy model perturbations to device (done within setupBornFwdGpu function)
 			//Note the perturbations have been already scaled by the wave-equation source scaling factor outside of this function
@@ -762,6 +762,9 @@ void BornShotsAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 	//                      c) allocate and copy data (recevier recordings arrays) to device
 	//                      d) allocate and copy wavefield time slices to gpu
 	setupAdjGpu(sourceRegDtw_vx, sourceRegDtw_vz, sourceRegDtw_sigmaxx, sourceRegDtw_sigmazz, sourceRegDtw_sigmaxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId);
+
+	//Initialize model perturbations (for allowing add = true from calling function)
+	modelCopyToGpu(drhox,drhoz,dlame,dmu,dmuxz,iGpu);
 
 	//Finite-difference grid and blocks
 	int nblockx;

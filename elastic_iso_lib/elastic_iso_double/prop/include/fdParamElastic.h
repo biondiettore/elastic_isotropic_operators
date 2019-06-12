@@ -22,7 +22,7 @@ class fdParamElastic{
 		~fdParamElastic();
 
 		// QC stuff
-		bool checkParfileConsistencyTime(const std::shared_ptr<double3DReg> seismicTraces, int timeAxisIndex, std::string fileToCheck) const; /** ensure time axis of traces matches nts from parfile */
+		bool checkParfileConsistencyTime(const std::shared_ptr<double3DReg> seismicTraces, int timeAxisIndex) const; /** ensure time axis of traces matches nts from parfile */
 		bool checkParfileConsistencySpace(const std::shared_ptr<double3DReg> model) const; /** ensure space axes of model matches those from parfile */
 		//bool checkParfileConsistencySpace(const std::shared_ptr<double3DReg> modelExt) const;
 
