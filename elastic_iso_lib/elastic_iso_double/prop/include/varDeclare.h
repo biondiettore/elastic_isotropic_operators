@@ -15,26 +15,27 @@
 #define max2(v1,v2) (((v1)>(v2))?(v1):(v2)) /* Minimum function */
 
 #if __CUDACC__
-/************************************* DEVICE DECLARATION *******************************/
-// Device function
-__device__ int min3(int v1,int v2,int v3){return min2(v1,min2(v2,v3));}
-__device__ int min4(int v1,int v2,int v3,int v4){return min2(min2(v1,v2),min2(v3,v4));}
+ /************************************* DEVICE DECLARATION *******************************/
+ // Device function
+ __device__ int min3(int v1,int v2,int v3){return min2(v1,min2(v2,v3));}
+ __device__ int min4(int v1,int v2,int v3,int v4){return min2(min2(v1,v2),min2(v3,v4));}
 
-// Constant memory variables
-__constant__ double dev_zCoeff[COEFF_SIZE]; // 8th-order Laplacian coefficients on Device
-__constant__ double dev_xCoeff[COEFF_SIZE];
+ // Constant memory variables
+ __constant__ double dev_zCoeff[COEFF_SIZE]; // 8th-order Laplacian coefficients on Device
+ __constant__ double dev_xCoeff[COEFF_SIZE];
 
-__constant__ int dev_nInterpFilter; // Time interpolation filter length
-__constant__ int dev_hInterpFilter; // Time interpolation filter half-length
-__constant__ double dev_interpFilter[2*(SUB_MAX+1)]; // Time interpolation filter stored in constant memory
+ __constant__ int dev_nInterpFilter; // Time interpolation filter length
+ __constant__ int dev_hInterpFilter; // Time interpolation filter half-length
+ __constant__ double dev_interpFilter[2*(SUB_MAX+1)]; // Time interpolation filter stored in constant memory
 
-__constant__ int dev_nts; // Number of time steps at the coarse time sampling on Device
-__constant__ int dev_ntw; // Number of time steps at the fine time sampling on Device
-__constant__ int dev_nz; // nz on Device
-__constant__ int dev_nx; // nx on Device
-__constant__ int dev_nep; // number of elastic parameters on Device
-__constant__ int dev_sub; // Subsampling in time
- __constant__ int dev_dts_inv; // 1/dts for computing time derivative on device
+ __constant__ int dev_nts; // Number of time steps at the coarse time sampling on Device
+ __constant__ int dev_ntw; // Number of time steps at the fine time sampling on Device
+ __constant__ int dev_nz; // nz on Device
+ __constant__ int dev_nx; // nx on Device
+ __constant__ int dev_nep; // number of elastic parameters on Device
+ __constant__ int dev_sub; // Subsampling in time
+ __constant__ double dev_dts_inv; // 1/dts for computing time derivative on device
+ __constant__ double dev_dtw; // dtw
 
  __constant__ int dev_nSourcesRegCenterGrid; // Nb of source grid points on center grid
  __constant__ int dev_nSourcesRegXGrid; // Nb of source grid points on x shifted grid

@@ -9,7 +9,8 @@ nonlinearPropElasticShotsGpu::nonlinearPropElasticShotsGpu(std::shared_ptr<SEP::
                               std::vector<std::shared_ptr<spaceInterpGpu>> sourcesVectorCenterGrid,
                               std::vector<std::shared_ptr<spaceInterpGpu>> sourcesVectorXGrid,
                               std::vector<std::shared_ptr<spaceInterpGpu>> sourcesVectorZGrid,
-                              std::vector<std::shared_ptr<spaceInterpGpu>> sourcesVectorXZGrid, std::vector<std::shared_ptr<spaceInterpGpu>> receiversVectorCenterGrid,
+                              std::vector<std::shared_ptr<spaceInterpGpu>> sourcesVectorXZGrid,
+                              std::vector<std::shared_ptr<spaceInterpGpu>> receiversVectorCenterGrid,
                               std::vector<std::shared_ptr<spaceInterpGpu>> receiversVectorXGrid,
                               std::vector<std::shared_ptr<spaceInterpGpu>> receiversVectorZGrid,
                               std::vector<std::shared_ptr<spaceInterpGpu>> receiversVectorXZGrid){
@@ -134,7 +135,7 @@ void nonlinearPropElasticShotsGpu::forward(const bool add,
   for (int iExp=0; iExp<_nExp; iExp++){
 
     int iGpu = omp_get_thread_num();
-		int iGpuId = _gpuList[iGpu];
+	int iGpuId = _gpuList[iGpu];
 
     // Copy model slice
     if(constantSrcSignal == 1) {

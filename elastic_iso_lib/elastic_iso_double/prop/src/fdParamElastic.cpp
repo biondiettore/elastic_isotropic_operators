@@ -346,7 +346,7 @@ bool fdParamElastic::checkParfileConsistencySpace(const std::shared_ptr<double3D
 // }
 
 fdParamElastic::~fdParamElastic(){
-	_rhoxDtw = NULL;
+  _rhoxDtw = NULL;
   _rhozDtw = NULL;
   _lamb2MuDtw = NULL;
   _lambDtw = NULL;

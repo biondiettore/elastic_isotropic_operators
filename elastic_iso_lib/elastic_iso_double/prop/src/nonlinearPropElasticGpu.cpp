@@ -104,15 +104,15 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<doub
   modelRegDts_sigmazz->scale(2.0*_fdParamElastic->_dtw);
   #pragma omp parallel for collapse(2)
   for(int is = 0; is < _nSourcesRegXGrid; is++){ //loop over number of reg sources x grid
-	for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
-	  (*modelRegDts_vx->_mat)[is][it] *= _fdParamElastic->_rhoxDtw[(_sourcesXGrid->getRegPosUnique())[is]];
-	}
+		for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
+	  		(*modelRegDts_vx->_mat)[is][it] *= _fdParamElastic->_rhoxDtw[(_sourcesXGrid->getRegPosUnique())[is]];
+		}
   }
   #pragma omp parallel for collapse(2)
   for(int is = 0; is < _nSourcesRegZGrid; is++){ //loop over number of reg sources z grid
-	for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
-	  (*modelRegDts_vz->_mat)[is][it] *= _fdParamElastic->_rhozDtw[(_sourcesZGrid->getRegPosUnique())[is]];
-	}
+		for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
+	  		(*modelRegDts_vz->_mat)[is][it] *= _fdParamElastic->_rhozDtw[(_sourcesZGrid->getRegPosUnique())[is]];
+		}
   }
   modelRegDts_sigmaxz->scale(2.0*_fdParamElastic->_dtw);
 

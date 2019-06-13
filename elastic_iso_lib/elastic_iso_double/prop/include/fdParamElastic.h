@@ -37,10 +37,10 @@ class fdParamElastic{
 
 		axis _timeAxisCoarse, _timeAxisFine, _zAxis, _xAxis, _extAxis, _wavefieldCompAxis;
 
-    // Precomputed scaling dtw / rho_x , dtw / rho_z , (lambda + 2*mu) * dtw , lambda * dtw , mu_xz * dtw
-    std::shared_ptr<double2DReg> _rhoxDtwReg, _rhozDtwReg, _lamb2MuDtwReg, _lambDtwReg, _muxzDtwReg;
-    //pointers to double arrays holding values. These are later passed to the device.
-    double *_rhoxDtw,*_rhozDtw,*_lamb2MuDtw,*_lambDtw,*_muxzDtw;
+        // Precomputed scaling dtw / rho_x , dtw / rho_z , (lambda + 2*mu) * dtw , lambda * dtw , mu_xz * dtw
+        std::shared_ptr<double2DReg> _rhoxDtwReg, _rhozDtwReg, _lamb2MuDtwReg, _lambDtwReg, _muxzDtwReg;
+        //pointers to double arrays holding values. These are later passed to the device.
+        double *_rhoxDtw,*_rhozDtw,*_lamb2MuDtw,*_lambDtw,*_muxzDtw;
 
 		//double *_reflectivityScale;
 		double _errorTolerance;
@@ -49,7 +49,7 @@ class fdParamElastic{
 		double _ots, _dts, _otw, _dtw;
 		double _Courant, _dispersionRatio;
 		int _nz, _nx;
-    const int _nwc=5;
+        const int _nwc=5;
 		int _zPadMinus, _zPadPlus, _xPadMinus, _xPadPlus, _zPad, _xPad, _minPad;
 		double _dz, _dx, _oz, _ox, _fMax;
 		int _saveWavefield, _blockSize, _fat;

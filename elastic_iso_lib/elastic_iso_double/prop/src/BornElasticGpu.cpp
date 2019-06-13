@@ -22,11 +22,11 @@ BornElasticGpu::BornElasticGpu(std::shared_ptr<fdParamElastic> fdParamElastic, s
 
 	/// Alocate on GPUs
 	allocateBornElasticGpu(_fdParamElastic->_rhoxDtw,
-														  _fdParamElastic->_rhozDtw,
-															_fdParamElastic->_lamb2MuDtw,
-															_fdParamElastic->_lambDtw,
-															_fdParamElastic->_muxzDtw,
-															_iGpu, _iGpuId, _useStreams);
+						   _fdParamElastic->_rhozDtw,
+						   _fdParamElastic->_lamb2MuDtw,
+						   _fdParamElastic->_lambDtw,
+						   _fdParamElastic->_muxzDtw,
+						   _iGpu, _iGpuId, _useStreams);
 	setAllWavefields(0); // By default, do not record the scattered wavefields
 }
 
@@ -70,7 +70,7 @@ void BornElasticGpu::forward(const bool add, const std::shared_ptr<double3DReg> 
 
 	}
 
-	//Getting to already staggered and scaled model perturbations
+	//Getting already staggered model perturbations
 	double *drhox_in = model->getVals();
 	double *drhoz_in = model->getVals()+_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
 	double *dlame_in = model->getVals()+2*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
@@ -156,7 +156,7 @@ void BornElasticGpu::adjoint(const bool add, const std::shared_ptr<double3DReg> 
 	_receiversCenterGrid->adjoint(false, dataRegDts_sigmazz, dataTemp_sigmazz);
 	_receiversXZGrid->adjoint(false, dataRegDts_sigmaxz, dataTemp_sigmaxz);
 
-	//Getting to already staggered and scaled model perturbations
+	//Getting model perturbations pointers
 	double *drhox_in = model->getVals();
 	double *drhoz_in = model->getVals()+_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
 	double *dlame_in = model->getVals()+2*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);

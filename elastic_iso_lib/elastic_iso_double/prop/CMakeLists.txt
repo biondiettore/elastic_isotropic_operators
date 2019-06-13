@@ -13,12 +13,13 @@ set(SOURCE_NL ${SRC_DIR}/fdParamElastic.cpp
               ${SRC_DIR}/nonlinearPropElasticGpu.cpp
               ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
               ${SRC_DIR}/spaceInterpGpu.cpp
-           # ${SRC_DIR}/spaceSincInterpGpu.cpp
+              # ${SRC_DIR}/spaceSincInterpGpu.cpp
               ${SRC_DIR}/interpTimeLinTbb.cpp
-         	  ${SRC_DIR}/stagger.cpp)
+         	    ${SRC_DIR}/stagger.cpp)
 
 set(SOURCE_BORN ${SRC_DIR}/BornElasticGpuFunctions.cu
-                ${SRC_DIR}/BornElasticGpu.cpp)
+                ${SRC_DIR}/BornElasticGpu.cpp
+							  ${SRC_DIR}/BornElasticShotsGpu.cpp)
 
 #Executables to be compiled
 # set(EXECS  ${SRC_DIR}/nonlinearPropElasticShotsGpuMain.cpp)
