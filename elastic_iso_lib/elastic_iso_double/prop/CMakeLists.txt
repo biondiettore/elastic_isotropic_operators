@@ -9,15 +9,16 @@ include_directories(include)
 #Files to be compiled
 set(SRC_DIR src)
 set(SOURCE_NL ${SRC_DIR}/fdParamElastic.cpp
-           ${SRC_DIR}/nonlinearPropElasticShotsGpu.cpp
-           ${SRC_DIR}/nonlinearPropElasticGpu.cpp
-           ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
-           ${SRC_DIR}/spaceInterpGpu.cpp
+              ${SRC_DIR}/nonlinearPropElasticShotsGpu.cpp
+              ${SRC_DIR}/nonlinearPropElasticGpu.cpp
+              ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
+              ${SRC_DIR}/spaceInterpGpu.cpp
            # ${SRC_DIR}/spaceSincInterpGpu.cpp
-           ${SRC_DIR}/interpTimeLinTbb.cpp
-         	 ${SRC_DIR}/stagger.cpp)
+              ${SRC_DIR}/interpTimeLinTbb.cpp
+         	  ${SRC_DIR}/stagger.cpp)
 
-set(SOURCE_BORN ${SRC_DIR}/BornElasticGpuFunctions.cu)
+set(SOURCE_BORN ${SRC_DIR}/BornElasticGpuFunctions.cu
+                ${SRC_DIR}/BornElasticGpu.cpp)
 
 #Executables to be compiled
 # set(EXECS  ${SRC_DIR}/nonlinearPropElasticShotsGpuMain.cpp)
@@ -40,11 +41,11 @@ set(HEADERS ${INC_DIR}/fdParamElastic.h
 
 #SEP LIBRARY DIRECTORIES
 link_directories(${Generic-cpp_BINARY_DIR}
-				 ${hypercube_BINARY_DIR}
-				 ${buffers-lib_BINARY_DIR}
-				 ${json_BINARY_DIR}
-				 ${sepVector-lib_BINARY_DIR}
-				 ${SEPlib_LIBDIR}
+                 ${hypercube_BINARY_DIR}
+                 ${buffers-lib_BINARY_DIR}
+                 ${json_BINARY_DIR}
+                 ${sepVector-lib_BINARY_DIR}
+                 ${SEPlib_LIBDIR}
 )
 
 #Compiling the project library

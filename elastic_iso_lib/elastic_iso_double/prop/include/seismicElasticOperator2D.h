@@ -35,8 +35,9 @@ class seismicElasticOperator2D : public Operator <V1, V2> {
 		int _iGpu, _nGpu, _iGpuId;
 		std::shared_ptr<interpTimeLinTbb> _timeInterp;
 
-    //these variables hold all five compnenets of elastic source signal. Should be a 3d reg
-		std::shared_ptr<V2> _sourcesSignals, _sourcesSignalsRegDts, _sourcesSignalsRegDtsDt2, _sourcesSignalsRegDtwDt2, _sourcesSignalsRegDtw;
+    //these variables hold all five components of elastic source signal. Should be a 3d reg
+		std::shared_ptr<V2> _sourcesSignals;
+		std::shared_ptr<double2DReg> _sourceRegDtw_vx, _sourceRegDtw_vz, _sourceRegDtw_sigmaxx, _sourceRegDtw_sigmazz, _sourceRegDtw_sigmaxz;
 
 	public:
 
@@ -56,9 +57,6 @@ class seismicElasticOperator2D : public Operator <V1, V2> {
 			std::shared_ptr<spaceInterpGpu> receiversCenterGrid, std::shared_ptr<spaceInterpGpu> receiversXGrid, std::shared_ptr<spaceInterpGpu> receiversZGrid, std::shared_ptr<spaceInterpGpu> receiversXZGrid,
 			const std::shared_ptr<V1> model, const std::shared_ptr<V2> data); // Nonlinear
 		//void setAcquisition(std::shared_ptr<spaceInterpGpu> sources, std::shared_ptr<V2> sourcesSignals, std::shared_ptr<spaceInterpGpu> receivers, const std::shared_ptr<V1> model, const std::shared_ptr<V2> data); // Born + Tomo + Wemva
-
-		// Scaling
-		//void scaleSeismicSource(const std::shared_ptr<spaceInterpGpu> seismicSource, std::shared_ptr<V2> signal, const std::shared_ptr<fdParamElastic> parObj) const;
 
 		// Other mutators
 		void setGpuNumber(int iGpu, int iGpuId){_iGpu = iGpu; _iGpuId = iGpuId;}

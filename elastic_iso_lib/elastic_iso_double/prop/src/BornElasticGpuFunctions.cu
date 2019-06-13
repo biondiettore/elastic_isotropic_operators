@@ -10,6 +10,7 @@
 #include <ctime>
 #include <stdio.h>
 #include <assert.h>
+#include <stdexcept>
 
 
 /****************************************************************************************/
@@ -251,8 +252,8 @@ void initBornGpu(double dz, double dx, int nz, int nx, int nts, double dts, int 
 		cuda_call(cudaMemcpyToSymbol(dev_nts, &nts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Copy number of coarse time parameters to device
 		cuda_call(cudaMemcpyToSymbol(dev_sub, &sub, sizeof(int), 0, cudaMemcpyHostToDevice));
 		cuda_call(cudaMemcpyToSymbol(dev_ntw, &host_ntw, sizeof(int), 0, cudaMemcpyHostToDevice)); // Copy number of coarse time parameters to device
-        double inv_dts = 1.0/dts;
-        cuda_call(cudaMemcpyToSymbol(dev_dts_inv, &inv_dts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Inverse of the time-source sampling
+    double inv_dts = 1.0/dts;
+    cuda_call(cudaMemcpyToSymbol(dev_dts_inv, &inv_dts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Inverse of the time-source sampling
 
 }
 
@@ -447,17 +448,6 @@ void wavefieldInitializeOnGpu(int iGpu){
 		cuda_call(cudaMemset(dev_p1_sigmaxx[iGpu], 0, host_nz*host_nx*sizeof(double)));
 		cuda_call(cudaMemset(dev_p1_sigmazz[iGpu], 0, host_nz*host_nx*sizeof(double)));
 		cuda_call(cudaMemset(dev_p1_sigmaxz[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		//Born specific slices
-		cuda_call(cudaMemset(dev_ssVxLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssVxRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssVzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssVzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssSigmaxxLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssSigmaxxRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssSigmazzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssSigmazzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssSigmaxzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
-		cuda_call(cudaMemset(dev_ssSigmaxzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
 }
 
 void modelCopyToGpu(double *drhox, double *drhoz, double *dlame, double *dmu, double *dmuxz,int iGpu){
@@ -531,6 +521,99 @@ void switchPointers(int iGpu){
 		dev_temp1[iGpu] = NULL;
 }
 
+void switchPointersSecondarySource(int iGpu){
+		dev_temp1[iGpu] 	= dev_ssVxLeft[iGpu];
+		dev_ssVxLeft[iGpu] 	= dev_ssVxRight[iGpu];
+		dev_ssVxRight[iGpu] = dev_temp1[iGpu];
+
+		dev_temp1[iGpu] 	= dev_ssVzLeft[iGpu];
+		dev_ssVzLeft[iGpu] 	= dev_ssVzRight[iGpu];
+		dev_ssVzRight[iGpu] = dev_temp1[iGpu];
+
+		dev_temp1[iGpu] 		= dev_ssSigmaxxLeft[iGpu];
+		dev_ssSigmaxxLeft[iGpu] = dev_ssSigmaxxRight[iGpu];
+		dev_ssSigmaxxRight[iGpu]= dev_temp1[iGpu];
+
+		dev_temp1[iGpu] 		= dev_ssSigmazzLeft[iGpu];
+		dev_ssSigmazzLeft[iGpu] = dev_ssSigmazzRight[iGpu];
+		dev_ssSigmazzRight[iGpu]= dev_temp1[iGpu];
+
+		dev_temp1[iGpu] 		= dev_ssSigmaxzLeft[iGpu];
+		dev_ssSigmaxzLeft[iGpu] = dev_ssSigmaxzRight[iGpu];
+		dev_ssSigmaxzRight[iGpu]= dev_temp1[iGpu];
+
+		dev_temp1[iGpu] = NULL;
+}
+
+void SecondarySourceInitializeOnGpu(int iGpu){
+	//Born specific slices
+	cuda_call(cudaMemset(dev_ssVxLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssVxRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssVzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssVzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssSigmaxxLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssSigmaxxRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssSigmazzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssSigmazzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssSigmaxzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	cuda_call(cudaMemset(dev_ssSigmaxzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+}
+
+void launchFwdRecordInterpDataKernels(int nblockDataCenterGrid, int nblockDataXGrid, int nblockDataZGrid, int nblockDataXZGrid, int its, int it2, int iGpu){
+		kernel_exec(ker_record_interp_data_centerGrid<<<nblockDataCenterGrid, BLOCK_SIZE_DATA>>>( dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_dataRegDts_sigmaxx[iGpu], dev_dataRegDts_sigmazz[iGpu], its, it2, dev_receiversPositionRegCenterGrid[iGpu]));
+		kernel_exec(ker_record_interp_data_xGrid<<<nblockDataXGrid, BLOCK_SIZE_DATA>>>( dev_p0_vx[iGpu], dev_dataRegDts_vx[iGpu], its, it2, dev_receiversPositionRegXGrid[iGpu]));
+
+		kernel_exec(ker_record_interp_data_zGrid<<<nblockDataZGrid, BLOCK_SIZE_DATA>>>( dev_p0_vz[iGpu], dev_dataRegDts_vz[iGpu], its, it2, dev_receiversPositionRegZGrid[iGpu]));
+
+		kernel_exec(ker_record_interp_data_xzGrid<<<nblockDataXZGrid, BLOCK_SIZE_DATA>>>( dev_p0_sigmaxz[iGpu], dev_dataRegDts_sigmaxz[iGpu], its, it2, dev_receiversPositionRegXZGrid[iGpu]));
+}
+
+void modelSetOnGpu(int iGpu){
+  cuda_call(cudaMemset(dev_drhox[iGpu], 0, host_nz*host_nx*sizeof(double)));
+  cuda_call(cudaMemset(dev_drhoz[iGpu], 0, host_nz*host_nx*sizeof(double)));
+  cuda_call(cudaMemset(dev_dlame[iGpu], 0, host_nz*host_nx*sizeof(double)));
+  cuda_call(cudaMemset(dev_dmu[iGpu], 0, host_nz*host_nx*sizeof(double)));
+  cuda_call(cudaMemset(dev_dmuxz[iGpu], 0, host_nz*host_nx*sizeof(double)));
+}
+
+//Functions specific to Adjoing operator
+void setupAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *sourceRegDtw_sigmaxx, double *sourceRegDtw_sigmazz, double *sourceRegDtw_sigmaxz, double *dataRegDts_vx, double *dataRegDts_vz, double *dataRegDts_sigmaxx, double *dataRegDts_sigmazz, double *dataRegDts_sigmaxz, int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid, int *sourcesPositionRegXGrid, int nSourcesRegXGrid, int *sourcesPositionRegZGrid, int nSourcesRegZGrid, int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid, int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid, int *receiversPositionRegXGrid, int nReceiversRegXGrid, int *receiversPositionRegZGrid, int nReceiversRegZGrid, int *receiversPositionRegXZGrid, int nReceiversRegXZGrid, int iGpu, int iGpuId){
+		// Set device number on GPU cluster
+		cudaSetDevice(iGpuId);
+
+	//allocate and copy src and rec geometry to gpu
+		srcRecAllocateAndCopyToGpu(sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu);
+
+		// Source - wavelets for each wavefield component. Allocate and copy to gpu
+		sourceAllocateGpu(nSourcesRegCenterGrid, nSourcesRegXGrid, nSourcesRegZGrid, nSourcesRegXZGrid, iGpu);
+		sourceCopyToGpu(sourceRegDtw_vx, sourceRegDtw_vz, sourceRegDtw_sigmaxx, sourceRegDtw_sigmazz, sourceRegDtw_sigmaxz, nSourcesRegCenterGrid, nSourcesRegXGrid, nSourcesRegZGrid, nSourcesRegXZGrid, iGpu);
+
+		// Data - data recordings for each wavefield component. Allocate and initialize on gpu
+		dataAllocateGpu(nReceiversRegCenterGrid, nReceiversRegXGrid, nReceiversRegZGrid, nReceiversRegXZGrid, iGpu);
+		dataCopyToGpu(dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, nReceiversRegCenterGrid, nReceiversRegXGrid, nReceiversRegZGrid, nReceiversRegXZGrid, iGpu);
+
+		//initailize wavefield slices to zero
+		wavefieldInitializeOnGpu(iGpu);
+
+    //Initialize model perturbations to zero
+    modelSetOnGpu(iGpu);
+}
+
+void launchAdjStepKernels(dim3 dimGrid, dim3 dimBlock, int iGpu){
+		kernel_exec(ker_step_adj<<<dimGrid, dimBlock>>>(dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu], dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_rhoxDtw[iGpu], dev_rhozDtw[iGpu], dev_lamb2MuDtw[iGpu], dev_lambDtw[iGpu], dev_muxzDtw[iGpu]));
+}
+
+void launchAdjInterpInjectDataKernels(int nblockDataCenterGrid, int nblockDataXGrid, int nblockDataZGrid, int nblockDataXZGrid, int its, int it2, int iGpu){
+		kernel_exec(ker_interp_inject_data_centerGrid<<<nblockDataCenterGrid, BLOCK_SIZE_DATA>>>( dev_dataRegDts_sigmaxx[iGpu], dev_dataRegDts_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], its, it2, dev_receiversPositionRegCenterGrid[iGpu]));
+
+		kernel_exec(ker_interp_inject_data_xGrid<<<nblockDataXGrid, BLOCK_SIZE_DATA>>>(dev_dataRegDts_vx[iGpu], dev_p0_vx[iGpu], its, it2, dev_receiversPositionRegXGrid[iGpu]));
+
+
+		kernel_exec(ker_interp_inject_data_zGrid<<<nblockDataZGrid, BLOCK_SIZE_DATA>>>(dev_dataRegDts_vz[iGpu], dev_p0_vz[iGpu], its, it2, dev_receiversPositionRegZGrid[iGpu]));
+		kernel_exec(ker_interp_inject_data_xzGrid<<<nblockDataXZGrid, BLOCK_SIZE_DATA>>>(dev_dataRegDts_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], its, it2, dev_receiversPositionRegXZGrid[iGpu]));
+
+}
+
 /****************************************************************************************/
 /*********************************** Born forward operator ******************************/
 /****************************************************************************************/
@@ -552,6 +635,12 @@ void BornShotsFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 		int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 		dim3 dimGrid(nblockx, nblocky);
 		dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+
+		// Extraction grid size
+		int nblockDataCenterGrid = (nReceiversRegCenterGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+		int nblockDataXGrid = (nReceiversRegXGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+		int nblockDataZGrid = (nReceiversRegZGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+		int nblockDataXZGrid = (nReceiversRegXZGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
 
 		if(useStreams == 0){
 			//Born operator w/o the use of Streams
@@ -577,9 +666,220 @@ void BornShotsFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 							switchPointers(iGpu);
 					}
 			}
+			/************************** Scattered wavefield computation *************************/
+			// Initialize time slices on device
+			wavefieldInitializeOnGpu(iGpu);
+		  SecondarySourceInitializeOnGpu(iGpu);
+
+			// Copy model perturbations to device (done within setupBornFwdGpu function)
+			//Note the perturbations have been already scaled by the wave-equation source scaling factor outside of this function
+
+			// Compute secondary source for first coarse time index (its = 0)
+			kernel_exec(imagingElaFwdGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxLeft[iGpu], dev_ssVzLeft[iGpu], dev_ssSigmaxxLeft[iGpu], dev_ssSigmazzLeft[iGpu], dev_ssSigmaxzLeft[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], 0));
+
+			// Start propagating scattered wavefield
+			for (int its = 0; its < host_nts-1; its++){
+
+				// Compute secondary source for first coarse time index (its+1)
+				kernel_exec(imagingElaFwdGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxRight[iGpu], dev_ssVzRight[iGpu], dev_ssSigmaxxRight[iGpu], dev_ssSigmazzRight[iGpu], dev_ssSigmaxzRight[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], 0));
+
+				for (int it2 = 1; it2 < host_sub+1; it2++){
+
+					// Step forward
+					launchFwdStepKernels(dimGrid, dimBlock, iGpu);
+
+					// Inject secondary source sample itw-1 in each component
+					kernel_exec(injectSecondarySource<<<dimGrid, dimBlock>>>(dev_ssVxLeft[iGpu], dev_ssVxRight[iGpu], dev_p0_vx[iGpu], it2-1));
+					kernel_exec(injectSecondarySource<<<dimGrid, dimBlock>>>(dev_ssVzLeft[iGpu], dev_ssVzRight[iGpu], dev_p0_vz[iGpu], it2-1));
+					kernel_exec(injectSecondarySource<<<dimGrid, dimBlock>>>(dev_ssSigmaxxLeft[iGpu], dev_ssSigmaxxRight[iGpu], dev_p0_sigmaxx[iGpu], it2-1));
+					kernel_exec(injectSecondarySource<<<dimGrid, dimBlock>>>(dev_ssSigmazzLeft[iGpu], dev_ssSigmazzRight[iGpu], dev_p0_sigmazz[iGpu], it2-1));
+					kernel_exec(injectSecondarySource<<<dimGrid, dimBlock>>>(dev_ssSigmaxzLeft[iGpu], dev_ssSigmaxzRight[iGpu], dev_p0_sigmaxz[iGpu], it2-1));
+
+					// Damp wavefields
+					launchDampCosineEdgeKernels(dimGrid, dimBlock, iGpu);
+
+					// Extract data
+					launchFwdRecordInterpDataKernels(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
+
+					// Switch pointers
+					switchPointers(iGpu);
+
+				}
+
+				// Switch pointers for secondary source and setting right slices to zero
+				switchPointersSecondarySource(iGpu);
+				cuda_call(cudaMemset(dev_ssVxRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+				cuda_call(cudaMemset(dev_ssVzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+				cuda_call(cudaMemset(dev_ssSigmaxxRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+				cuda_call(cudaMemset(dev_ssSigmazzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+				cuda_call(cudaMemset(dev_ssSigmaxzRight[iGpu], 0, host_nz*host_nx*sizeof(double)));
+
+			}
+
+			// Copy data back to host
+			cuda_call(cudaMemcpy(dataRegDts_vx, dev_dataRegDts_vx[iGpu], nReceiversRegXGrid*host_nts*sizeof(double), cudaMemcpyDeviceToHost));
+			cuda_call(cudaMemcpy(dataRegDts_vz, dev_dataRegDts_vz[iGpu], nReceiversRegZGrid*host_nts*sizeof(double), cudaMemcpyDeviceToHost));
+			cuda_call(cudaMemcpy(dataRegDts_sigmaxx, dev_dataRegDts_sigmaxx[iGpu], nReceiversRegCenterGrid*host_nts*sizeof(double), cudaMemcpyDeviceToHost));
+			cuda_call(cudaMemcpy(dataRegDts_sigmazz, dev_dataRegDts_sigmazz[iGpu], nReceiversRegCenterGrid*host_nts*sizeof(double), cudaMemcpyDeviceToHost));
+			cuda_call(cudaMemcpy(dataRegDts_sigmaxz, dev_dataRegDts_sigmaxz[iGpu], nReceiversRegXZGrid*host_nts*sizeof(double), cudaMemcpyDeviceToHost));
+
+			// Deallocate all slices
+			cuda_call(cudaFree(dev_sourceRegDtw_vx[iGpu]));
+			cuda_call(cudaFree(dev_sourceRegDtw_vz[iGpu]));
+			cuda_call(cudaFree(dev_sourceRegDtw_sigmaxx[iGpu]));
+			cuda_call(cudaFree(dev_sourceRegDtw_sigmazz[iGpu]));
+			cuda_call(cudaFree(dev_sourceRegDtw_sigmaxz[iGpu]));
+
+			cuda_call(cudaFree(dev_dataRegDts_vx[iGpu]));
+			cuda_call(cudaFree(dev_dataRegDts_vz[iGpu]));
+			cuda_call(cudaFree(dev_dataRegDts_sigmaxx[iGpu]));
+			cuda_call(cudaFree(dev_dataRegDts_sigmazz[iGpu]));
+			cuda_call(cudaFree(dev_dataRegDts_sigmaxz[iGpu]));
+
+			cuda_call(cudaFree(dev_sourcesPositionRegCenterGrid[iGpu]));
+			cuda_call(cudaFree(dev_sourcesPositionRegXGrid[iGpu]));
+			cuda_call(cudaFree(dev_sourcesPositionRegZGrid[iGpu]));
+			cuda_call(cudaFree(dev_sourcesPositionRegXZGrid[iGpu]));
+			cuda_call(cudaFree(dev_receiversPositionRegCenterGrid[iGpu]));
+			cuda_call(cudaFree(dev_receiversPositionRegXGrid[iGpu]));
+			cuda_call(cudaFree(dev_receiversPositionRegZGrid[iGpu]));
+			cuda_call(cudaFree(dev_receiversPositionRegXZGrid[iGpu]));
 
 		} else {
 			//Born operator w/ the use of Streams
+			throw std::logic_error( "Error! Born forward operator not implemented yet!" );
 
 		}
+}
+
+/****************************************************************************************/
+/*********************************** Born adjoint operator ******************************/
+/****************************************************************************************/
+void BornShotsAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *sourceRegDtw_sigmaxx, double *sourceRegDtw_sigmazz, double *sourceRegDtw_sigmaxz, double *drhox, double *drhoz, double *dlame, double *dmu, double *dmuxz, double *dataRegDts_vx, double *dataRegDts_vz, double *dataRegDts_sigmaxx, double *dataRegDts_sigmazz, double *dataRegDts_sigmaxz, int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid, int *sourcesPositionRegXGrid, int nSourcesRegXGrid, int *sourcesPositionRegZGrid, int nSourcesRegZGrid, int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid, int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid, int *receiversPositionRegXGrid, int nReceiversRegXGrid, int *receiversPositionRegZGrid, int nReceiversRegZGrid, int *receiversPositionRegXZGrid, int nReceiversRegXZGrid, int iGpu, int iGpuId, int surfaceCondition, int useStreams){
+
+	//setup:                a) src and receiver positions allocation and copying to device
+	//                      b) allocate and initialize (0) model (arrays for sources for each wavefield) to device
+	//                      c) allocate and copy data (recevier recordings arrays) to device
+	//                      d) allocate and copy wavefield time slices to gpu
+	setupAdjGpu(sourceRegDtw_vx, sourceRegDtw_vz, sourceRegDtw_sigmaxx, sourceRegDtw_sigmazz, sourceRegDtw_sigmaxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId);
+
+	//Initialize model perturbations (for allowing add = true from calling function)
+	modelCopyToGpu(drhox,drhoz,dlame,dmu,dmuxz,iGpu);
+
+	//Finite-difference grid and blocks
+	int nblockx;
+	if(surfaceCondition==0){
+		nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
+	}
+	else if(surfaceCondition==1){
+		nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
+	}
+	int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
+	dim3 dimGrid(nblockx, nblocky);
+	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+
+	// Extraction grid size
+	int nblockDataCenterGrid = (nReceiversRegCenterGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+	int nblockDataXGrid = (nReceiversRegXGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+	int nblockDataZGrid = (nReceiversRegZGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+	int nblockDataXZGrid = (nReceiversRegXZGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+
+	if(useStreams == 0){
+		//Born operator w/o the use of Streams
+		/************************** Source wavefield computation ****************************/
+		for (int its = 0; its < host_nts-1; its++){
+				for (int it2 = 1; it2 < host_sub+1; it2++){
+						// Compute fine time-step index
+						int itw = its * host_sub + it2;
+
+						// Step forward
+						launchFwdStepKernels(dimGrid, dimBlock, iGpu);
+						// Inject source
+						launchFwdInjectSourceKernels(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
+
+						// Damp wavefields
+						launchDampCosineEdgeKernels(dimGrid, dimBlock, iGpu);
+
+						// Extract wavefield components
+						kernel_exec(interpWavefieldSingleComp<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_p0_vx[iGpu], its, it2));
+						kernel_exec(interpWavefieldSingleComp<<<dimGrid, dimBlock>>>(dev_wavefieldVz[iGpu], dev_p0_vz[iGpu], its, it2));
+
+						// Switch pointers
+						switchPointers(iGpu);
+				}
+		}
+
+		/************************** Receiver wavefield computation **************************/
+		// Initialize time slices on device
+		wavefieldInitializeOnGpu(iGpu);
+		SecondarySourceInitializeOnGpu(iGpu);
+
+	    // Start propagation
+	    for (int its = host_nts-2; its > -1; its--){
+	        for (int it2 = host_sub-1; it2 > -1; it2--){
+	            // Step back in time
+	            launchAdjStepKernels(dimGrid, dimBlock, iGpu);
+	            // Inject data
+	            launchAdjInterpInjectDataKernels(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
+	            // Damp wavefield
+	            launchDampCosineEdgeKernels(dimGrid, dimBlock, iGpu);
+	            // Interpolate and record time slices of receiver wavefield at coarse sampling (no scaling applied yet)
+				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssVxLeft[iGpu], dev_ssVxRight[iGpu], dev_p0_vx[iGpu], it2));
+				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssVzLeft[iGpu], dev_ssVzRight[iGpu], dev_p0_vz[iGpu], it2));
+				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmaxxLeft[iGpu], dev_ssSigmaxxRight[iGpu], dev_p0_sigmaxx[iGpu], it2));
+				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmazzLeft[iGpu], dev_ssSigmazzRight[iGpu], dev_p0_sigmazz[iGpu], it2));
+				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmaxzLeft[iGpu], dev_ssSigmaxzRight[iGpu], dev_p0_sigmaxz[iGpu], it2));
+
+	            // Switch pointers
+	            switchPointers(iGpu);
+	          }
+
+			  // Apply extended imaging condition for its+1
+			  kernel_exec(imagingElaAdjGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxRight[iGpu], dev_ssVzRight[iGpu], dev_ssSigmaxxRight[iGpu], dev_ssSigmazzRight[iGpu], dev_ssSigmaxzRight[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], its));
+			  // Switch pointers for secondary source and setting right slices to zero
+			  switchPointersSecondarySource(iGpu);
+			  cuda_call(cudaMemset(dev_ssVxLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+			  cuda_call(cudaMemset(dev_ssVzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+			  cuda_call(cudaMemset(dev_ssSigmaxxLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+			  cuda_call(cudaMemset(dev_ssSigmazzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+			  cuda_call(cudaMemset(dev_ssSigmaxzLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
+	    }// Finished main loop - we still have to compute imaging condition for its=0
+
+		// Apply extended imaging condition for its=0
+		kernel_exec(imagingElaAdjGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxRight[iGpu], dev_ssVzRight[iGpu], dev_ssSigmaxxRight[iGpu], dev_ssSigmazzRight[iGpu], dev_ssSigmaxzRight[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], 0));
+
+		// Copy model back to host
+		cuda_call(cudaMemcpy(drhox, dev_drhox[iGpu], host_nz*host_nx*sizeof(double), cudaMemcpyDeviceToHost));
+		cuda_call(cudaMemcpy(drhoz, dev_drhoz[iGpu], host_nz*host_nx*sizeof(double), cudaMemcpyDeviceToHost));
+		cuda_call(cudaMemcpy(dlame, dev_dlame[iGpu], host_nz*host_nx*sizeof(double), cudaMemcpyDeviceToHost));
+		cuda_call(cudaMemcpy(dmu, dev_dmu[iGpu], host_nz*host_nx*sizeof(double), cudaMemcpyDeviceToHost));
+		cuda_call(cudaMemcpy(dmuxz, dev_dmuxz[iGpu], host_nz*host_nx*sizeof(double), cudaMemcpyDeviceToHost));
+
+		// Deallocate all slices
+		cuda_call(cudaFree(dev_sourceRegDtw_vx[iGpu]));
+		cuda_call(cudaFree(dev_sourceRegDtw_vz[iGpu]));
+		cuda_call(cudaFree(dev_sourceRegDtw_sigmaxx[iGpu]));
+		cuda_call(cudaFree(dev_sourceRegDtw_sigmazz[iGpu]));
+		cuda_call(cudaFree(dev_sourceRegDtw_sigmaxz[iGpu]));
+
+		cuda_call(cudaFree(dev_dataRegDts_vx[iGpu]));
+		cuda_call(cudaFree(dev_dataRegDts_vz[iGpu]));
+		cuda_call(cudaFree(dev_dataRegDts_sigmaxx[iGpu]));
+		cuda_call(cudaFree(dev_dataRegDts_sigmazz[iGpu]));
+		cuda_call(cudaFree(dev_dataRegDts_sigmaxz[iGpu]));
+
+		cuda_call(cudaFree(dev_sourcesPositionRegCenterGrid[iGpu]));
+		cuda_call(cudaFree(dev_sourcesPositionRegXGrid[iGpu]));
+		cuda_call(cudaFree(dev_sourcesPositionRegZGrid[iGpu]));
+		cuda_call(cudaFree(dev_sourcesPositionRegXZGrid[iGpu]));
+		cuda_call(cudaFree(dev_receiversPositionRegCenterGrid[iGpu]));
+		cuda_call(cudaFree(dev_receiversPositionRegXGrid[iGpu]));
+		cuda_call(cudaFree(dev_receiversPositionRegZGrid[iGpu]));
+		cuda_call(cudaFree(dev_receiversPositionRegXZGrid[iGpu]));
+
+	} else {
+		//Born operator w/ the use of Streams
+		throw std::logic_error( "Error! Born adjoint operator not implemented yet!" );
+
+	}
 }

@@ -20,11 +20,11 @@ nonlinearPropElasticGpu::nonlinearPropElasticGpu(std::shared_ptr<fdParamElastic>
 
 	/// Alocate on GPUs
 	allocateNonlinearElasticGpu(_fdParamElastic->_rhoxDtw,
-												_fdParamElastic->_rhozDtw,
-												_fdParamElastic->_lamb2MuDtw,
-												_fdParamElastic->_lambDtw,
-												_fdParamElastic->_muxzDtw,
-												_iGpu, iGpuId);
+														  _fdParamElastic->_rhozDtw,
+															_fdParamElastic->_lamb2MuDtw,
+															_fdParamElastic->_lambDtw,
+															_fdParamElastic->_muxzDtw,
+															_iGpu, iGpuId);
 	setAllWavefields(0); // By default, do not record the scattered wavefields
 }
 
@@ -34,8 +34,8 @@ void nonlinearPropElasticGpu::setAllWavefields(int wavefieldFlag){
 
 bool nonlinearPropElasticGpu::checkParfileConsistency(const std::shared_ptr<SEP::double3DReg> model, const std::shared_ptr<SEP::double3DReg> data) const{
 
-	if (_fdParamElastic->checkParfileConsistencyTime(data, 1, "Data file") != true) {return false;} // Check data time axis
-	if (_fdParamElastic->checkParfileConsistencyTime(model,1, "Model file") != true) {return false;}; // Check model time axis
+	if (_fdParamElastic->checkParfileConsistencyTime(data, 1) != true) {return false;} // Check data time axis
+	if (_fdParamElastic->checkParfileConsistencyTime(model,1) != true) {return false;}; // Check model time axis
 
 	return true;
 }
@@ -62,7 +62,6 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<doub
   std::shared_ptr<double2DReg> modelRegDtw_sigmazz(new double2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
   std::shared_ptr<double2DReg> modelRegDtw_sigmaxz(new double2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
 
-  // std::shared_ptr<double2DReg> dataRegDtw(new double2DReg(_fdParamElastic->_ntw, _nReceiversReg));
   std::shared_ptr<double2DReg> dataRegDts_vx(new double2DReg(_fdParamElastic->_nts, _nReceiversRegXGrid));
   std::shared_ptr<double2DReg> dataRegDts_vz(new double2DReg(_fdParamElastic->_nts, _nReceiversRegZGrid));
   std::shared_ptr<double2DReg> dataRegDts_sigmaxx(new double2DReg(_fdParamElastic->_nts, _nReceiversRegCenterGrid));
@@ -77,11 +76,6 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<doub
 
   if (!add){
 	  data->scale(0.0);
-	  modelTemp_vx -> scale(0.0);
-	  modelTemp_vz -> scale(0.0);
-	  modelTemp_sigmaxx -> scale(0.0);
-	  modelTemp_sigmazz -> scale(0.0);
-	  modelTemp_sigmaxz -> scale(0.0);
   } else {
 	  /* Copy the data to the temporary array */
 	  std::memcpy(dataTemp_vx->getVals(),data->getVals(), _nReceiversIrregXGrid*_fdParamElastic->_nts*sizeof(double) );
@@ -241,7 +235,6 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<double3DRe
 	std::shared_ptr<double2DReg> modelRegDtw_sigmazz(new double2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
 	std::shared_ptr<double2DReg> modelRegDtw_sigmaxz(new double2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
 
-	// std::shared_ptr<double2DReg> dataRegDtw(new double2DReg(_fdParamElastic->_ntw, _nReceiversReg));
 	std::shared_ptr<double2DReg> dataRegDts_vx(new double2DReg(_fdParamElastic->_nts, _nReceiversRegXGrid));
 	std::shared_ptr<double2DReg> dataRegDts_vz(new double2DReg(_fdParamElastic->_nts, _nReceiversRegZGrid));
 	std::shared_ptr<double2DReg> dataRegDts_sigmaxx(new double2DReg(_fdParamElastic->_nts, _nReceiversRegCenterGrid));

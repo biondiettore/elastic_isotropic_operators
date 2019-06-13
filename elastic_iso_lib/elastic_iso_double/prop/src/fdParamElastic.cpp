@@ -64,8 +64,8 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<double3DReg> elasticParam, 
 	_fat = _par->getInt("fat");
 	_minPad = std::min(_zPad, _xPad);
 	_saveWavefield = _par->getInt("saveWavefield", 0);
-	_alphaCos = par->getFloat("alphaCos", 0.99);
-	_errorTolerance = par->getFloat("errorTolerance", 0.000001);
+	_alphaCos = _par->getFloat("alphaCos", 0.99);
+	_errorTolerance = _par->getFloat("errorTolerance", 0.000001);
 
 	/***** Other parameters *****/
 
@@ -298,7 +298,7 @@ bool fdParamElastic::checkModelSize(){
 	}
 }
 
-bool fdParamElastic::checkParfileConsistencyTime(const std::shared_ptr<double3DReg> seismicTraces, int timeAxisIndex,  std::string fileToCheck) const {
+bool fdParamElastic::checkParfileConsistencyTime(const std::shared_ptr<double3DReg> seismicTraces, int timeAxisIndex) const {
 	if (_nts != seismicTraces->getHyper()->getAxis(timeAxisIndex).n) {std::cerr << "**** ERROR: nts not consistent with parfile ****" << std::endl; return false;}
 	if ( std::abs(_dts - seismicTraces->getHyper()->getAxis(timeAxisIndex).d) > _errorTolerance ) {std::cerr << "**** ERROR: dts not consistent with parfile ****" << std::endl; return false;}
 	if ( std::abs(_ots - seismicTraces->getHyper()->getAxis(timeAxisIndex).o) > _errorTolerance ) {std::cerr << "**** ERROR: ots not consistent with parfile ****" << std::endl; return false;}
