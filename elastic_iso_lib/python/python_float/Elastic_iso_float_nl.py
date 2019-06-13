@@ -133,17 +133,22 @@ def buildReceiversGeometry(parObject,elasticParam):
 	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
 
 	# receiver _zCoord and _xCoord
-	recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
-	zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
-	zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
-	zCoordFloatNd = zCoordFloat.getNdArray()
-	recAxisHorizontal=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
-	xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
-	xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
-	xCoordFloatNd = xCoordFloat.getNdArray()
-	for irec in range(nxReceiver):
-		zCoordFloatNd[irec] = oz + ozReceiver*dz + dzReceiver*dz*irec
-		xCoordFloatNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
+	recParFile = parObject.getString("recParFile","none")
+	if(recParFile != "none"):
+		xCoordFloatNd,zCoordFloatNd = parseRecParFile(recParFile)
+		
+	else:
+		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
+		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
+		zCoordFloatNd = zCoordFloat.getNdArray()
+		recAxisHorizontal=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
+		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
+		xCoordFloatNd = xCoordFloat.getNdArray()
+		for irec in range(nxReceiver):
+			zCoordFloatNd[irec] = oz + ozReceiver*dz + dzReceiver*dz*irec
+			xCoordFloatNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
 
 	for iRec in range(nRecGeom):
 		recVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
@@ -152,6 +157,28 @@ def buildReceiversGeometry(parObject,elasticParam):
 		recVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
 
 	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
+
+# Reads receiver x,y,z locations from parFile
+def parseRecParFile(recParFile):
+	nDevices = None
+	devCoords = []
+	with open(recParFile,"r") as fid:
+		for line in fid:
+			if("#" not in line):
+				lineCur = line.split()
+				if(len(lineCur)==1):
+					nDevices=float(lineCur[0])
+				elif(len(lineCur)==3):
+					lineCur[0] = float(lineCur[0])
+					lineCur[1] = float(lineCur[1])
+					lineCur[2] = float(lineCur[2])
+					devCoords.append(lineCur)
+				else:
+					raise ValueError("Error: Incorrectly formatted line, %s, in recParFile"%(lineCur))
+	if(nDevices != None):
+		if (len(devCoords) != nDevices): raise ValueError("ERROR: number of devices in parfile (%d) not the same as specified nDevices (%d)"%(len(a),nDevices))
+	devCoordsNdArray = np.asarray(devCoords)
+	return devCoordsNdArray[:,0],devCoordsNdArray[:,2]
 
 ############################### Nonlinear ######################################
 def nonlinearOpInitFloat(args):
