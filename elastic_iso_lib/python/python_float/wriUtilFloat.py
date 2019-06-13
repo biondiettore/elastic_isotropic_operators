@@ -56,11 +56,15 @@ def forcing_term_op_init(args):
 	output = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataFloat")
 	wavefieldStaggerOp=StaggerFloat.stagger_wfld(staggerDummyModel,output)
 
+	#scale
+	scaleOp = Op.scalingOp(output,1/(centerHyper.getAxis(1).d*centerHyper.getAxis(2).d))
+
 	#chain operators
 	spaceInterpMultiOp.setDomainRange(padTruncateDummyModel,input)
 	spaceInterpMultiOp = Op.Transpose(spaceInterpMultiOp)
 	PK_adj = Op.ChainOperator(spaceInterpMultiOp,padTruncateSourceOp)
 	SPK_adj = Op.ChainOperator(PK_adj,wavefieldStaggerOp)
+	CSPK_adj = Op.ChainOperator(SPK_adj,scaleOp)
 
 	#read in source
 	# waveletFloat = SepVector.getSepVector(SPK_adj.getDomain().getHyper(),storage="dataFloat")
@@ -75,9 +79,9 @@ def forcing_term_op_init(args):
 	for iShot in range(irregSourceAxis.n):
 		priorModelMat[:,:,iShot] = waveletSMatT
 
-	SPK_adj.forward(False,priorModel,priorData)
+	CSPK_adj.forward(False,priorModel,priorData)
 
-	return SPK_adj,priorData
+	return CSPK_adj,priorData
 
 #
 def data_extraction_op_init(args):

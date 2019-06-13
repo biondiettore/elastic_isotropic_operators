@@ -53,7 +53,7 @@ if __name__ == '__main__':
 	forcingTermOp,prior = wriUtilFloat.forcing_term_op_init(sys.argv)
 
 	# scale prior
-	prior.scale(1/(elasticParamFloat.getHyper().getAxis(1).d*elasticParamFloat.getHyper().getAxis(2).d))
+	# prior.scale(1/(elasticParamFloat.getHyper().getAxis(1).d*elasticParamFloat.getHyper().getAxis(2).d))
 
 	################################ DP Test ###################################
 	if (parObject.getInt("dp",0)==1):

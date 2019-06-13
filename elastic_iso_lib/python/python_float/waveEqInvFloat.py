@@ -19,6 +19,30 @@ import inversionUtils
 import wriUtilFloat
 from sys_util import logger
 
+class maskComp(Op.Operator):
+	"""Wrapper encapsulating PYBIND11 module"""
+
+	def __init__(self,domain,compKeep):
+		#Checking if getCpp is present
+		self.setDomainRange(domain,domain)
+		self.compKeep = compKeep
+		return
+
+	def forward(self,add,model,data):
+		self.checkDomainRange(model,data)
+		if(not add):
+			data.zero()
+		data.getNdArray()[:,compKeep,:,:] = data.getNdArray()[:,compKeep,:,:] + model.getNdArray()[:,compKeep,:,:]
+
+		return
+
+	def adjoint(self,add,model,data):
+		self.checkDomainRange(model,data)
+		self.forward(add,model,data)
+		return
+
+
+
 # Template for linearized waveform inversion workflow
 if __name__ == '__main__':
 
