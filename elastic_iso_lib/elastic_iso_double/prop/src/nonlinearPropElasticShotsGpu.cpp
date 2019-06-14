@@ -135,7 +135,7 @@ void nonlinearPropElasticShotsGpu::forward(const bool add,
   for (int iExp=0; iExp<_nExp; iExp++){
 
     int iGpu = omp_get_thread_num();
-	int iGpuId = _gpuList[iGpu];
+		int iGpuId = _gpuList[iGpu];
 
     // Copy model slice
     if(constantSrcSignal == 1) {

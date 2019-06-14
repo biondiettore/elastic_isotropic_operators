@@ -20,7 +20,7 @@ class BornElasticShotsGpu : public Operator<SEP::double3DReg, SEP::double4DReg> 
 
 	private:
 		int _nExp, _nGpu, _info, _deviceNumberInfo, _iGpuAlloc;
-		int _saveWavefield, _wavefieldShotNumber;
+		int _saveWavefield, _wavefieldShotNumber, _useStreams;
 		std::shared_ptr<SEP::double3DReg> _elasticParam;
 		std::shared_ptr<paramObj> _par;
 	    std::vector<std::shared_ptr<SEP::double3DReg>> _sourcesSignalsVector;

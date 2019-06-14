@@ -49,6 +49,8 @@ PYBIND11_MODULE(pyElastic_iso_double_nl, clsGeneric) {
 
       .def("getWavefield", (std::shared_ptr<SEP::double4DReg> (nonlinearPropElasticShotsGpu::*)()) &nonlinearPropElasticShotsGpu::getWavefield, "get wavefield")
 
+			.def("setBackground", (void (nonlinearPropElasticShotsGpu::*)(std::shared_ptr<SEP::double3DReg>)) &nonlinearPropElasticShotsGpu::setBackground, "setBackground")
+
       .def("dotTest",(bool (nonlinearPropElasticShotsGpu::*)(const bool, const float)) &nonlinearPropElasticShotsGpu::dotTest,"Dot-Product Test")
 
       ;

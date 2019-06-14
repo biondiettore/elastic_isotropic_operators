@@ -38,6 +38,9 @@ if (pybind11_FOUND)
   pybind11_add_module(pyElastic_iso_double_nl MODULE pyElastic_iso_double_nl.cpp)
   target_link_libraries(pyElastic_iso_double_nl PRIVATE ELASTIC_ISO_DOUBLE_NL ${LIBS})
 
+	pybind11_add_module(pyElastic_iso_double_born MODULE pyElastic_iso_double_born.cpp)
+  target_link_libraries(pyElastic_iso_double_born PRIVATE ELASTIC_ISO_DOUBLE_BORN ${LIBS})
+
   pybind11_add_module(pyElastic_iso_double_we MODULE pyElastic_iso_double_we.cpp)
   target_link_libraries(pyElastic_iso_double_we PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
 
@@ -49,20 +52,13 @@ if (pybind11_FOUND)
 
   pybind11_add_module(pyPadTruncateSourceDouble MODULE pyPadTruncateSourceDouble.cpp)
   target_link_libraries(pyPadTruncateSourceDouble PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
-  # pybind11_add_module(pyElastic_iso_double_born MODULE pyElastic_iso_double_born.cpp)
-  # target_link_libraries(pyElastic_iso_double_born PRIVATE ELASTIC_ISO_DOUBLE_BORN ${LIBS})
-  # pybind11_add_module(pyElastic_iso_double_born_ext MODULE pyElastic_iso_double_born_ext.cpp)
-  # target_link_libraries(pyElastic_iso_double_born_ext PRIVATE ELASTIC_ISO_DOUBLE_BORN_EXT ${LIBS})
-  # pybind11_add_module(pyElastic_iso_double_tomo MODULE pyElastic_iso_double_tomo.cpp)
-  # target_link_libraries(pyElastic_iso_double_tomo PRIVATE ELASTIC_ISO_DOUBLE_TOMO_EXT ${LIBS})
-  # pybind11_add_module(pyElastic_iso_double_wemva MODULE pyElastic_iso_double_wemva.cpp)
-  # target_link_libraries(pyElastic_iso_double_wemva PRIVATE ELASTIC_ISO_DOUBLE_WEMVA_EXT ${LIBS})
 
   #Installing library
   install( TARGETS pyElastic_iso_double_nl DESTINATION lib/python) #Module for non-linear operator
+	install( TARGETS pyElastic_iso_double_born DESTINATION lib/python) #Module for Born operator
   install( FILES Elastic_iso_double_nl.py DESTINATION lib/python)
 
-  install( TARGETS pyElastic_iso_double_we DESTINATION lib/python) #Module for non-linear operator
+  install( TARGETS pyElastic_iso_double_we DESTINATION lib/python) #Module for wave-equation operator
   install( FILES Elastic_iso_double_we.py DESTINATION lib/python)
 
   install( TARGETS pyStaggerDouble  DESTINATION lib/python)
