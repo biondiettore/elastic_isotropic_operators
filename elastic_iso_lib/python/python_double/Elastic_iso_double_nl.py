@@ -137,6 +137,17 @@ def buildReceiversGeometry(parObject,elasticParam):
 	if(recParFile != "none"):
 		xCoordFloatNd,zCoordFloatNd = parseRecParFile(recParFile)
 
+		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
+		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
+		zCoordFloatNd = zCoordFloat.getNdArray()
+		zCoordFloatNd = zCoord
+		recAxisHorizontal=Hypercube.axis(n=len(xCoord),o=0.0,d=1.0)
+		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+		xCoordFloatNd = xCoordFloat.getNdArray()
+		xCoordFloatNd = xCoord
+
 	else:
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
@@ -179,7 +190,7 @@ def parseRecParFile(recParFile):
 		if (len(devCoords) != nDevices): raise ValueError("ERROR: number of devices in parfile (%d) not the same as specified nDevices (%d)"%(len(a),nDevices))
 	devCoordsNdArray = np.asarray(devCoords)
 	return devCoordsNdArray[:,0],devCoordsNdArray[:,2]
-	
+
 ############################### Nonlinear ######################################
 def nonlinearOpInitDouble(args):
 	"""Function to correctly initialize nonlinear operator

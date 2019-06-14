@@ -135,8 +135,19 @@ def buildReceiversGeometry(parObject,elasticParam):
 	# receiver _zCoord and _xCoord
 	recParFile = parObject.getString("recParFile","none")
 	if(recParFile != "none"):
-		xCoordFloatNd,zCoordFloatNd = parseRecParFile(recParFile)
-		
+		xCoord,zCoord = parseRecParFile(recParFile)
+
+		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
+		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
+		zCoordFloatNd = zCoordFloat.getNdArray()
+		zCoordFloatNd = zCoord
+		recAxisHorizontal=Hypercube.axis(n=len(xCoord),o=0.0,d=1.0)
+		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
+		xCoordFloatNd = xCoordFloat.getNdArray()
+		xCoordFloatNd = xCoord
+
 	else:
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
