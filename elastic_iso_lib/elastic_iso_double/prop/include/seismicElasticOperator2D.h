@@ -22,8 +22,6 @@ class seismicElasticOperator2D : public Operator <V1, V2> {
 		std::shared_ptr<fdParamElastic> _fdParamElastic;
 		std::shared_ptr<spaceInterpGpu> _sourcesCenterGrid, _sourcesXGrid, _sourcesZGrid, _sourcesXZGrid;
 		std::shared_ptr<spaceInterpGpu> _receiversCenterGrid, _receiversXGrid, _receiversZGrid, _receiversXZGrid;
-// 		std::shared_ptr<spaceInterpGpu> _sources_vx,_sources_vz,_sources_sigmaxx,_sources_sigmazz,_sources_sigmaxz;
-//     std::shared_ptr<spaceInterpGpu> _receivers_vx, _receivers_vz, _receivers_sigmaxx, _receivers_sigmazz, _receivers_sigmaxz;
 		int *_sourcesPositionRegCenterGrid, *_sourcesPositionRegXGrid, *_sourcesPositionRegZGrid, *_sourcesPositionRegXZGrid;
 		int *_receiversPositionRegCenterGrid, *_receiversPositionRegXGrid, *_receiversPositionRegZGrid, *_receiversPositionRegXZGrid;
 		int _nSourcesRegCenterGrid,_nSourcesRegXGrid,_nSourcesRegZGrid,_nSourcesRegXZGrid;
@@ -46,7 +44,7 @@ class seismicElasticOperator2D : public Operator <V1, V2> {
 
 		// Sources
 		void setSources(std::shared_ptr<spaceInterpGpu> sourcesCenterGrid, std::shared_ptr<spaceInterpGpu> sourcesXGrid, std::shared_ptr<spaceInterpGpu> sourcesZGrid, std::shared_ptr<spaceInterpGpu> sourcesXZGrid); // This one is for the nonlinear modeling operator
-		// void setSources(std::shared_ptr<spaceInterpGpu> sources, std::shared_ptr<V2> sourcesSignals); // For the other operators (Born + Tomo + Wemva)
+		void setSources(std::shared_ptr<spaceInterpGpu> sourcesCenterGrid, std::shared_ptr<spaceInterpGpu> sourcesXGrid, std::shared_ptr<spaceInterpGpu> sourcesZGrid, std::shared_ptr<spaceInterpGpu> sourcesXZGrid, std::shared_ptr<V2> sourcesSignals); // For Born
 
 		// Receivers
 		void setReceivers(std::shared_ptr<spaceInterpGpu> receiversCenterGrid, std::shared_ptr<spaceInterpGpu> receiversXGrid, std::shared_ptr<spaceInterpGpu> receiversZGrid, std::shared_ptr<spaceInterpGpu> receiversXZGrid);
@@ -56,7 +54,11 @@ class seismicElasticOperator2D : public Operator <V1, V2> {
 			std::shared_ptr<spaceInterpGpu> sourcesCenterGrid, std::shared_ptr<spaceInterpGpu> sourcesXGrid, std::shared_ptr<spaceInterpGpu> sourcesZGrid, std::shared_ptr<spaceInterpGpu> sourcesXZGrid,
 			std::shared_ptr<spaceInterpGpu> receiversCenterGrid, std::shared_ptr<spaceInterpGpu> receiversXGrid, std::shared_ptr<spaceInterpGpu> receiversZGrid, std::shared_ptr<spaceInterpGpu> receiversXZGrid,
 			const std::shared_ptr<V1> model, const std::shared_ptr<V2> data); // Nonlinear
-		//void setAcquisition(std::shared_ptr<spaceInterpGpu> sources, std::shared_ptr<V2> sourcesSignals, std::shared_ptr<spaceInterpGpu> receivers, const std::shared_ptr<V1> model, const std::shared_ptr<V2> data); // Born + Tomo + Wemva
+		void setAcquisition(
+			std::shared_ptr<spaceInterpGpu> sourcesCenterGrid, std::shared_ptr<spaceInterpGpu> sourcesXGrid, std::shared_ptr<spaceInterpGpu> sourcesZGrid, std::shared_ptr<spaceInterpGpu> sourcesXZGrid,
+			std::shared_ptr<V2> sourcesSignals,
+			std::shared_ptr<spaceInterpGpu> receiversCenterGrid, std::shared_ptr<spaceInterpGpu> receiversXGrid, std::shared_ptr<spaceInterpGpu> receiversZGrid, std::shared_ptr<spaceInterpGpu> receiversXZGrid,
+			const std::shared_ptr<V1> model, const std::shared_ptr<V2> data); // Born
 
 		// Other mutators
 		void setGpuNumber(int iGpu, int iGpuId){_iGpu = iGpu; _iGpuId = iGpuId;}

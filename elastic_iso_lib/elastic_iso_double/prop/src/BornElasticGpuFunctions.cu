@@ -252,8 +252,8 @@ void initBornGpu(double dz, double dx, int nz, int nx, int nts, double dts, int 
 		cuda_call(cudaMemcpyToSymbol(dev_nts, &nts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Copy number of coarse time parameters to device
 		cuda_call(cudaMemcpyToSymbol(dev_sub, &sub, sizeof(int), 0, cudaMemcpyHostToDevice));
 		cuda_call(cudaMemcpyToSymbol(dev_ntw, &host_ntw, sizeof(int), 0, cudaMemcpyHostToDevice)); // Copy number of coarse time parameters to device
-    double inv_dts = 1.0/dts;
-    cuda_call(cudaMemcpyToSymbol(dev_dts_inv, &inv_dts, sizeof(int), 0, cudaMemcpyHostToDevice)); // Inverse of the time-source sampling
+    	double inv_dts = 1.0/(2.0 * dts);
+    	cuda_call(cudaMemcpyToSymbol(dev_dts_inv, &inv_dts, sizeof(double), 0, cudaMemcpyHostToDevice)); // Inverse of the time-source sampling
 
 }
 

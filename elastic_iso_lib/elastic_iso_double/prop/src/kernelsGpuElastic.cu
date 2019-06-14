@@ -581,38 +581,38 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
 
     // Copy current slice from global to shared memory for each wavefield component -- edges
     if (threadIdx.y < FAT) {
-    // vx
-    shared_c_vx[ixLocal-FAT][izLocal] = dev_c_vx[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_vx[ixLocal+BLOCK_SIZE][izLocal] = dev_c_vx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // vz
-    shared_c_vz[ixLocal-FAT][izLocal] = dev_c_vz[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_c_vz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmaxx
-    shared_c_sigmaxx[ixLocal-FAT][izLocal] = dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmaxx[ixLocal+BLOCK_SIZE][izLocal] = dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmazz
-    shared_c_sigmazz[ixLocal-FAT][izLocal] = dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmazz[ixLocal+BLOCK_SIZE][izLocal] = dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmaxz
-    shared_c_sigmaxz[ixLocal-FAT][izLocal] = dev_c_sigmaxz[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmaxz[ixLocal+BLOCK_SIZE][izLocal] = dev_c_sigmaxz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+        // vx
+        shared_c_vx[ixLocal-FAT][izLocal] = dev_c_vx[iGlobal-dev_nz*FAT]; // Left side
+        shared_c_vx[ixLocal+BLOCK_SIZE][izLocal] = dev_c_vx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+        // vz
+        shared_c_vz[ixLocal-FAT][izLocal] = dev_c_vz[iGlobal-dev_nz*FAT]; // Left side
+        shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_c_vz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+        // sigmaxx
+        shared_c_sigmaxx[ixLocal-FAT][izLocal] = dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+        shared_c_sigmaxx[ixLocal+BLOCK_SIZE][izLocal] = dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+        // sigmazz
+        shared_c_sigmazz[ixLocal-FAT][izLocal] = dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
+        shared_c_sigmazz[ixLocal+BLOCK_SIZE][izLocal] = dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+        // sigmaxz
+        shared_c_sigmaxz[ixLocal-FAT][izLocal] = dev_c_sigmaxz[iGlobal-dev_nz*FAT]; // Left side
+        shared_c_sigmaxz[ixLocal+BLOCK_SIZE][izLocal] = dev_c_sigmaxz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
     }
     if (threadIdx.x < 5) {
-    // vx
-    shared_c_vx[ixLocal][izLocal-5] = dev_c_vx[iGlobal-5]; // Up
-    shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_c_vx[iGlobal+BLOCK_SIZE]; // Down
-    // vz
-    shared_c_vz[ixLocal][izLocal-5] = dev_c_vz[iGlobal-5]; // Up
-    shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_c_vz[iGlobal+BLOCK_SIZE]; // Down
-    // sigmaxx
-    shared_c_sigmaxx[ixLocal][izLocal-5] = dev_c_sigmaxx[iGlobal-5]; // Up
-    shared_c_sigmaxx[ixLocal][izLocal+BLOCK_SIZE] = dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
-    // sigmazz
-    shared_c_sigmazz[ixLocal][izLocal-5] = dev_c_sigmazz[iGlobal-5]; // Up
-    shared_c_sigmazz[ixLocal][izLocal+BLOCK_SIZE] = dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
-    // sigmaxz
-    shared_c_sigmaxz[ixLocal][izLocal-5] = dev_c_sigmaxz[iGlobal-5]; // Up
-    shared_c_sigmaxz[ixLocal][izLocal+BLOCK_SIZE] = dev_c_sigmaxz[iGlobal+BLOCK_SIZE]; // Down
+        // vx
+        shared_c_vx[ixLocal][izLocal-5] = dev_c_vx[iGlobal-5]; // Up
+        shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_c_vx[iGlobal+BLOCK_SIZE]; // Down
+        // vz
+        shared_c_vz[ixLocal][izLocal-5] = dev_c_vz[iGlobal-5]; // Up
+        shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_c_vz[iGlobal+BLOCK_SIZE]; // Down
+        // sigmaxx
+        shared_c_sigmaxx[ixLocal][izLocal-5] = dev_c_sigmaxx[iGlobal-5]; // Up
+        shared_c_sigmaxx[ixLocal][izLocal+BLOCK_SIZE] = dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
+        // sigmazz
+        shared_c_sigmazz[ixLocal][izLocal-5] = dev_c_sigmazz[iGlobal-5]; // Up
+        shared_c_sigmazz[ixLocal][izLocal+BLOCK_SIZE] = dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
+        // sigmaxz
+        shared_c_sigmaxz[ixLocal][izLocal-5] = dev_c_sigmaxz[iGlobal-5]; // Up
+        shared_c_sigmaxz[ixLocal][izLocal+BLOCK_SIZE] = dev_c_sigmaxz[iGlobal+BLOCK_SIZE]; // Down
     }
     __syncthreads(); // Synchronise all threads within each block -- look new sync options
 
@@ -713,20 +713,20 @@ __global__ void dampCosineEdge(double *dev_p1_vx, double *dev_p2_vx,
     int distToEdge = min4(izGlobal-FAT, ixGlobal-FAT, dev_nz-izGlobal-1-FAT, dev_nx-ixGlobal-1-FAT);
     if (distToEdge < dev_minPad){
 
-    // Compute damping coefficient
-    double damp = dev_cosDampingCoeff[distToEdge];
+        // Compute damping coefficient
+        double damp = dev_cosDampingCoeff[distToEdge];
 
-    // Apply damping
-    dev_p1_vx[iGlobal] *= damp;
-    dev_p2_vx[iGlobal] *= damp;
-    dev_p1_vz[iGlobal] *= damp;
-    dev_p2_vz[iGlobal] *= damp;
-    dev_p1_sigmaxx[iGlobal] *= damp;
-    dev_p2_sigmaxx[iGlobal] *= damp;
-    dev_p1_sigmazz[iGlobal] *= damp;
-    dev_p2_sigmazz[iGlobal] *= damp;
-    dev_p1_sigmaxz[iGlobal] *= damp;
-    dev_p2_sigmaxz[iGlobal] *= damp;
+        // Apply damping
+        dev_p1_vx[iGlobal] *= damp;
+        dev_p2_vx[iGlobal] *= damp;
+        dev_p1_vz[iGlobal] *= damp;
+        dev_p2_vz[iGlobal] *= damp;
+        dev_p1_sigmaxx[iGlobal] *= damp;
+        dev_p2_sigmaxx[iGlobal] *= damp;
+        dev_p1_sigmazz[iGlobal] *= damp;
+        dev_p2_sigmazz[iGlobal] *= damp;
+        dev_p1_sigmaxz[iGlobal] *= damp;
+        dev_p2_sigmaxz[iGlobal] *= damp;
     }
 }
 
@@ -925,20 +925,20 @@ __global__ void imagingElaFwdGpu(double* dev_wavefieldVx, double* dev_wavefieldV
 
     // Copy current slice from global to shared memory for each wavefield component -- edges
     if (threadIdx.y < FAT) {
-    // vx
-    shared_c_vx[ixLocal-FAT][izLocal] = dev_wavefieldVx[iGlobal_cur-dev_nz*FAT]; // Left side
-    shared_c_vx[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVx[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
-    // vz
-    shared_c_vz[ixLocal-FAT][izLocal] = dev_wavefieldVz[iGlobal_cur-dev_nz*FAT]; // Left side
-    shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVz[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
+        // vx
+        shared_c_vx[ixLocal-FAT][izLocal] = dev_wavefieldVx[iGlobal_cur-dev_nz*FAT]; // Left side
+        shared_c_vx[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVx[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
+        // vz
+        shared_c_vz[ixLocal-FAT][izLocal] = dev_wavefieldVz[iGlobal_cur-dev_nz*FAT]; // Left side
+        shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVz[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
     }
     if (threadIdx.x < 5) {
-    // vx
-    shared_c_vx[ixLocal][izLocal-5] = dev_wavefieldVx[iGlobal_cur-5]; // Up
-    shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVx[iGlobal_cur+BLOCK_SIZE]; // Down
-    // vz
-    shared_c_vz[ixLocal][izLocal-5] = dev_wavefieldVz[iGlobal_cur-5]; // Up
-    shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVz[iGlobal_cur+BLOCK_SIZE]; // Down
+        // vx
+        shared_c_vx[ixLocal][izLocal-5] = dev_wavefieldVx[iGlobal_cur-5]; // Up
+        shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVx[iGlobal_cur+BLOCK_SIZE]; // Down
+        // vz
+        shared_c_vz[ixLocal][izLocal-5] = dev_wavefieldVz[iGlobal_cur-5]; // Up
+        shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVz[iGlobal_cur+BLOCK_SIZE]; // Down
     }
     __syncthreads(); // Synchronise all threads within each block -- look new sync options
 
@@ -956,14 +956,14 @@ __global__ void imagingElaFwdGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     //Note we assume zero wavefield for its < 0 and its > ntw
     //Scattering Vx and Vz components (- drho * dvx/dt and - drho * dvz/dt)
     if(its == 0){
-    dev_vx[iGlobal] = dev_drhox[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
-    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
+        dev_vx[iGlobal] = dev_drhox[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+        dev_vz[iGlobal] = dev_drhoz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
     } else if(its == dev_nts){
-    dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
-    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
+        dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
+        dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
     } else {
-    dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
-    dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
+        dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+        dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
     }
     //Scattering Sigmaxx component
     dev_sigmaxx[iGlobal] = dev_dlame[iGlobal] * (dvx_dx + dvz_dz) + 2.0 * dev_dmu[iGlobal] * dvx_dx;
@@ -971,14 +971,13 @@ __global__ void imagingElaFwdGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     dev_sigmazz[iGlobal] = dev_dlame[iGlobal] * (dvx_dx + dvz_dz) + 2.0 * dev_dmu[iGlobal] * dvz_dz;
     //Scattering Sigmaxz component             //first deriv in negative z direction of current vx
     dev_sigmaxz[iGlobal] = dev_dmuxz[iGlobal]*(dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1])  +
-     dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
-     dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
-     dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
-     //first deriv in negative x direction of current vz
-     dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
-     dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
-     dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
-     dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
+                           dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
+                           dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
+                           //first deriv in negative x direction of current vz
+                           dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
+                           dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
+                           dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
+                           dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
 
 
 }
@@ -1005,20 +1004,20 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
 
     // Copy current slice from global to shared memory for each wavefield component -- edges
     if (threadIdx.y < FAT) {
-    // vx
-    shared_c_vx[ixLocal-FAT][izLocal] = dev_wavefieldVx[iGlobal_cur-dev_nz*FAT]; // Left side
-    shared_c_vx[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVx[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
-    // vz
-    shared_c_vz[ixLocal-FAT][izLocal] = dev_wavefieldVz[iGlobal_cur-dev_nz*FAT]; // Left side
-    shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVz[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
+        // vx
+        shared_c_vx[ixLocal-FAT][izLocal] = dev_wavefieldVx[iGlobal_cur-dev_nz*FAT]; // Left side
+        shared_c_vx[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVx[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
+        // vz
+        shared_c_vz[ixLocal-FAT][izLocal] = dev_wavefieldVz[iGlobal_cur-dev_nz*FAT]; // Left side
+        shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVz[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
     }
     if (threadIdx.x < 5) {
-    // vx
-    shared_c_vx[ixLocal][izLocal-5] = dev_wavefieldVx[iGlobal_cur-5]; // Up
-    shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVx[iGlobal_cur+BLOCK_SIZE]; // Down
-    // vz
-    shared_c_vz[ixLocal][izLocal-5] = dev_wavefieldVz[iGlobal_cur-5]; // Up
-    shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVz[iGlobal_cur+BLOCK_SIZE]; // Down
+        // vx
+        shared_c_vx[ixLocal][izLocal-5] = dev_wavefieldVx[iGlobal_cur-5]; // Up
+        shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVx[iGlobal_cur+BLOCK_SIZE]; // Down
+        // vz
+        shared_c_vz[ixLocal][izLocal-5] = dev_wavefieldVz[iGlobal_cur-5]; // Up
+        shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVz[iGlobal_cur+BLOCK_SIZE]; // Down
     }
     __syncthreads(); // Synchronise all threads within each block -- look new sync options
 
@@ -1035,14 +1034,14 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
 
     //Imaging drhox and drhoz components
     if(its == 0){
-    dev_drhox[iGlobal] += dev_vx[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
-    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
+        dev_drhox[iGlobal] += dev_vx[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+        dev_drhoz[iGlobal] += dev_vz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
     } else if(its == dev_nts){
-    dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
-    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
+        dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
+        dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
     } else {
-    dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
-    dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
+        dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old] - dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
+        dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old] - dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
     }
     //Imaging dlame component
     dev_dlame[iGlobal] += (dev_sigmaxx[iGlobal] + dev_sigmazz[iGlobal]) * (dvx_dx + dvz_dz);
@@ -1050,12 +1049,12 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     dev_dmu[iGlobal] += 2.0 * (dvx_dx * dev_sigmaxx[iGlobal] + dvz_dz * dev_sigmazz[iGlobal]);
     //Scattering Sigmaxz component             //first deriv in negative z direction of current vx
     dev_dmuxz[iGlobal] += dev_sigmaxz[iGlobal]*(dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1])  +
-     dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
-     dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
-     dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
-     //first deriv in negative x direction of current vz
-     dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
-     dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
-     dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
-     dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
+                                                dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
+                                                dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
+                                                dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
+                                                //first deriv in negative x direction of current vz
+                                                dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
+                                                dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
+                                                dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
+                                                dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
 }

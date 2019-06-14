@@ -27,46 +27,25 @@ class nonlinearPropElasticGpu : public seismicElasticOperator2D<SEP::double3DReg
 		std::shared_ptr<double4DReg> _wavefield;
 
 	public:
-	    //! Constructor.
-		/*!
-    	* Overloaded constructors from seismicOperator2D
-    	*/
+    //! Constructor.
 		nonlinearPropElasticGpu(std::shared_ptr<fdParamElastic> fdParamElastic, std::shared_ptr<paramObj> par, int nGpu, int iGpu, int iGpuId, int iGpuAlloc);
 
 		//! Mutators.
-		/*!
-    	* A more elaborate description of the mutators.
-    	*/
 		void setAllWavefields(int wavefieldFlag);
 
-    	//! QC
-		/*!
-    	*  A more elaborate description of QC.
-    	*/
+  	//! QC
 		virtual bool checkParfileConsistency(std::shared_ptr<SEP::double3DReg> model, std::shared_ptr<SEP::double3DReg> data) const;
 
-    	//! FWD
-		/*!
-    	* A more elaborate description of FWD
-    	*/
-    	void forward(const bool add, const std::shared_ptr<double3DReg> model, std::shared_ptr<double3DReg> data) const;
+  	//! FWD
+  	void forward(const bool add, const std::shared_ptr<double3DReg> model, std::shared_ptr<double3DReg> data) const;
 
-	    //! ADJ
-	    /*!
-	    * A more elaborate description of ADJ
-	    */
+	  //! ADJ
 		void adjoint(const bool add, std::shared_ptr<double3DReg> model, const std::shared_ptr<double3DReg> data) const;
 
 		//! Desctructor
-	    /*!
-	    * A more elaborate description of Desctructor
-	    */
 		~nonlinearPropElasticGpu(){};
 
 		//! Accesor
-	    /*!
-	    * A more elaborate description of Accesor
-	    */
 		std::shared_ptr<double4DReg> getWavefield() { return _wavefield; }
 
 };
