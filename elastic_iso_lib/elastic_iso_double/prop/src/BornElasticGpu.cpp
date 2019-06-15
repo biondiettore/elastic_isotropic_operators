@@ -22,11 +22,11 @@ BornElasticGpu::BornElasticGpu(std::shared_ptr<fdParamElastic> fdParamElastic, s
 
 	/// Alocate on GPUs
 	allocateBornElasticGpu(_fdParamElastic->_rhoxDtw,
-						   _fdParamElastic->_rhozDtw,
-						   _fdParamElastic->_lamb2MuDtw,
-						   _fdParamElastic->_lambDtw,
-						   _fdParamElastic->_muxzDtw,
-						   _iGpu, _iGpuId, _useStreams);
+                         _fdParamElastic->_rhozDtw,
+												 _fdParamElastic->_lamb2MuDtw,
+												 _fdParamElastic->_lambDtw,
+												 _fdParamElastic->_muxzDtw,
+												 _iGpu, _iGpuId, _useStreams);
 	setAllWavefields(0); // By default, do not record the scattered wavefields
 }
 
@@ -72,37 +72,37 @@ void BornElasticGpu::forward(const bool add, const std::shared_ptr<double3DReg> 
 
 	//Getting already staggered model perturbations
 	double *drhox_in = model->getVals();
-	double *drhoz_in = model->getVals()+_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
-	double *dlame_in = model->getVals()+2*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
-	double *dmu_in   = model->getVals()+3*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
-	double *dmuxz_in = model->getVals()+4*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
+	double *drhoz_in = model->getVals()+_fdParamElastic->_nz*_fdParamElastic->_nx;
+	double *dlame_in = model->getVals()+2*_fdParamElastic->_nz*_fdParamElastic->_nx;
+	double *dmu_in   = model->getVals()+3*_fdParamElastic->_nz*_fdParamElastic->_nx;
+	double *dmuxz_in = model->getVals()+4*_fdParamElastic->_nz*_fdParamElastic->_nx;
 
 	// /* Propagate */
 	if (_saveWavefield == 0) {
 		BornShotsFwdGpu(_sourceRegDtw_vx->getVals(),
-													_sourceRegDtw_vz->getVals(),
-													_sourceRegDtw_sigmaxx->getVals(),
-													_sourceRegDtw_sigmazz->getVals(),
-													_sourceRegDtw_sigmaxz->getVals(),
-													drhox_in,
-													drhoz_in,
-													dlame_in,
-													dmu_in,
-													dmuxz_in,
-													dataRegDts_vx->getVals(),
-													dataRegDts_vz->getVals(),
-													dataRegDts_sigmaxx->getVals(),
-													dataRegDts_sigmazz->getVals(),
-													dataRegDts_sigmaxz->getVals(),
-													_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
-													_sourcesPositionRegXGrid, _nSourcesRegXGrid,
-													_sourcesPositionRegZGrid, _nSourcesRegZGrid,
-													_sourcesPositionRegXZGrid, _nSourcesRegXZGrid,
-													_receiversPositionRegCenterGrid, _nReceiversRegCenterGrid,
-													_receiversPositionRegXGrid, _nReceiversRegXGrid,
-													_receiversPositionRegZGrid, _nReceiversRegZGrid,
-													_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
-													 _iGpu, _iGpuId, _fdParamElastic->_surfaceCondition, _useStreams);
+						_sourceRegDtw_vz->getVals(),
+						_sourceRegDtw_sigmaxx->getVals(),
+						_sourceRegDtw_sigmazz->getVals(),
+						_sourceRegDtw_sigmaxz->getVals(),
+						drhox_in,
+						drhoz_in,
+						dlame_in,
+						dmu_in,
+						dmuxz_in,
+						dataRegDts_vx->getVals(),
+						dataRegDts_vz->getVals(),
+						dataRegDts_sigmaxx->getVals(),
+						dataRegDts_sigmazz->getVals(),
+						dataRegDts_sigmaxz->getVals(),
+						_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
+						_sourcesPositionRegXGrid, _nSourcesRegXGrid,
+						_sourcesPositionRegZGrid, _nSourcesRegZGrid,
+						_sourcesPositionRegXZGrid, _nSourcesRegXZGrid,
+						_receiversPositionRegCenterGrid, _nReceiversRegCenterGrid,
+						_receiversPositionRegXGrid, _nReceiversRegXGrid,
+						_receiversPositionRegZGrid, _nReceiversRegZGrid,
+						_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
+						_iGpu, _iGpuId, _fdParamElastic->_surfaceCondition, _useStreams);
 	} else {
 		throw std::logic_error( "Error! Born forward operator w/ wavefield saving not implemented yet!" );
 	}
@@ -120,7 +120,6 @@ void BornElasticGpu::forward(const bool add, const std::shared_ptr<double3DReg> 
   std::memcpy(data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid)*_fdParamElastic->_nts, dataTemp_sigmaxx->getVals(), _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(double) );
   std::memcpy(data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, dataTemp_sigmazz->getVals(), _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(double) );
   std::memcpy(data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+2*_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, dataTemp_sigmaxz->getVals(), _nReceiversIrregXZGrid*_fdParamElastic->_nts*sizeof(double) );
-
 
 }
 
@@ -158,10 +157,10 @@ void BornElasticGpu::adjoint(const bool add, const std::shared_ptr<double3DReg> 
 
 	//Getting model perturbations pointers
 	double *drhox_in = model->getVals();
-	double *drhoz_in = model->getVals()+_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
-	double *dlame_in = model->getVals()+2*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
-	double *dmu_in   = model->getVals()+3*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
-	double *dmuxz_in = model->getVals()+4*_fdParamElastic->_nz*_fdParamElastic->_nx*sizeof(double);
+	double *drhoz_in = model->getVals()+_fdParamElastic->_nz*_fdParamElastic->_nx;
+	double *dlame_in = model->getVals()+2*_fdParamElastic->_nz*_fdParamElastic->_nx;
+	double *dmu_in   = model->getVals()+3*_fdParamElastic->_nz*_fdParamElastic->_nx;
+	double *dmuxz_in = model->getVals()+4*_fdParamElastic->_nz*_fdParamElastic->_nx;
 
 	// /* Propagate */
 	if (_saveWavefield == 0) {

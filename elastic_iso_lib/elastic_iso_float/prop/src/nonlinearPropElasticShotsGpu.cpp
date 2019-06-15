@@ -98,7 +98,7 @@ void nonlinearPropElasticShotsGpu::forward(const bool add,
 
     // Create vectors for each GPU
     std::shared_ptr<SEP::hypercube> hyperModelSlices(new hypercube(model->getHyper()->getAxis(1), model->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
-    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
+    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), data->getHyper()->getAxis(3)));
     std::vector<std::shared_ptr<float3DReg>> modelSlicesVector;
     std::vector<std::shared_ptr<float3DReg>> dataSlicesVector;
     std::vector<std::shared_ptr<nonlinearPropElasticGpu>> propObjectVector;
@@ -201,7 +201,7 @@ void nonlinearPropElasticShotsGpu::forwardWavefield(const bool add,
 
     // Create vectors for each GPU
     std::shared_ptr<SEP::hypercube> hyperModelSlices(new hypercube(model->getHyper()->getAxis(1), model->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
-    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
+    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), data->getHyper()->getAxis(3)));
     std::vector<std::shared_ptr<float3DReg>> modelSlicesVector;
     std::vector<std::shared_ptr<float3DReg>> dataSlicesVector;
     std::vector<std::shared_ptr<nonlinearPropElasticGpu>> propObjectVector;
@@ -323,7 +323,7 @@ void nonlinearPropElasticShotsGpu::adjoint(const bool add,
 
     // Create vectors for each GPU
     std::shared_ptr<SEP::hypercube> hyperModelSlices(new hypercube(model->getHyper()->getAxis(1), model->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
-    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
+    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), data->getHyper()->getAxis(3)));
     std::vector<std::shared_ptr<float3DReg>> modelSlicesVector;
     std::vector<std::shared_ptr<float3DReg>> dataSlicesVector;
     std::vector<std::shared_ptr<nonlinearPropElasticGpu>> propObjectVector;
@@ -442,7 +442,7 @@ void nonlinearPropElasticShotsGpu::adjointWavefield(const bool add, std::shared_
 
     // Create vectors for each GPU
     std::shared_ptr<SEP::hypercube> hyperModelSlices(new hypercube(model->getHyper()->getAxis(1), model->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
-    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
+    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), data->getHyper()->getAxis(3)));
     std::vector<std::shared_ptr<float3DReg>> modelSlicesVector;
     std::vector<std::shared_ptr<float3DReg>> dataSlicesVector;
     std::vector<std::shared_ptr<nonlinearPropElasticGpu>> propObjectVector;

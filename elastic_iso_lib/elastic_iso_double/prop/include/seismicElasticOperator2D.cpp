@@ -10,7 +10,7 @@ void seismicElasticOperator2D <V1, V2>::setSources(std::shared_ptr<spaceInterpGp
 	_nSourcesRegZGrid = _sourcesZGrid->getNDeviceReg();
 	_nSourcesRegXZGrid = _sourcesXZGrid->getNDeviceReg();
 
-  _nSourcesIrregCenterGrid = _sourcesCenterGrid->getNDeviceIrreg();
+  	_nSourcesIrregCenterGrid = _sourcesCenterGrid->getNDeviceIrreg();
 	_nSourcesIrregXGrid = _sourcesXGrid->getNDeviceIrreg();
 	_nSourcesIrregZGrid = _sourcesZGrid->getNDeviceIrreg();
 	_nSourcesIrregXZGrid = _sourcesXZGrid->getNDeviceIrreg();
@@ -62,11 +62,11 @@ void seismicElasticOperator2D <V1, V2>::setSources(std::shared_ptr<spaceInterpGp
 	std::shared_ptr<double2DReg> sourceRegDts_sigmazz(new double2DReg(_fdParamElastic->_nts, _nSourcesRegCenterGrid));
 	std::shared_ptr<double2DReg> sourceRegDts_sigmaxz(new double2DReg(_fdParamElastic->_nts, _nSourcesRegXZGrid));
 
-	_sourceRegDtw_vx = std::make_shared<double2DReg>(_fdParamElastic->_nts, _nSourcesRegXGrid);
-	_sourceRegDtw_vz = std::make_shared<double2DReg>(_fdParamElastic->_nts, _nSourcesRegZGrid);
-	_sourceRegDtw_sigmaxx = std::make_shared<double2DReg>(_fdParamElastic->_nts, _nSourcesRegCenterGrid);
-	_sourceRegDtw_sigmazz = std::make_shared<double2DReg>(_fdParamElastic->_nts, _nSourcesRegCenterGrid);
-	_sourceRegDtw_sigmaxz = std::make_shared<double2DReg>(_fdParamElastic->_nts, _nSourcesRegXZGrid);
+	_sourceRegDtw_vx = std::make_shared<double2DReg>(_fdParamElastic->_ntw, _nSourcesRegXGrid);
+	_sourceRegDtw_vz = std::make_shared<double2DReg>(_fdParamElastic->_ntw, _nSourcesRegZGrid);
+	_sourceRegDtw_sigmaxx = std::make_shared<double2DReg>(_fdParamElastic->_ntw, _nSourcesRegCenterGrid);
+	_sourceRegDtw_sigmazz = std::make_shared<double2DReg>(_fdParamElastic->_ntw, _nSourcesRegCenterGrid);
+	_sourceRegDtw_sigmaxz = std::make_shared<double2DReg>(_fdParamElastic->_ntw, _nSourcesRegXZGrid);
 
 	/* Copy from 3d source to respective 2d source components */
 	std::memcpy( sourceTemp_vx->getVals(), _sourcesSignals->getVals(), _nSourcesIrregXGrid*_fdParamElastic->_nts*sizeof(double) );
@@ -131,7 +131,7 @@ void seismicElasticOperator2D <V1, V2>::setReceivers(std::shared_ptr<spaceInterp
 	_nReceiversRegZGrid = _receiversZGrid->getNDeviceReg();
 	_nReceiversRegXZGrid = _receiversXZGrid->getNDeviceReg();
 
-  _nReceiversIrregCenterGrid = _receiversCenterGrid->getNDeviceIrreg();
+	_nReceiversIrregCenterGrid = _receiversCenterGrid->getNDeviceIrreg();
 	_nReceiversIrregXGrid = _receiversXGrid->getNDeviceIrreg();
 	_nReceiversIrregZGrid = _receiversZGrid->getNDeviceIrreg();
 	_nReceiversIrregXZGrid = _receiversXZGrid->getNDeviceIrreg();

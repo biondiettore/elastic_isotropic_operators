@@ -97,7 +97,7 @@ void BornElasticShotsGpu::forward(const bool add, const std::shared_ptr<double3D
 
     // Create vectors for each GPU
     std::shared_ptr<SEP::hypercube> hyperModelSlices(new hypercube(model->getHyper()->getAxis(1), model->getHyper()->getAxis(2), SEP::axis(5))); //This model slice contains the staggered and scaled model perturbations (drhox, drhoz, dlame, dmu, dmuxz)
-    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
+    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), data->getHyper()->getAxis(3)));
     std::vector<std::shared_ptr<double3DReg>> modelSlicesVector;
     std::vector<std::shared_ptr<double3DReg>> dataSlicesVector;
     std::vector<std::shared_ptr<BornElasticGpu>> BornObjectVector;
@@ -108,8 +108,8 @@ void BornElasticShotsGpu::forward(const bool add, const std::shared_ptr<double3D
     std::shared_ptr<SEP::double3DReg> modelSlice(new SEP::double3DReg(hyperModelSlices));
 
     //stagger 2d density, mu
-		std::shared_ptr<staggerX> staggerXop(new staggerX(temp,temp1));
-		std::shared_ptr<staggerZ> staggerZop(new staggerZ(temp,temp1));
+    std::shared_ptr<staggerX> staggerXop(new staggerX(temp,temp1));
+    std::shared_ptr<staggerZ> staggerZop(new staggerZ(temp,temp1));
 
     unsigned long long nz = _fdParamElastic->_nz;
     unsigned long long nx = _fdParamElastic->_nx;
@@ -117,10 +117,10 @@ void BornElasticShotsGpu::forward(const bool add, const std::shared_ptr<double3D
     //DENSITY PERTURBATION
     //D_RHOX
     std::memcpy( temp->getVals(), model->getVals(), nx*nz*sizeof(double) );
-		staggerXop->adjoint(false, temp1, temp);
+    staggerXop->adjoint(false, temp1, temp);
     std::memcpy( modelSlice->getVals(), temp1->getVals(), nx*nz*sizeof(double) );
     //D_RHOZ
-		staggerZop->adjoint(false, temp1, temp);
+    staggerZop->adjoint(false, temp1, temp);
     std::memcpy( modelSlice->getVals()+nx*nz, temp1->getVals(), nx*nz*sizeof(double) );
 
     //D_LAME
@@ -136,16 +136,16 @@ void BornElasticShotsGpu::forward(const bool add, const std::shared_ptr<double3D
     std::memcpy( modelSlice->getVals()+4*nx*nz, temp->getVals(), nx*nz*sizeof(double) );
 
     //Scaling of the perturbations
-		#pragma omp for collapse(2)
-		for (long long ix = 0; ix < nx; ix++){
-			for (long long iz = 0; iz < nz; iz++) {
-				(*modelSlice->_mat)[0][ix][iz] *= (*_fdParamElastic->_rhoxDtwReg->_mat)[ix][iz];
-				(*modelSlice->_mat)[1][ix][iz] *= (*_fdParamElastic->_rhozDtwReg->_mat)[ix][iz];
-				(*modelSlice->_mat)[2][ix][iz] *= 2.0*_fdParamElastic->_dtw;
-				(*modelSlice->_mat)[3][ix][iz] *= 2.0*_fdParamElastic->_dtw;
-				(*modelSlice->_mat)[4][ix][iz] *= 2.0*_fdParamElastic->_dtw;
-			}
-		}
+    #pragma omp for collapse(2)
+    for (long long ix = 0; ix < nx; ix++){
+    	for (long long iz = 0; iz < nz; iz++) {
+    		(*modelSlice->_mat)[0][ix][iz] *= (*_fdParamElastic->_rhoxDtwReg->_mat)[ix][iz];
+    		(*modelSlice->_mat)[1][ix][iz] *= (*_fdParamElastic->_rhozDtwReg->_mat)[ix][iz];
+    		(*modelSlice->_mat)[2][ix][iz] *= 2.0*_fdParamElastic->_dtw;
+    		(*modelSlice->_mat)[3][ix][iz] *= 2.0*_fdParamElastic->_dtw;
+    		(*modelSlice->_mat)[4][ix][iz] *= 2.0*_fdParamElastic->_dtw;
+    	}
+    }
 
     // Initialization for each GPU:
   	// (1) Creation of vector of objects, model, and data.
@@ -240,7 +240,7 @@ void BornElasticShotsGpu::adjoint(const bool add, const std::shared_ptr<double3D
 
     // Create vectors for each GPU
     std::shared_ptr<SEP::hypercube> hyperModelSlices(new hypercube(model->getHyper()->getAxis(1), model->getHyper()->getAxis(2), SEP::axis(5))); //This model slice contains the staggered and scaled model perturbations (drhox, drhoz, dlame, dmu, dmuxz)
-    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), model->getHyper()->getAxis(3)));
+    std::shared_ptr<SEP::hypercube> hyperDataSlices(new hypercube(data->getHyper()->getAxis(1), data->getHyper()->getAxis(2), data->getHyper()->getAxis(3)));
     std::vector<std::shared_ptr<double3DReg>> modelSlicesVector;
     std::vector<std::shared_ptr<double3DReg>> dataSlicesVector;
     std::vector<std::shared_ptr<BornElasticGpu>> BornObjectVector;
