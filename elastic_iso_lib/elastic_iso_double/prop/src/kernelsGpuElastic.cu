@@ -958,7 +958,7 @@ __global__ void imagingElaFwdGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     if(its == 0){
         dev_vx[iGlobal] = dev_drhox[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
         dev_vz[iGlobal] = dev_drhoz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
-    } else if(its == dev_nts){
+    } else if(its == dev_nts-1){
         dev_vx[iGlobal] = dev_drhox[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
         dev_vz[iGlobal] = dev_drhoz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
     } else {
@@ -1036,7 +1036,7 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     if(its == 0){
         dev_drhox[iGlobal] += dev_vx[iGlobal] * (- dev_wavefieldVx[iGlobal_new])*dev_dts_inv;
         dev_drhoz[iGlobal] += dev_vz[iGlobal] * (- dev_wavefieldVz[iGlobal_new])*dev_dts_inv;
-    } else if(its == dev_nts){
+    } else if(its == dev_nts-1){
         dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx[iGlobal_old])*dev_dts_inv;
         dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz[iGlobal_old])*dev_dts_inv;
     } else {

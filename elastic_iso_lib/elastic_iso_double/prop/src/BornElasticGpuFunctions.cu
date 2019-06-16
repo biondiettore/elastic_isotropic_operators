@@ -691,7 +691,7 @@ void BornShotsFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 		for (int its = 0; its < host_nts-1; its++){
 
 			// Compute secondary source for first coarse time index (its+1)
-			kernel_exec(imagingElaFwdGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxRight[iGpu], dev_ssVzRight[iGpu], dev_ssSigmaxxRight[iGpu], dev_ssSigmazzRight[iGpu], dev_ssSigmaxzRight[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], 0));
+			kernel_exec(imagingElaFwdGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxRight[iGpu], dev_ssVzRight[iGpu], dev_ssSigmaxxRight[iGpu], dev_ssSigmazzRight[iGpu], dev_ssSigmaxzRight[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], its+1));
 
 			for (int it2 = 1; it2 < host_sub+1; it2++){
 
@@ -834,11 +834,11 @@ void BornShotsAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 	            // Damp wavefield
 	            launchDampCosineEdgeKernels(dimGrid, dimBlock, iGpu);
 	            // Interpolate and record time slices of receiver wavefield at coarse sampling (no scaling applied yet)
-				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssVxLeft[iGpu], dev_ssVxRight[iGpu], dev_p0_vx[iGpu], it2));
-				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssVzLeft[iGpu], dev_ssVzRight[iGpu], dev_p0_vz[iGpu], it2));
-				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmaxxLeft[iGpu], dev_ssSigmaxxRight[iGpu], dev_p0_sigmaxx[iGpu], it2));
-				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmazzLeft[iGpu], dev_ssSigmazzRight[iGpu], dev_p0_sigmazz[iGpu], it2));
-				kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmaxzLeft[iGpu], dev_ssSigmaxzRight[iGpu], dev_p0_sigmaxz[iGpu], it2));
+							kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssVxLeft[iGpu], dev_ssVxRight[iGpu], dev_p0_vx[iGpu], it2));
+							kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssVzLeft[iGpu], dev_ssVzRight[iGpu], dev_p0_vz[iGpu], it2));
+							kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmaxxLeft[iGpu], dev_ssSigmaxxRight[iGpu], dev_p0_sigmaxx[iGpu], it2));
+							kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmazzLeft[iGpu], dev_ssSigmazzRight[iGpu], dev_p0_sigmazz[iGpu], it2));
+							kernel_exec(extractInterpAdjointWavefield<<<dimGrid, dimBlock>>>(dev_ssSigmaxzLeft[iGpu], dev_ssSigmaxzRight[iGpu], dev_p0_sigmaxz[iGpu], it2));
 
 	            // Switch pointers
 	            switchPointers(iGpu);
