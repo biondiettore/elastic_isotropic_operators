@@ -54,8 +54,11 @@ class nonlinearPropElasticShotsGpu : public Operator<SEP::float4DReg, SEP::float
 		void adjoint(const bool add, std::shared_ptr<SEP::float4DReg> model, const std::shared_ptr<SEP::float4DReg> data) const;
 		void adjointWavefield(const bool add, std::shared_ptr<float4DReg> model, const std::shared_ptr<float4DReg> data);
 
-		/* Accessor */
-		std::shared_ptr<SEP::float4DReg> getWavefield(){ return _wavefield; }
+		//! Accesor
+		std::shared_ptr<float4DReg> getWavefield() { return _wavefield; }
+
+		/* Mutators */
+		void setBackground(std::shared_ptr<float3DReg> elasticParam){ _fdParamElastic = std::make_shared<fdParamElastic>(elasticParam, _par); }
 
 };
 

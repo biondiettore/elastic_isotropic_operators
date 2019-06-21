@@ -209,7 +209,7 @@ void initNonlinearElasticGpu(float dz, float dx, int nz, int nx, int nts, float 
 		}
 
 		/**************************** COPY TO CONSTANT MEMORY *******************************/
-		// Derivative coefficients
+		// Finite-difference coefficients
 		cuda_call(cudaMemcpyToSymbol(dev_zCoeff, zCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice)); // Copy derivative coefficients to device
 		cuda_call(cudaMemcpyToSymbol(dev_xCoeff, xCoeff, COEFF_SIZE*sizeof(float), 0, cudaMemcpyHostToDevice));
 
@@ -327,7 +327,7 @@ void modelAllocateGpu(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSour
 		cuda_call(cudaMalloc((void**) &dev_modelRegDtw_sigmazz[iGpu], nSourcesRegCenterGrid*host_ntw*sizeof(float))); // Allocate input on device
 		cuda_call(cudaMalloc((void**) &dev_modelRegDtw_sigmaxz[iGpu], nSourcesRegXZGrid*host_ntw*sizeof(float))); // Allocate input on device
 }
-//copt model from host to device
+//copy model from host to device
 void modelCopyToGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRegDtw_sigmaxx, float *modelRegDtw_sigmazz, float *modelRegDtw_sigmaxz, int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int iGpu){
 		cuda_call(cudaMemcpy(dev_modelRegDtw_vx[iGpu], modelRegDtw_vx, nSourcesRegXGrid*host_ntw*sizeof(float), cudaMemcpyHostToDevice)); // Copy input signals on device
 		cuda_call(cudaMemcpy(dev_modelRegDtw_vz[iGpu], modelRegDtw_vz, nSourcesRegZGrid*host_ntw*sizeof(float), cudaMemcpyHostToDevice)); // Copy input signals on device
@@ -343,8 +343,8 @@ void modelInitializeOnGpu(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int n
 		cuda_call(cudaMemset(dev_modelRegDtw_sigmazz[iGpu], 0, nSourcesRegCenterGrid*host_ntw*sizeof(float))); // Copy input signals on device
 		cuda_call(cudaMemset(dev_modelRegDtw_sigmaxz[iGpu], 0, nSourcesRegXZGrid*host_ntw*sizeof(float))); // Copy input signals on device
 }
-		//allocate model on device
-		void dataAllocateGpu(int nReceiversRegCenterGrid, int nReceiversRegXGrid, int nReceiversRegZGrid, int nReceiversRegXZGrid, int iGpu){
+//allocate model on device
+void dataAllocateGpu(int nReceiversRegCenterGrid, int nReceiversRegXGrid, int nReceiversRegZGrid, int nReceiversRegXZGrid, int iGpu){
 		cuda_call(cudaMalloc((void**) &dev_dataRegDts_vx[iGpu], nReceiversRegXGrid*host_nts*sizeof(float))); // Allocate output on device
 		cuda_call(cudaMalloc((void**) &dev_dataRegDts_vz[iGpu], nReceiversRegZGrid*host_nts*sizeof(float))); // Allocate output on device
 		cuda_call(cudaMalloc((void**) &dev_dataRegDts_sigmaxx[iGpu], nReceiversRegCenterGrid*host_nts*sizeof(float))); // Allocate output on device
@@ -534,7 +534,7 @@ void propShotsElasticFwdGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 		//                      d) allocate and copy wavefield time slices to gpu
 		setupFwdGpu(modelRegDtw_vx, modelRegDtw_vz, modelRegDtw_sigmaxx, modelRegDtw_sigmazz, modelRegDtw_sigmaxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId);
 
-		// Finite-difference grid and blocks
+		//Finite-difference grid and blocks
 		int nblockx;
 		if(surfaceCondition==0){
 			nblockx = (host_nz-5-FAT) / BLOCK_SIZE;

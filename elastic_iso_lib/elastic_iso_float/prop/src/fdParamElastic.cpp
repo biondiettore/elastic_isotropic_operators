@@ -64,8 +64,8 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 	_fat = _par->getInt("fat");
 	_minPad = std::min(_zPad, _xPad);
 	_saveWavefield = _par->getInt("saveWavefield", 0);
-	_alphaCos = par->getFloat("alphaCos", 0.99);
-	_errorTolerance = par->getFloat("errorTolerance", 0.000001);
+	_alphaCos = _par->getFloat("alphaCos", 0.99);
+	_errorTolerance = _par->getFloat("errorTolerance", 0.000001);
 
 	/***** Other parameters *****/
 
@@ -298,7 +298,7 @@ bool fdParamElastic::checkModelSize(){
 	}
 }
 
-bool fdParamElastic::checkParfileConsistencyTime(const std::shared_ptr<float3DReg> seismicTraces, int timeAxisIndex,  std::string fileToCheck) const {
+bool fdParamElastic::checkParfileConsistencyTime(const std::shared_ptr<float3DReg> seismicTraces, int timeAxisIndex) const {
 	if (_nts != seismicTraces->getHyper()->getAxis(timeAxisIndex).n) {std::cerr << "**** ERROR: nts not consistent with parfile ****" << std::endl; return false;}
 	if ( std::abs(_dts - seismicTraces->getHyper()->getAxis(timeAxisIndex).d) > _errorTolerance ) {std::cerr << "**** ERROR: dts not consistent with parfile ****" << std::endl; return false;}
 	if ( std::abs(_ots - seismicTraces->getHyper()->getAxis(timeAxisIndex).o) > _errorTolerance ) {std::cerr << "**** ERROR: ots not consistent with parfile ****" << std::endl; return false;}
@@ -317,36 +317,14 @@ bool fdParamElastic::checkParfileConsistencySpace(const std::shared_ptr<float3DR
 	if ( std::abs(_dx - model->getHyper()->getAxis(2).d) > _errorTolerance ) {std::cerr << "**** ERROR: dx not consistent with parfile ****" << std::endl; return false;}
 	if ( std::abs(_ox - model->getHyper()->getAxis(2).o) > _errorTolerance ) {std::cerr << "**** ERROR: ox not consistent with parfile ****" << std::endl; return false;}
 
-  // Elastic Parameter axis
-	if (3 != model->getHyper()->getAxis(3).n) {std::cerr << "**** ERROR number of elastic parameters != 3 ****" << std::endl; return false;}
+	// Elastic Parameter axis
+	// if (3 != model->getHyper()->getAxis(3).n) {std::cerr << "**** ERROR number of elastic parameters != 3 ****" << std::endl; return false;}
 
 	return true;
 }
 
-// bool fdParamElastic::checkParfileConsistencySpace(const std::shared_ptr<float3DReg> modelExt) const {
-
-// 	// Vertical axis
-// 	if (_nz != modelExt->getHyper()->getAxis(1).n) {std::cerr << "**** ERROR: nz not consistent with parfile ****" << std::endl; return false;}
-// 	if ( std::abs(_dz - modelExt->getHyper()->getAxis(1).d) > _errorTolerance ) {std::cerr << "**** ERROR: dz not consistent with parfile ****" << std::endl; return false;}
-// 	if ( std::abs(_oz - modelExt->getHyper()->getAxis(1).o) > _errorTolerance ) {std::cerr << "**** ERROR: oz not consistent with parfile ****" << std::endl; return false;}
-
-// 	// Vertical axis
-// 	if (_nx != modelExt->getHyper()->getAxis(2).n) {std::cerr << "**** ERROR: nx not consistent with parfile ****" << std::endl; return false;}
-// 	if ( std::abs(_dx - modelExt->getHyper()->getAxis(2).d) > _errorTolerance ) {std::cerr << "**** ERROR: dx not consistent with parfile ****" << std::endl; return false;}
-// 	if ( std::abs(_ox - modelExt->getHyper()->getAxis(2).o) > _errorTolerance ) {std::cerr << "**** ERROR: ox not consistent with parfile ****" << std::endl; return false;}
-
-// 	// Extended axis
-// 	if (_nExt != modelExt->getHyper()->getAxis(3).n) {std::cerr << "**** ERROR: nExt not consistent with parfile ****" << std::endl; return false;}
-// 	if (_nExt>1) {
-// 		if ( std::abs(_dExt - modelExt->getHyper()->getAxis(3).d) > _errorTolerance ) {std::cerr << "**** ERROR: dExt not consistent with parfile ****" << std::endl; return false;}
-// 		if ( std::abs(_oExt - modelExt->getHyper()->getAxis(3).o) > _errorTolerance ) { std::cerr << "**** ERROR: oExt not consistent with parfile ****" << std::endl; return false;}
-// 	}
-
-// 	return true;
-// }
-
 fdParamElastic::~fdParamElastic(){
-	_rhoxDtw = NULL;
+  _rhoxDtw = NULL;
   _rhozDtw = NULL;
   _lamb2MuDtw = NULL;
   _lambDtw = NULL;

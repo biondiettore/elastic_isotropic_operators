@@ -20,11 +20,11 @@ nonlinearPropElasticGpu::nonlinearPropElasticGpu(std::shared_ptr<fdParamElastic>
 
 	/// Alocate on GPUs
 	allocateNonlinearElasticGpu(_fdParamElastic->_rhoxDtw,
-												_fdParamElastic->_rhozDtw,
-												_fdParamElastic->_lamb2MuDtw,
-												_fdParamElastic->_lambDtw,
-												_fdParamElastic->_muxzDtw,
-												_iGpu, iGpuId);
+														  _fdParamElastic->_rhozDtw,
+															_fdParamElastic->_lamb2MuDtw,
+															_fdParamElastic->_lambDtw,
+															_fdParamElastic->_muxzDtw,
+															_iGpu, iGpuId);
 	setAllWavefields(0); // By default, do not record the scattered wavefields
 }
 
@@ -34,8 +34,8 @@ void nonlinearPropElasticGpu::setAllWavefields(int wavefieldFlag){
 
 bool nonlinearPropElasticGpu::checkParfileConsistency(const std::shared_ptr<SEP::float3DReg> model, const std::shared_ptr<SEP::float3DReg> data) const{
 
-	if (_fdParamElastic->checkParfileConsistencyTime(data, 1, "Data file") != true) {return false;} // Check data time axis
-	if (_fdParamElastic->checkParfileConsistencyTime(model,1, "Model file") != true) {return false;}; // Check model time axis
+	if (_fdParamElastic->checkParfileConsistencyTime(data, 1) != true) {return false;} // Check data time axis
+	if (_fdParamElastic->checkParfileConsistencyTime(model,1) != true) {return false;}; // Check model time axis
 
 	return true;
 }
@@ -62,7 +62,6 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
   std::shared_ptr<float2DReg> modelRegDtw_sigmazz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
   std::shared_ptr<float2DReg> modelRegDtw_sigmaxz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
 
-  // std::shared_ptr<float2DReg> dataRegDtw(new float2DReg(_fdParamElastic->_ntw, _nReceiversReg));
   std::shared_ptr<float2DReg> dataRegDts_vx(new float2DReg(_fdParamElastic->_nts, _nReceiversRegXGrid));
   std::shared_ptr<float2DReg> dataRegDts_vz(new float2DReg(_fdParamElastic->_nts, _nReceiversRegZGrid));
   std::shared_ptr<float2DReg> dataRegDts_sigmaxx(new float2DReg(_fdParamElastic->_nts, _nReceiversRegCenterGrid));
@@ -77,11 +76,6 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
 
   if (!add){
 	  data->scale(0.0);
-	  modelTemp_vx -> scale(0.0);
-	  modelTemp_vz -> scale(0.0);
-	  modelTemp_sigmaxx -> scale(0.0);
-	  modelTemp_sigmazz -> scale(0.0);
-	  modelTemp_sigmaxz -> scale(0.0);
   } else {
 	  /* Copy the data to the temporary array */
 	  std::memcpy(dataTemp_vx->getVals(),data->getVals(), _nReceiversIrregXGrid*_fdParamElastic->_nts*sizeof(float) );
@@ -110,15 +104,15 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
   modelRegDts_sigmazz->scale(2.0*_fdParamElastic->_dtw);
   #pragma omp parallel for collapse(2)
   for(int is = 0; is < _nSourcesRegXGrid; is++){ //loop over number of reg sources x grid
-    for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
-      (*modelRegDts_vx->_mat)[is][it] *= _fdParamElastic->_rhoxDtw[(_sourcesXGrid->getRegPosUnique())[is]];
-    }
+		for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
+	  		(*modelRegDts_vx->_mat)[is][it] *= _fdParamElastic->_rhoxDtw[(_sourcesXGrid->getRegPosUnique())[is]];
+		}
   }
   #pragma omp parallel for collapse(2)
   for(int is = 0; is < _nSourcesRegZGrid; is++){ //loop over number of reg sources z grid
-    for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
-      (*modelRegDts_vz->_mat)[is][it] *= _fdParamElastic->_rhozDtw[(_sourcesZGrid->getRegPosUnique())[is]];
-    }
+		for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
+	  		(*modelRegDts_vz->_mat)[is][it] *= _fdParamElastic->_rhozDtw[(_sourcesZGrid->getRegPosUnique())[is]];
+		}
   }
   modelRegDts_sigmaxz->scale(2.0*_fdParamElastic->_dtw);
 
@@ -140,16 +134,16 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
 	// /* Propagate */
 	if (_saveWavefield == 0) {
 		propShotsElasticFwdGpu(modelRegDtw_vx->getVals(),
-		 											modelRegDtw_vz->getVals(),
+													modelRegDtw_vz->getVals(),
 													modelRegDtw_sigmaxx->getVals(),
 													modelRegDtw_sigmazz->getVals(),
 													modelRegDtw_sigmaxz->getVals(),
-                    			dataRegDts_vx->getVals(),
+													dataRegDts_vx->getVals(),
 													dataRegDts_vz->getVals(),
 													dataRegDts_sigmaxx->getVals(),
 													dataRegDts_sigmazz->getVals(),
 													dataRegDts_sigmaxz->getVals(),
-                    			_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
+													_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
 													_sourcesPositionRegXGrid, _nSourcesRegXGrid,
 													_sourcesPositionRegZGrid, _nSourcesRegZGrid,
 													_sourcesPositionRegXZGrid, _nSourcesRegXZGrid,
@@ -158,20 +152,20 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
 													_receiversPositionRegZGrid, _nReceiversRegZGrid,
 													_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
 													 _iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
-    } else {
+	} else {
 			//Saving wavefield with or w/o streams
 			if(_useStreams == 0){
 				propShotsElasticFwdGpuWavefield(modelRegDtw_vx->getVals(),
-				 											modelRegDtw_vz->getVals(),
+															modelRegDtw_vz->getVals(),
 															modelRegDtw_sigmaxx->getVals(),
 															modelRegDtw_sigmazz->getVals(),
 															modelRegDtw_sigmaxz->getVals(),
-		                    			dataRegDts_vx->getVals(),
+															dataRegDts_vx->getVals(),
 															dataRegDts_vz->getVals(),
 															dataRegDts_sigmaxx->getVals(),
 															dataRegDts_sigmazz->getVals(),
 															dataRegDts_sigmaxz->getVals(),
-		                    			_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
+															_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
 															_sourcesPositionRegXGrid, _nSourcesRegXGrid,
 															_sourcesPositionRegZGrid, _nSourcesRegZGrid,
 															_sourcesPositionRegXZGrid, _nSourcesRegXZGrid,
@@ -183,16 +177,16 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
 															 _iGpu, _iGpuId);
 			} else {
 				propShotsElasticFwdGpuWavefieldStreams(modelRegDtw_vx->getVals(),
-				 											modelRegDtw_vz->getVals(),
+															modelRegDtw_vz->getVals(),
 															modelRegDtw_sigmaxx->getVals(),
 															modelRegDtw_sigmazz->getVals(),
 															modelRegDtw_sigmaxz->getVals(),
-		                    			dataRegDts_vx->getVals(),
+															dataRegDts_vx->getVals(),
 															dataRegDts_vz->getVals(),
 															dataRegDts_sigmaxx->getVals(),
 															dataRegDts_sigmazz->getVals(),
 															dataRegDts_sigmaxz->getVals(),
-		                    			_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
+															_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
 															_sourcesPositionRegXGrid, _nSourcesRegXGrid,
 															_sourcesPositionRegZGrid, _nSourcesRegZGrid,
 															_sourcesPositionRegXZGrid, _nSourcesRegXZGrid,
@@ -241,7 +235,6 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 	std::shared_ptr<float2DReg> modelRegDtw_sigmazz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
 	std::shared_ptr<float2DReg> modelRegDtw_sigmaxz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
 
-	// std::shared_ptr<float2DReg> dataRegDtw(new float2DReg(_fdParamElastic->_ntw, _nReceiversReg));
 	std::shared_ptr<float2DReg> dataRegDts_vx(new float2DReg(_fdParamElastic->_nts, _nReceiversRegXGrid));
 	std::shared_ptr<float2DReg> dataRegDts_vz(new float2DReg(_fdParamElastic->_nts, _nReceiversRegZGrid));
 	std::shared_ptr<float2DReg> dataRegDts_sigmaxx(new float2DReg(_fdParamElastic->_nts, _nReceiversRegCenterGrid));
@@ -348,13 +341,13 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 	#pragma omp parallel for collapse(2)
 	for(int is = 0; is < _nSourcesRegXGrid; is++){ //loop over number of reg sources x grid
 		for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
-	  		(*modelRegDts_vx->_mat)[is][it] *= _fdParamElastic->_rhoxDtw[(_sourcesXGrid->getRegPosUnique())[is]];
+			(*modelRegDts_vx->_mat)[is][it] *= _fdParamElastic->_rhoxDtw[(_sourcesXGrid->getRegPosUnique())[is]];
 		}
 	}
 	#pragma omp parallel for collapse(2)
 	for(int is = 0; is < _nSourcesRegZGrid; is++){ //loop over number of reg sources z grid
 		for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
-	  		(*modelRegDts_vz->_mat)[is][it] *= _fdParamElastic->_rhozDtw[(_sourcesZGrid->getRegPosUnique())[is]];
+			(*modelRegDts_vz->_mat)[is][it] *= _fdParamElastic->_rhozDtw[(_sourcesZGrid->getRegPosUnique())[is]];
 		}
 	}
 	modelRegDts_sigmaxz->scale(2.0*_fdParamElastic->_dtw);

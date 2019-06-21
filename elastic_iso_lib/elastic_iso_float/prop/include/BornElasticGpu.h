@@ -1,5 +1,5 @@
-#ifndef NL_PROP_ELASTIC_GPU_H
-#define NL_PROP_ELASTIC_GPU_H 1
+#ifndef BORN_ELASTIC_GPU_H
+#define BORN_ELASTIC_GPU_H 1
 
 #include <string>
 #include <tbb/tbb.h>
@@ -13,40 +13,42 @@
 #include "fdParamElastic.h"
 #include "seismicElasticOperator2D.h"
 #include "interpTimeLinTbb.h"
-#include "nonlinearPropElasticGpuFunctions.h"
+#include "BornElasticGpuFunctions.h"
 
 using namespace SEP;
 //! Propogates one elastic wavefield for one shot on one gpu.
 /*!
  A more elaborate description of the class.
 */
-class nonlinearPropElasticGpu : public seismicElasticOperator2D<SEP::float3DReg, SEP::float3DReg> {
+class BornElasticGpu : public seismicElasticOperator2D<SEP::float3DReg, SEP::float3DReg> {
 
 	protected:
 
-		std::shared_ptr<float4DReg> _wavefield;
+		std::shared_ptr<float4DReg> _srcWavefield, _secWavefield;
 
 	public:
-    //! Constructor.
-		nonlinearPropElasticGpu(std::shared_ptr<fdParamElastic> fdParamElastic, std::shared_ptr<paramObj> par, int nGpu, int iGpu, int iGpuId, int iGpuAlloc);
+	  	//! Constructor.
+		BornElasticGpu(std::shared_ptr<fdParamElastic> fdParamElastic, std::shared_ptr<paramObj> par, int nGpu, int iGpu, int iGpuId, int iGpuAlloc);
 
 		//! Mutators.
 		void setAllWavefields(int wavefieldFlag);
 
-  	//! QC
+    	//! QC
 		virtual bool checkParfileConsistency(std::shared_ptr<SEP::float3DReg> model, std::shared_ptr<SEP::float3DReg> data) const;
 
-  	//! FWD
-  	void forward(const bool add, const std::shared_ptr<float3DReg> model, std::shared_ptr<float3DReg> data) const;
+    	//! FWD
+    	void forward(const bool add, const std::shared_ptr<float3DReg> model, std::shared_ptr<float3DReg> data) const;
 
-	  //! ADJ
+		//! ADJ
 		void adjoint(const bool add, std::shared_ptr<float3DReg> model, const std::shared_ptr<float3DReg> data) const;
 
 		//! Desctructor
-		~nonlinearPropElasticGpu(){};
+		~BornElasticGpu(){};
 
 		//! Accesor
-		std::shared_ptr<float4DReg> getWavefield() { return _wavefield; }
+		std::shared_ptr<float4DReg> getSrcWavefield() { return _srcWavefield; }
+    	std::shared_ptr<float4DReg> getSecWavefield() { return _secWavefield; }
+
 
 };
 

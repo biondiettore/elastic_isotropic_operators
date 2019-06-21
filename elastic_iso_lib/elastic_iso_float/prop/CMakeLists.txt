@@ -8,14 +8,22 @@ include_directories(include)
 
 #Files to be compiled
 set(SRC_DIR src)
-set(SOURCE ${SRC_DIR}/fdParamElastic.cpp
-					 ${SRC_DIR}/nonlinearPropElasticShotsGpu.cpp
-					 ${SRC_DIR}/nonlinearPropElasticGpu.cpp
-					 ${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
-					 ${SRC_DIR}/spaceInterpGpu.cpp
-					 # ${SRC_DIR}/spaceSincInterpGpu.cpp
-					 ${SRC_DIR}/interpTimeLinTbb.cpp
-					 ${SRC_DIR}/stagger.cpp)
+set(SOURCE_NL ${SRC_DIR}/fdParamElastic.cpp
+					 		${SRC_DIR}/nonlinearPropElasticShotsGpu.cpp
+					 		${SRC_DIR}/nonlinearPropElasticGpu.cpp
+					 		${SRC_DIR}/nonlinearPropElasticGpuFunctions.cu
+					 		${SRC_DIR}/spaceInterpGpu.cpp
+					 		# ${SRC_DIR}/spaceSincInterpGpu.cpp
+					 		${SRC_DIR}/interpTimeLinTbb.cpp
+					 		${SRC_DIR}/stagger.cpp)
+
+set(SOURCE_BORN ${SRC_DIR}/fdParamElastic.cpp
+                ${SRC_DIR}/BornElasticGpuFunctions.cu
+                ${SRC_DIR}/BornElasticGpu.cpp
+			          ${SRC_DIR}/BornElasticShotsGpu.cpp
+                ${SRC_DIR}/spaceInterpGpu.cpp
+                ${SRC_DIR}/interpTimeLinTbb.cpp
+           	    ${SRC_DIR}/stagger.cpp)
 
 #Executables to be compiled
 # set(EXECS  ${SRC_DIR}/nonlinearPropElasticShotsGpuMain.cpp)
@@ -46,14 +54,17 @@ link_directories(${Generic-cpp_BINARY_DIR}
 								)
 
 #Compiling the project library
-add_library(ELASTIC_ISO_FLOAT_NL ${SOURCE})
+add_library(ELASTIC_ISO_FLOAT_NL ${SOURCE_NL})
+add_library(ELASTIC_ISO_FLOAT_BORN ${SOURCE_BORN})
 
 #Compiling the project executables
 # add_executable(padElasticFileGpuMain ${SRC_DIR}/padElasticFileGpuMain.cpp)
 # target_link_libraries(padElasticFileGpuMain genericCpp OpenMP::OpenMP_CXX)
 target_link_libraries(ELASTIC_ISO_FLOAT_NL genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
+target_link_libraries(ELASTIC_ISO_FLOAT_BORN genericCpp sepVector sep3d sep OpenMP::OpenMP_CXX)
 
 #Adding libray and header files to install destination
 install(TARGETS ELASTIC_ISO_FLOAT_NL DESTINATION lib)
+install(TARGETS ELASTIC_ISO_FLOAT_BORN DESTINATION lib)
 # install(TARGETS padElasticFileGpuMain DESTINATION bin)
 install(FILES ${HEADERS} DESTINATION include)

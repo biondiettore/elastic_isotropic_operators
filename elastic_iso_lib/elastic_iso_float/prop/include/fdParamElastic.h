@@ -22,7 +22,7 @@ class fdParamElastic{
 		~fdParamElastic();
 
 		// QC stuff
-		bool checkParfileConsistencyTime(const std::shared_ptr<float3DReg> seismicTraces, int timeAxisIndex, std::string fileToCheck) const; /** ensure time axis of traces matches nts from parfile */
+		bool checkParfileConsistencyTime(const std::shared_ptr<float3DReg> seismicTraces, int timeAxisIndex) const; /** ensure time axis of traces matches nts from parfile */
 		bool checkParfileConsistencySpace(const std::shared_ptr<float3DReg> model) const; /** ensure space axes of model matches those from parfile */
 		//bool checkParfileConsistencySpace(const std::shared_ptr<float3DReg> modelExt) const;
 
@@ -37,10 +37,10 @@ class fdParamElastic{
 
 		axis _timeAxisCoarse, _timeAxisFine, _zAxis, _xAxis, _extAxis, _wavefieldCompAxis;
 
-    // Precomputed scaling dtw / rho_x , dtw / rho_z , (lambda + 2*mu) * dtw , lambda * dtw , mu_xz * dtw
-    std::shared_ptr<float2DReg> _rhoxDtwReg, _rhozDtwReg, _lamb2MuDtwReg, _lambDtwReg, _muxzDtwReg;
-    //pointers to float arrays holding values. These are later passed to the device.
-    float *_rhoxDtw,*_rhozDtw,*_lamb2MuDtw,*_lambDtw,*_muxzDtw;
+        // Precomputed scaling dtw / rho_x , dtw / rho_z , (lambda + 2*mu) * dtw , lambda * dtw , mu_xz * dtw
+        std::shared_ptr<float2DReg> _rhoxDtwReg, _rhozDtwReg, _lamb2MuDtwReg, _lambDtwReg, _muxzDtwReg;
+        //pointers to float arrays holding values. These are later passed to the device.
+        float *_rhoxDtw,*_rhozDtw,*_lamb2MuDtw,*_lambDtw,*_muxzDtw;
 
 		//float *_reflectivityScale;
 		float _errorTolerance;
@@ -49,12 +49,12 @@ class fdParamElastic{
 		float _ots, _dts, _otw, _dtw;
 		float _Courant, _dispersionRatio;
 		int _nz, _nx;
-    const int _nwc=5;
+        const int _nwc=5;
 		int _zPadMinus, _zPadPlus, _xPadMinus, _xPadPlus, _zPad, _xPad, _minPad;
 		float _dz, _dx, _oz, _ox, _fMax;
 		int _saveWavefield, _blockSize, _fat;
 		float _alphaCos;
-    int _surfaceCondition;
+        int _surfaceCondition;
 
 };
 
