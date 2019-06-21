@@ -92,7 +92,7 @@ void BornElasticShotsGpu::forward(const bool add, const std::shared_ptr<double3D
     else {constantSrcSignal=0;}
 
     // Check if we have constant receiver geometry. If _receiversVectorCenterGrid size==1 then all receiver vectors should be as well.
-    if (_receiversVectorCenterGrid.size() == 1) {constantRecGeom=1;}
+    if (_receiversVectorCenterGrid.size() == 1) {constantRecGeom = 1;}
     else {constantRecGeom=0;}
 
     // Create vectors for each GPU
@@ -180,22 +180,22 @@ void BornElasticShotsGpu::forward(const bool add, const std::shared_ptr<double3D
   	  int iGpuId = _gpuList[iGpu];
 
       // Set acquisition geometry
-	  if ( (constantRecGeom == 1) && (constantSrcSignal == 1) ) {
-          BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[0], _receiversVectorCenterGrid[0], _receiversVectorXGrid[0], _receiversVectorZGrid[0], _receiversVectorXZGrid[0],
-          modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
-	  }
-	  if ( (constantRecGeom == 1) && (constantSrcSignal == 0) ) {
-          BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[iExp], _receiversVectorCenterGrid[0], _receiversVectorXGrid[0], _receiversVectorZGrid[0], _receiversVectorXZGrid[0],
-          modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
-	  }
-	  if ( (constantRecGeom == 0) && (constantSrcSignal == 1) ) {
-          BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[0], _receiversVectorCenterGrid[iExp], _receiversVectorXGrid[iExp], _receiversVectorZGrid[iExp], _receiversVectorXZGrid[iExp],
-          modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
-	  }
-	  if ( (constantRecGeom == 0) && (constantSrcSignal == 0) ) {
-          BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[iExp], _receiversVectorCenterGrid[iExp], _receiversVectorXGrid[iExp], _receiversVectorZGrid[iExp], _receiversVectorXZGrid[iExp],
-          modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
-	  }
+  	  if ( (constantRecGeom == 1) && (constantSrcSignal == 1) ) {
+            BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[0], _receiversVectorCenterGrid[0], _receiversVectorXGrid[0], _receiversVectorZGrid[0], _receiversVectorXZGrid[0],
+            modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
+  	  }
+  	  if ( (constantRecGeom == 1) && (constantSrcSignal == 0) ) {
+            BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[iExp], _receiversVectorCenterGrid[0], _receiversVectorXGrid[0], _receiversVectorZGrid[0], _receiversVectorXZGrid[0],
+            modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
+  	  }
+  	  if ( (constantRecGeom == 0) && (constantSrcSignal == 1) ) {
+            BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[0], _receiversVectorCenterGrid[iExp], _receiversVectorXGrid[iExp], _receiversVectorZGrid[iExp], _receiversVectorXZGrid[iExp],
+            modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
+  	  }
+  	  if ( (constantRecGeom == 0) && (constantSrcSignal == 0) ) {
+            BornObjectVector[iGpu]->setAcquisition(_sourcesVectorCenterGrid[iExp], _sourcesVectorXGrid[iExp], _sourcesVectorZGrid[iExp], _sourcesVectorXZGrid[iExp], _sourcesSignalsVector[iExp], _receiversVectorCenterGrid[iExp], _receiversVectorXGrid[iExp], _receiversVectorZGrid[iExp], _receiversVectorXZGrid[iExp],
+            modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
+  	  }
 
       // Set GPU number for propagator object
       BornObjectVector[iGpu]->setGpuNumber(iGpu,iGpuId);
@@ -265,7 +265,7 @@ void BornElasticShotsGpu::adjoint(const bool add, const std::shared_ptr<double3D
 
   		// Model slice
   		std::shared_ptr<SEP::double3DReg> modelSlices(new SEP::double3DReg(hyperModelSlices));
-        modelSlices->scale(0.0); // Initialize each model slices vector to zero
+      modelSlices->scale(0.0); // Initialize each model slices vector to zero
   		modelSlicesVector.push_back(modelSlices);
 
   		// Data slice
@@ -352,6 +352,7 @@ void BornElasticShotsGpu::adjoint(const bool add, const std::shared_ptr<double3D
 		std::memcpy( temp->getVals(), modelSlicesVector[0]->getVals(), nx*nz*sizeof(double) );
 		staggerXop->forward(true, temp, temp1);
     //D_RHOZ
+    std::memcpy( temp->getVals(), modelSlicesVector[0]->getVals()+nx*nz, nx*nz*sizeof(double) );
 		staggerZop->forward(true, temp, temp1);
     std::memcpy( model->getVals(), temp1->getVals(), nx*nz*sizeof(double) );
 
