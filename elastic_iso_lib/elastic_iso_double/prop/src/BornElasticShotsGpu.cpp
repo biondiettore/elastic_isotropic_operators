@@ -305,7 +305,7 @@ void BornElasticShotsGpu::adjoint(const bool add, const std::shared_ptr<double3D
 	      BornObjectVector[iGpu]->setGpuNumber(iGpu,iGpuId);
 
 	      //Launch modeling
-	      BornObjectVector[iGpu]->adjoint(false, modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
+	      BornObjectVector[iGpu]->adjoint(true, modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
 
 	  }
 
