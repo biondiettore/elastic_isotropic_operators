@@ -187,7 +187,7 @@ void BornElasticGpu::adjoint(const bool add, const std::shared_ptr<double3DReg> 
 										_receiversPositionRegXGrid, _nReceiversRegXGrid,
 										_receiversPositionRegZGrid, _nReceiversRegZGrid,
 										_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
-										 _iGpu, _iGpuId, _fdParamElastic->_surfaceCondition, _useStreams);
+										_iGpu, _iGpuId, _fdParamElastic->_surfaceCondition, _useStreams);
 	} else {
 		throw std::logic_error( "Error! Born forward operator w/ wavefield saving not implemented yet!" );
 	}

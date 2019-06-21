@@ -200,6 +200,10 @@ void BornElasticShotsGpu::forward(const bool add, const std::shared_ptr<double3D
       // Set GPU number for propagator object
       BornObjectVector[iGpu]->setGpuNumber(iGpu,iGpuId);
 
+      //Test dot-product of single shot operator
+      // BornObjectVector[iGpu]->dotTest(true);
+      // exit(0);
+
       //Launch modeling
       BornObjectVector[iGpu]->forward(false, modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
 

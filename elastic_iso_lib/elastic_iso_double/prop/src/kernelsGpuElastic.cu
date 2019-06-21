@@ -971,13 +971,14 @@ __global__ void imagingElaFwdGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     dev_sigmazz[iGlobal] = dev_dlame[iGlobal] * (dvx_dx + dvz_dz) + 2.0 * dev_dmu[iGlobal] * dvz_dz;
     //Scattering Sigmaxz component             //first deriv in negative z direction of current vx
     dev_sigmaxz[iGlobal] = dev_dmuxz[iGlobal]*(dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1])  +
-                           dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
-                           dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
-                           //first deriv in negative x direction of current vz
-                           dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
-                           dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
-                           dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
-                           dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
+                                               dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
+                                               dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
+                                               dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
+                                               //first deriv in negative x direction of current vz
+                                               dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
+                                               dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
+                                               dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
+                                               dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
 
 
 }
@@ -1048,7 +1049,7 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     //Imaging dmu component
     dev_dmu[iGlobal] += 2.0 * (dvx_dx * dev_sigmaxx[iGlobal] + dvz_dz * dev_sigmazz[iGlobal]);
     //Scattering Sigmaxz component             //first deriv in negative z direction of current vx
-    dev_dmuxz[iGlobal] += dev_sigmaxz[iGlobal]*(dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1])  +
+    dev_dmuxz[iGlobal] += dev_sigmaxz[iGlobal]*(dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1]) +
                                                 dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
                                                 dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
                                                 dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+

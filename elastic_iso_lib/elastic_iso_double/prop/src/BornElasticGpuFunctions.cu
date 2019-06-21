@@ -450,6 +450,13 @@ void wavefieldInitializeOnGpu(int iGpu){
 		cuda_call(cudaMemset(dev_p1_sigmaxz[iGpu], 0, host_nz*host_nx*sizeof(double)));
 }
 
+void VxVzInitializeOnGpu(int iGpu){
+		// Set Vx to zero
+		cuda_call(cudaMemset(dev_wavefieldVx[iGpu], 0, host_nz*host_nx*host_nts*sizeof(double)));
+		// Set Vz to zero
+		cuda_call(cudaMemset(dev_wavefieldVz[iGpu], 0, host_nz*host_nx*host_nts*sizeof(double)));
+}
+
 void modelCopyToGpu(double *drhox, double *drhoz, double *dlame, double *dmu, double *dmuxz,int iGpu){
 		cuda_call(cudaMemcpy(dev_drhox[iGpu], drhox, host_nz*host_nx*sizeof(double), cudaMemcpyHostToDevice));
 		cuda_call(cudaMemcpy(dev_drhoz[iGpu], drhoz, host_nz*host_nx*sizeof(double), cudaMemcpyHostToDevice));
@@ -476,6 +483,9 @@ void setupBornFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 
 		//Initialize wavefield slices to zero
 		wavefieldInitializeOnGpu(iGpu);
+
+		//initailize source Vx and Vz to zero
+		VxVzInitializeOnGpu(iGpu);
 
 		//Initialize model perturbations
 		modelCopyToGpu(drhox,drhoz,dlame,dmu,dmuxz,iGpu);
@@ -599,6 +609,9 @@ void setupAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *sourc
 
 		//initailize wavefield slices to zero
 		wavefieldInitializeOnGpu(iGpu);
+
+		//initailize source Vx and Vz to zero
+		VxVzInitializeOnGpu(iGpu);
 
     //Initialize model perturbations to zero
     modelSetOnGpu(iGpu);
@@ -804,6 +817,7 @@ void BornShotsAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 
 						// Step forward
 						launchFwdStepKernels(dimGrid, dimBlock, iGpu);
+
 						// Inject source
 						launchFwdInjectSourceKernels(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
 
@@ -845,7 +859,7 @@ void BornShotsAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 	          }
 
 			  // Apply extended imaging condition for its+1
-			  kernel_exec(imagingElaAdjGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxRight[iGpu], dev_ssVzRight[iGpu], dev_ssSigmaxxRight[iGpu], dev_ssSigmazzRight[iGpu], dev_ssSigmaxzRight[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], its));
+			  kernel_exec(imagingElaAdjGpu<<<dimGrid, dimBlock>>>(dev_wavefieldVx[iGpu], dev_wavefieldVz[iGpu], dev_ssVxRight[iGpu], dev_ssVzRight[iGpu], dev_ssSigmaxxRight[iGpu], dev_ssSigmazzRight[iGpu], dev_ssSigmaxzRight[iGpu], dev_drhox[iGpu], dev_drhoz[iGpu], dev_dlame[iGpu], dev_dmu[iGpu], dev_dmuxz[iGpu], its+1));
 			  // Switch pointers for secondary source and setting right slices to zero
 			  switchPointersSecondarySource(iGpu);
 			  cuda_call(cudaMemset(dev_ssVxLeft[iGpu], 0, host_nz*host_nx*sizeof(double)));
