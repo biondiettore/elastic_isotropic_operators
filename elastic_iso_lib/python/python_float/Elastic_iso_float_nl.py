@@ -1,6 +1,7 @@
 #Python module encapsulating PYBIND11 module
 #It seems necessary to allow std::cout redirection to screen
 import pyElastic_iso_float_nl
+import pyElastic_iso_float_born
 import pyOperator as Op
 import elasticParamConvertModule as ElaConv
 #Other necessary modules
@@ -196,7 +197,7 @@ def nonlinearOpInitFloat(args):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
-	# Bullshit stuff
+	# IO objects
 	io=genericIO.pyGenericIO.ioModes(args)
 	ioDef=io.getDefaultIO()
 	parObject=ioDef.getParamObj()
@@ -312,3 +313,104 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 		with pyElastic_iso_float_nl.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
+################################### Born #######################################
+def BornOpInitFloat(args):
+	"""Function to correctly initialize nonlinear operator
+	   The function will return the necessary variables for operator construction
+	"""
+	# IO objects
+	io=genericIO.pyGenericIO.ioModes(args)
+	ioDef=io.getDefaultIO()
+	parObject=ioDef.getParamObj()
+
+	# elatic params
+	elasticParam=parObject.getString("elasticParam", "noElasticParamFile")
+	if (elasticParam == "noElasticParamFile"):
+		print("**** ERROR: User did not provide elastic parameter file ****\n")
+		sys.exit()
+	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
+
+	#Converting model parameters to Rho|Lame|Mu if necessary [kg/m3|Pa|Pa]
+	# 0 ==> correct parameterization
+	# 1 ==> VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
+	mod_par = parObject.getInt("mod_par",0)
+	if(mod_par != 0):
+		convOp = ElaConv.ElasticConv(elasticParamFloat,mod_par)
+		elasticParamFloatTemp = elasticParamFloat.clone()
+		convOp.forward(False,elasticParamFloatTemp,elasticParamFloat)
+		del elasticParamFloatTemp
+
+	# Build sources/receivers geometry
+	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
+	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
+
+	# Time Axis
+	nts=parObject.getInt("nts",-1)
+	ots=parObject.getFloat("ots",0.0)
+	dts=parObject.getFloat("dts",-1.0)
+	timeAxis=Hypercube.axis(n=nts,o=ots,d=dts)
+	wavefieldAxis=Hypercube.axis(n=5)
+
+	# Read sources signals
+	sourcesFile=parObject.getString("sources","noSourcesFile")
+	if (sourcesFile == "noSourcesFile"):
+		raise IOError("**** ERROR: User did not provide seismic sources file ****")
+	sourcesSignalsFloat=genericIO.defaultIO.getVector(sourcesFile,ndims=3)
+	sourcesSignalsVector=[]
+	sourcesSignalsVector.append(sourcesSignalsFloat) # Create a vector of float3DReg slices
+
+	# Allocate model
+	modelFloat=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataFloat")
+
+	# Allocate data
+	dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
+	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
+
+	# Outputs
+	return modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
+
+class BornElasticShotsGpu(Op.Operator):
+	"""Wrapper encapsulating PYBIND11 module for elastic Born propagator"""
+
+	def __init__(self,domain,range,elasticParam,paramP,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid):
+		#Domain = source wavelet
+		#Range = recorded data space
+		self.setDomainRange(domain,range)
+		#Checking if getCpp is present
+		if("getCpp" in dir(elasticParam)):
+			elasticParam = elasticParam.getCpp()
+		if("getCpp" in dir(paramP)):
+			paramP = paramP.getCpp()
+		for idx,sourceSignal in enumerate(sourcesSignalsVector):
+			if("getCpp" in dir(sourceSignal)):
+				sourcesSignalsVector[idx] = sourceSignal.getCpp()
+		self.pyOp = pyElastic_iso_float_born.BornElasticShotsGpu(elasticParam,paramP,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		return
+
+	def forward(self,add,model,data):
+		#Checking if getCpp is present
+		if("getCpp" in dir(model)):
+			model = model.getCpp()
+		if("getCpp" in dir(data)):
+			data = data.getCpp()
+		with pyElastic_iso_float_nl.ostream_redirect():
+			self.pyOp.forward(add,model,data)
+		return
+
+	def adjoint(self,add,model,data):
+		#Checking if getCpp is present
+		if("getCpp" in dir(model)):
+			model = model.getCpp()
+		if("getCpp" in dir(data)):
+			data = data.getCpp()
+		with pyElastic_iso_float_nl.ostream_redirect():
+			self.pyOp.adjoint(add,model,data)
+		return
+
+	def setBackground(self,elasticParam):
+		#Checking if getCpp is present
+		if("getCpp" in dir(elasticParam)):
+			elasticParam = elasticParam.getCpp()
+		with pyElastic_iso_float_nl.ostream_redirect():
+			self.pyOp.setBackground(elasticParam)
+		return

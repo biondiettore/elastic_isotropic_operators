@@ -40,6 +40,9 @@ if (pybind11_FOUND)
 
   pybind11_add_module(pyElastic_iso_float_we MODULE pyElastic_iso_float_we.cpp)
   target_link_libraries(pyElastic_iso_float_we PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
+
+  pybind11_add_module(pyElastic_iso_float_born MODULE pyElastic_iso_float_born.cpp)
+  target_link_libraries(pyElastic_iso_float_born PRIVATE ELASTIC_ISO_FLOAT_BORN ${LIBS})
   #
   pybind11_add_module(pyStaggerFloat MODULE pyStaggerFloat.cpp)
   target_link_libraries(pyStaggerFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
@@ -49,17 +52,10 @@ if (pybind11_FOUND)
 
   pybind11_add_module(pyPadTruncateSourceFloat MODULE pyPadTruncateSourceFloat.cpp)
   target_link_libraries(pyPadTruncateSourceFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
-  # pybind11_add_module(pyElastic_iso_float_born MODULE pyElastic_iso_float_born.cpp)
-  # target_link_libraries(pyElastic_iso_float_born PRIVATE ELASTIC_ISO_FLOAT_BORN ${LIBS})
-  # pybind11_add_module(pyElastic_iso_float_born_ext MODULE pyElastic_iso_float_born_ext.cpp)
-  # target_link_libraries(pyElastic_iso_float_born_ext PRIVATE ELASTIC_ISO_FLOAT_BORN_EXT ${LIBS})
-  # pybind11_add_module(pyElastic_iso_float_tomo MODULE pyElastic_iso_float_tomo.cpp)
-  # target_link_libraries(pyElastic_iso_float_tomo PRIVATE ELASTIC_ISO_FLOAT_TOMO_EXT ${LIBS})
-  # pybind11_add_module(pyElastic_iso_float_wemva MODULE pyElastic_iso_float_wemva.cpp)
-  # target_link_libraries(pyElastic_iso_float_wemva PRIVATE ELASTIC_ISO_FLOAT_WEMVA_EXT ${LIBS})
 
   #Installing library
   install( TARGETS pyElastic_iso_float_nl DESTINATION lib/python) #Module for non-linear operator
+  install( TARGETS pyElastic_iso_float_born DESTINATION lib/python) #Module for Born operator
   install( FILES Elastic_iso_float_nl.py DESTINATION lib/python)
 
   install( TARGETS pyElastic_iso_float_we DESTINATION lib/python) #Module for non-linear operator
@@ -81,6 +77,7 @@ if (pybind11_FOUND)
   install( FILES waveEqInvFloat.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES waveReconMainFloat.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES nonlinearPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
+  install( FILES BornPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install( FILES waveEquationPythonElasticFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install(FILES waveletFloatMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
   install(FILES forcingTermOpsTest.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)

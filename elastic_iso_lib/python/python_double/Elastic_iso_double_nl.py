@@ -197,7 +197,7 @@ def nonlinearOpInitDouble(args):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
-	# Bullshit stuff
+	# IO objects
 	io=genericIO.pyGenericIO.ioModes(args)
 	ioDef=io.getDefaultIO()
 	parObject=ioDef.getParamObj()
@@ -326,7 +326,7 @@ def BornOpInitDouble(args):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
-	# Bullshit stuff
+	# IO objects
 	io=genericIO.pyGenericIO.ioModes(args)
 	ioDef=io.getDefaultIO()
 	parObject=ioDef.getParamObj()
@@ -388,7 +388,7 @@ def BornOpInitDouble(args):
 	return modelDouble,dataDouble,elasticParamDouble,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
 
 class BornElasticShotsGpu(Op.Operator):
-	"""Wrapper encapsulating PYBIND11 module for non-linear propagator"""
+	"""Wrapper encapsulating PYBIND11 module for elastic Born propagator"""
 
 	def __init__(self,domain,range,elasticParam,paramP,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid):
 		#Domain = source wavelet
