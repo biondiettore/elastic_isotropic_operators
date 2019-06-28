@@ -1,6 +1,6 @@
 #Python module encapsulating PYBIND11 module
 #It seems necessary to allow std::cout redirection to screen
-import pyElastic_iso_float_prop
+import pyElastic_iso_float_nl
 import pyElastic_iso_float_born
 import pyOperator as Op
 import elasticParamConvertModule as ElaConv
@@ -11,7 +11,7 @@ import Hypercube
 import numpy as np
 import sys
 
-from pyElastic_iso_float_prop import spaceInterpGpu
+from pyElastic_iso_float_nl import spaceInterpGpu
 
 ############################ Acquisition geometry ##############################
 # Build sources geometry
@@ -253,7 +253,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			elasticParam = elasticParam.getCpp()
 		if("getCpp" in dir(paramP)):
 			paramP = paramP.getCpp()
-		self.pyOp = pyElastic_iso_float_prop.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
 	def forward(self,add,model,data):
@@ -262,7 +262,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -272,7 +272,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.forwardWavefield(add,model,data)
 		return
 
@@ -282,7 +282,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
@@ -292,7 +292,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.adjointWavefield(add,model,data)
 		return
 
@@ -304,13 +304,13 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 	# 	#Checking if getCpp is present
 	# 	if("getCpp" in dir(elasticParam)):
 	# 		elasticParam = elasticParam.getCpp()
-	# 	with pyElastic_iso_float_prop.ostream_redirect():
+	# 	with pyElastic_iso_float_nl.ostream_redirect():
 	# 		self.pyOp.setVel(elasticParam)
 	# 	return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
 ################################### Born #######################################
@@ -393,7 +393,7 @@ class BornElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -403,7 +403,7 @@ class BornElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
@@ -411,6 +411,6 @@ class BornElasticShotsGpu(Op.Operator):
 		#Checking if getCpp is present
 		if("getCpp" in dir(elasticParam)):
 			elasticParam = elasticParam.getCpp()
-		with pyElastic_iso_float_prop.ostream_redirect():
+		with pyElastic_iso_float_nl.ostream_redirect():
 			self.pyOp.setBackground(elasticParam)
 		return
