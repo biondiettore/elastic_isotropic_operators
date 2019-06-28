@@ -14,6 +14,29 @@ import sys
 from pyElastic_iso_double_nl import spaceInterpGpu
 
 ############################ Acquisition geometry ##############################
+# Reads source or receiver x,y,z locations from parFile
+def parsePosParFile(PosParFile):
+	nDevices = None
+	devCoords = []
+	with open(PosParFile,"r") as fid:
+		for line in fid:
+			if("#" not in line):
+				lineCur = line.split()
+				if(len(lineCur)==1):
+					nDevices=float(lineCur[0])
+				elif(len(lineCur)==3):
+					lineCur[0] = float(lineCur[0])
+					lineCur[1] = float(lineCur[1])
+					lineCur[2] = float(lineCur[2])
+					devCoords.append(lineCur)
+				else:
+					raise ValueError("Error: Incorrectly formatted line, %s, in %s"%(lineCur,PosParFile))
+	if(nDevices != None):
+		if (len(devCoords) != nDevices): raise ValueError("ERROR: number of devices in parfile (%d) not the same as specified nDevices (%d)"%(len(a),nDevices))
+	devCoordsNdArray = np.asarray(devCoords)
+	return devCoordsNdArray[:,0],devCoordsNdArray[:,2]
+
+
 # Build sources geometry
 def buildSourceGeometry(parObject,elasticParam):
 
@@ -78,10 +101,6 @@ def buildSourceGeometry(parObject,elasticParam):
 		sourcesVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
 		sourcesVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
 		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
 
 		oxSource=oxSource+spacingShots # Shift source
 
@@ -136,7 +155,7 @@ def buildReceiversGeometry(parObject,elasticParam):
 	# receiver _zCoord and _xCoord
 	recParFile = parObject.getString("recParFile","none")
 	if(recParFile != "none"):
-		xCoordFloatNd,zCoordFloatNd = parseRecParFile(recParFile)
+		xCoordFloatNd,zCoordFloatNd = parsePosParFile(recParFile)
 
 		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
@@ -169,28 +188,6 @@ def buildReceiversGeometry(parObject,elasticParam):
 		recVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
 
 	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
-
-# Reads receiver x,y,z locations from parFile
-def parseRecParFile(recParFile):
-	nDevices = None
-	devCoords = []
-	with open(recParFile,"r") as fid:
-		for line in fid:
-			if("#" not in line):
-				lineCur = line.split()
-				if(len(lineCur)==1):
-					nDevices=float(lineCur[0])
-				elif(len(lineCur)==3):
-					lineCur[0] = float(lineCur[0])
-					lineCur[1] = float(lineCur[1])
-					lineCur[2] = float(lineCur[2])
-					devCoords.append(lineCur)
-				else:
-					raise ValueError("Error: Incorrectly formatted line, %s, in recParFile"%(lineCur))
-	if(nDevices != None):
-		if (len(devCoords) != nDevices): raise ValueError("ERROR: number of devices in parfile (%d) not the same as specified nDevices (%d)"%(len(a),nDevices))
-	devCoordsNdArray = np.asarray(devCoords)
-	return devCoordsNdArray[:,0],devCoordsNdArray[:,2]
 
 ############################### Nonlinear ######################################
 def nonlinearOpInitDouble(args):
