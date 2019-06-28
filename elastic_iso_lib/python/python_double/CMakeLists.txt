@@ -56,7 +56,7 @@ if (pybind11_FOUND)
   #Installing library
   install( TARGETS pyElastic_iso_double_nl DESTINATION lib/python) #Module for non-linear operator
 	install( TARGETS pyElastic_iso_double_born DESTINATION lib/python) #Module for Born operator
-  install( FILES Elastic_iso_double_nl.py DESTINATION lib/python)
+  install( FILES Elastic_iso_double_prop.py DESTINATION lib/python)
 
   install( TARGETS pyElastic_iso_double_we DESTINATION lib/python) #Module for wave-equation operator
   install( FILES Elastic_iso_double_we.py DESTINATION lib/python)

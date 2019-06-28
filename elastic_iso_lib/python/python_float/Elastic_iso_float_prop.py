@@ -1,7 +1,7 @@
 #Python module encapsulating PYBIND11 module
 #It seems necessary to allow std::cout redirection to screen
-import pyElastic_iso_double_nl
-import pyElastic_iso_double_born
+import pyElastic_iso_float_prop
+import pyElastic_iso_float_born
 import pyOperator as Op
 import elasticParamConvertModule as ElaConv
 #Other necessary modules
@@ -11,7 +11,7 @@ import Hypercube
 import numpy as np
 import sys
 
-from pyElastic_iso_double_nl import spaceInterpGpu
+from pyElastic_iso_float_prop import spaceInterpGpu
 
 ############################ Acquisition geometry ##############################
 # Build sources geometry
@@ -65,23 +65,23 @@ def buildSourceGeometry(parObject,elasticParam):
 		# sources _zCoord and _xCoord
 		sourceAxisVertical=Hypercube.axis(n=nzSource,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[sourceAxisVertical])
-		zCoordDouble=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
 		sourceAxisHorizontal=Hypercube.axis(n=nxSource,o=0.0,d=1.0)
 		xCoordHyper=Hypercube.hypercube(axes=[sourceAxisHorizontal])
-		xCoordDouble=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
 
 		#Setting z and x position of the source for the given experiment
-		zCoordDouble.set(oz+ozSource*dz)
-		xCoordDouble.set(ox+oxSource*dx)
+		zCoordFloat.set(oz+ozSource*dz)
+		xCoordFloat.set(ox+oxSource*dx)
 
-		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		# sourcesVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		# sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		# sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		# sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		# sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
 
 		oxSource=oxSource+spacingShots # Shift source
 
@@ -136,37 +136,37 @@ def buildReceiversGeometry(parObject,elasticParam):
 	# receiver _zCoord and _xCoord
 	recParFile = parObject.getString("recParFile","none")
 	if(recParFile != "none"):
-		xCoordFloatNd,zCoordFloatNd = parseRecParFile(recParFile)
+		xCoord,zCoord = parseRecParFile(recParFile)
 
 		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
-		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
 		zCoordFloatNd = zCoordFloat.getNdArray()
 		zCoordFloatNd = zCoord
 		recAxisHorizontal=Hypercube.axis(n=len(xCoord),o=0.0,d=1.0)
 		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
-		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
 		xCoordFloatNd = xCoordFloat.getNdArray()
 		xCoordFloatNd = xCoord
 
 	else:
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
-		zCoordDouble=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
-		zCoordDoubleNd = zCoordDouble.getNdArray()
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
+		zCoordFloatNd = zCoordFloat.getNdArray()
 		recAxisHorizontal=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
-		xCoordDouble=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
-		xCoordDoubleNd = xCoordDouble.getNdArray()
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
+		xCoordFloatNd = xCoordFloat.getNdArray()
 		for irec in range(nxReceiver):
-			zCoordDoubleNd[irec] = oz + ozReceiver*dz + dzReceiver*dz*irec
-			xCoordDoubleNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
+			zCoordFloatNd[irec] = oz + ozReceiver*dz + dzReceiver*dz*irec
+			xCoordFloatNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
 
 	for iRec in range(nRecGeom):
-		recVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
+		recVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
+		recVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
+		recVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
+		recVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
 
 	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
 
@@ -193,7 +193,7 @@ def parseRecParFile(recParFile):
 	return devCoordsNdArray[:,0],devCoordsNdArray[:,2]
 
 ############################### Nonlinear ######################################
-def nonlinearOpInitDouble(args):
+def nonlinearOpInitFloat(args):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
@@ -208,8 +208,6 @@ def nonlinearOpInitDouble(args):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
 	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
-	elasticParamDouble=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataDouble")
-
 	#Converting model parameters to Rho|Lame|Mu if necessary [kg/m3|Pa|Pa]
 	# 0 ==> correct parameterization
 	# 1 ==> VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
@@ -220,14 +218,9 @@ def nonlinearOpInitDouble(args):
 		convOp.forward(False,elasticParamFloatTemp,elasticParamFloat)
 		del elasticParamFloatTemp
 
-	#Conversion to double precision
-	elasticParamDoubleNp=elasticParamDouble.getNdArray()
-	elasticParamFloatNp=elasticParamFloat.getNdArray()
-	elasticParamDoubleNp[:]=elasticParamFloatNp
-
 	# Build sources/receivers geometry
-	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamDouble)
-	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamDouble)
+	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
+	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
 
 	# Time Axis
 	nts=parObject.getInt("nts",-1)
@@ -239,14 +232,14 @@ def nonlinearOpInitDouble(args):
 	dummyAxis=Hypercube.axis(n=1)
 	wavefieldAxis=Hypercube.axis(n=5)
 	modelHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
-	modelDouble=SepVector.getSepVector(modelHyper,storage="dataDouble")
+	modelFloat=SepVector.getSepVector(modelHyper,storage="dataFloat")
 
 	# Allocate data
 	dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
-	dataDouble=SepVector.getSepVector(dataHyper,storage="dataDouble")
+	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
 
 	# Outputs
-	return modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
+	return modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
 
 class nonlinearPropElasticShotsGpu(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module for non-linear propagator"""
@@ -260,7 +253,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			elasticParam = elasticParam.getCpp()
 		if("getCpp" in dir(paramP)):
 			paramP = paramP.getCpp()
-		self.pyOp = pyElastic_iso_double_nl.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		self.pyOp = pyElastic_iso_float_prop.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
 	def forward(self,add,model,data):
@@ -269,7 +262,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -279,7 +272,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			self.pyOp.forwardWavefield(add,model,data)
 		return
 
@@ -289,7 +282,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
@@ -299,30 +292,29 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			self.pyOp.adjointWavefield(add,model,data)
 		return
 
 	def getWavefield(self):
 		wavefield = self.pyOp.getWavefield()
-		return SepVector.doubleVector(fromCpp=wavefield)
+		return SepVector.floatVector(fromCpp=wavefield)
 
-	def setBackground(self,elasticParam):
-		#Checking if getCpp is present
-		if("getCpp" in dir(elasticParam)):
-			elasticParam = elasticParam.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
-			self.pyOp.setBackground(elasticParam)
-		return
+	# def setVel(self,elasticParam):
+	# 	#Checking if getCpp is present
+	# 	if("getCpp" in dir(elasticParam)):
+	# 		elasticParam = elasticParam.getCpp()
+	# 	with pyElastic_iso_float_prop.ostream_redirect():
+	# 		self.pyOp.setVel(elasticParam)
+	# 	return
 
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
-
 ################################### Born #######################################
-def BornOpInitDouble(args):
+def BornOpInitFloat(args):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
@@ -337,7 +329,6 @@ def BornOpInitDouble(args):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
 	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
-	elasticParamDouble=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataDouble")
 
 	#Converting model parameters to Rho|Lame|Mu if necessary [kg/m3|Pa|Pa]
 	# 0 ==> correct parameterization
@@ -349,14 +340,9 @@ def BornOpInitDouble(args):
 		convOp.forward(False,elasticParamFloatTemp,elasticParamFloat)
 		del elasticParamFloatTemp
 
-	#Conversion to double precision
-	elasticParamDoubleNp=elasticParamDouble.getNdArray()
-	elasticParamFloatNp=elasticParamFloat.getNdArray()
-	elasticParamDoubleNp[:]=elasticParamFloatNp
-
 	# Build sources/receivers geometry
-	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamDouble)
-	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamDouble)
+	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
+	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
 
 	# Time Axis
 	nts=parObject.getInt("nts",-1)
@@ -370,22 +356,18 @@ def BornOpInitDouble(args):
 	if (sourcesFile == "noSourcesFile"):
 		raise IOError("**** ERROR: User did not provide seismic sources file ****")
 	sourcesSignalsFloat=genericIO.defaultIO.getVector(sourcesFile,ndims=3)
-	sourcesSignalsDouble=SepVector.getSepVector(sourcesSignalsFloat.getHyper(),storage="dataDouble")
-	sourcesSignalsDoubleNp=sourcesSignalsDouble.getNdArray()
-	sourcesSignalsFloatNp=sourcesSignalsFloat.getNdArray()
-	sourcesSignalsDoubleNp[:]=sourcesSignalsFloatNp
 	sourcesSignalsVector=[]
-	sourcesSignalsVector.append(sourcesSignalsDouble) # Create a vector of double3DReg slices
+	sourcesSignalsVector.append(sourcesSignalsFloat) # Create a vector of float3DReg slices
 
 	# Allocate model
-	modelDouble=SepVector.getSepVector(elasticParamDouble.getHyper(),storage="dataDouble")
+	modelFloat=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataFloat")
 
 	# Allocate data
 	dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
-	dataDouble=SepVector.getSepVector(dataHyper,storage="dataDouble")
+	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
 
 	# Outputs
-	return modelDouble,dataDouble,elasticParamDouble,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
+	return modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
 
 class BornElasticShotsGpu(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module for elastic Born propagator"""
@@ -402,7 +384,7 @@ class BornElasticShotsGpu(Op.Operator):
 		for idx,sourceSignal in enumerate(sourcesSignalsVector):
 			if("getCpp" in dir(sourceSignal)):
 				sourcesSignalsVector[idx] = sourceSignal.getCpp()
-		self.pyOp = pyElastic_iso_double_born.BornElasticShotsGpu(elasticParam,paramP,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		self.pyOp = pyElastic_iso_float_born.BornElasticShotsGpu(elasticParam,paramP,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
 	def forward(self,add,model,data):
@@ -411,7 +393,7 @@ class BornElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			self.pyOp.forward(add,model,data)
 		return
 
@@ -421,7 +403,7 @@ class BornElasticShotsGpu(Op.Operator):
 			model = model.getCpp()
 		if("getCpp" in dir(data)):
 			data = data.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			self.pyOp.adjoint(add,model,data)
 		return
 
@@ -429,6 +411,6 @@ class BornElasticShotsGpu(Op.Operator):
 		#Checking if getCpp is present
 		if("getCpp" in dir(elasticParam)):
 			elasticParam = elasticParam.getCpp()
-		with pyElastic_iso_double_nl.ostream_redirect():
+		with pyElastic_iso_float_prop.ostream_redirect():
 			self.pyOp.setBackground(elasticParam)
 		return

@@ -3,16 +3,16 @@ import sys
 import genericIO
 import SepVector
 import Hypercube
-import Elastic_iso_float_nl
+import Elastic_iso_float_prop
 import numpy as np
 import time
 
 if __name__ == '__main__':
     # Initialize operator
-    modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_nl.nonlinearOpInitFloat(sys.argv)
+    modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.nonlinearOpInitFloat(sys.argv)
 
     # Construct nonlinear operator object
-    nonlinearElasticOp=Elastic_iso_float_nl.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+    nonlinearElasticOp=Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
     # Forward
     if (parObject.getInt("adj",0) == 0):

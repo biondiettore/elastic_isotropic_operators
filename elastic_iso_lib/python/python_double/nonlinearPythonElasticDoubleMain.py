@@ -3,16 +3,16 @@ import sys
 import genericIO
 import SepVector
 import Hypercube
-import Elastic_iso_double_nl
+import Elastic_iso_double_prop
 import numpy as np
 import time
 
 if __name__ == '__main__':
 	# Initialize operator
-	modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_double_nl.nonlinearOpInitDouble(sys.argv)
+	modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_double_prop.nonlinearOpInitDouble(sys.argv)
 
 	# Construct nonlinear operator object
-	nonlinearElasticOp=Elastic_iso_double_nl.nonlinearPropElasticShotsGpu(modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+	nonlinearElasticOp=Elastic_iso_double_prop.nonlinearPropElasticShotsGpu(modelDouble,dataDouble,elasticParamDouble,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
 	#Testing dot-product test of the operator
 	if (parObject.getInt("dpTest",0) == 1):
