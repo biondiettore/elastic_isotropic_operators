@@ -61,7 +61,7 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 	/***** Other parameters *****/
 	_fMax = _par->getFloat("fMax",1000.0);
 	_blockSize = _par->getInt("blockSize");
-	_fat = _par->getInt("fat");
+	_fat = _par->getInt("fat",4);
 	_minPad = std::min(_zPad, _xPad);
 	_saveWavefield = _par->getInt("saveWavefield", 0);
 	_alphaCos = _par->getFloat("alphaCos", 0.99);
