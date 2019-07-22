@@ -72,6 +72,9 @@ if (pybind11_FOUND)
 
   install( FILES wriUtilFloat.py DESTINATION lib/python)
 
+  #Inversion-related files
+  install( FILES inversionUtils.py DESTINATION lib/python)
+  install( FILES efwiMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
 
   #Installing Python executables
   install( FILES waveEqInvFloat.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
