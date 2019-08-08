@@ -296,19 +296,86 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 		wavefield = self.pyOp.getWavefield()
 		return SepVector.floatVector(fromCpp=wavefield)
 
-	# def setVel(self,elasticParam):
-	# 	#Checking if getCpp is present
-	# 	if("getCpp" in dir(elasticParam)):
-	# 		elasticParam = elasticParam.getCpp()
-	# 	with pyElastic_iso_float_nl.ostream_redirect():
-	# 		self.pyOp.setVel(elasticParam)
-	# 	return
-
 	def dotTestCpp(self,verb=False,maxError=.00001):
 		"""Method to call the Cpp class dot-product test"""
 		with pyElastic_iso_float_nl.ostream_redirect():
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
+
+def nonlinearFwiOpInitFloat(args):
+	"""Function to correctly initialize nonlinear operator
+	   The function will return the necessary variables for operator construction
+	"""
+	# IO objects
+	io=genericIO.pyGenericIO.ioModes(args)
+	ioDef=io.getDefaultIO()
+	parObject=ioDef.getParamObj()
+
+	# elatic params
+	elasticParam=parObject.getString("elasticParam", "noElasticParamFile")
+	if (elasticParam == "noElasticParamFile"):
+		print("**** ERROR: User did not provide elastic parameter file ****\n")
+		sys.exit()
+	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
+	
+	# Build sources/receivers geometry
+	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
+	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
+
+	# Time Axis
+	nts=parObject.getInt("nts",-1)
+	ots=parObject.getFloat("ots",0.0)
+	dts=parObject.getFloat("dts",-1.0)
+	timeAxis=Hypercube.axis(n=nts,o=ots,d=dts)
+
+	# Allocate model
+	dummyAxis=Hypercube.axis(n=1)
+	wavefieldAxis=Hypercube.axis(n=5)
+	sourceHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
+	sourceFloat=SepVector.getSepVector(sourceHyper,storage="dataFloat")
+
+	# Allocate data
+	dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
+	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
+
+	# Outputs
+	return elasticParamFloat,dataFloat,sourceFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
+
+class nonlinearFwiPropElasticShotsGpu(Op.Operator):
+	"""Wrapper encapsulating PYBIND11 module for non-linear propagator"""
+
+	def __init__(self,domain,range,sources,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid):
+		#Domain = source wavelet
+		#Range = recorded data space
+		self.setDomainRange(domain,range)
+		#Checking if getCpp is present
+		if("getCpp" in dir(domain)):
+			domain = domain.getCpp()
+		if("getCpp" in dir(paramP)):
+			paramP = paramP.getCpp()
+		if("getCpp" in dir(sources)):
+			sources = sources.getCpp()
+			self.sources = sources.clone()
+		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(domain,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		return
+
+	def forward(self,add,model,data):
+		#Setting elastic model parameters
+		self.setBackground(model)
+		#Checking if getCpp is present
+		if("getCpp" in dir(data)):
+			data = data.getCpp()
+		with pyElastic_iso_float_nl.ostream_redirect():
+			self.pyOp.forward(add,self.sources,data)
+		return
+
+	def setBackground(self,elasticParam):
+		#Checking if getCpp is present
+		if("getCpp" in dir(elasticParam)):
+			elasticParam = elasticParam.getCpp()
+		with pyElastic_iso_float_nl.ostream_redirect():
+			self.pyOp.setBackground(elasticParam)
+		return
 ################################### Born #######################################
 def BornOpInitFloat(args):
 	"""Function to correctly initialize nonlinear operator

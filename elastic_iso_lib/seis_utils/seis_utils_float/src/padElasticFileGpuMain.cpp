@@ -102,64 +102,7 @@ int main(int argc, char **argv) {
 	data->scale(0.0);
 
 	/****************************************************************************/
-	//First model parameter is considered to be density and will be padded with values within the fat layer
-	// Copy central part
-	for (long long ix=0; ix<nx; ix++){
-		for (long long iz=0; iz<nz; iz++){
-			if(surfaceCondition==0){
-				(*data->_mat)[0][ix+fat+xPad][iz+fat+zPad] = (*model->_mat)[0][ix][iz];
-			}
-			else if(surfaceCondition==1){
-				(*data->_mat)[0][ix+fat+xPad][iz+zPad] = (*model->_mat)[0][ix][iz];
-			}
-		}
-	}
-
-	for (long long ix=0; ix<nx; ix++){
-		// Top central part
-		if(surfaceCondition==0){
-			for (long long iz=0; iz<zPad+fat; iz++){
-				(*data->_mat)[0][ix+fat+xPad][iz] = (*model->_mat)[0][ix][0];
-			}
-		}
-		else if(surfaceCondition==1){
-			for (long long iz=0; iz<zPad; iz++){
-				(*data->_mat)[0][ix+fat+xPad][iz] = (*model->_mat)[0][ix][0];
-			}
-		}
-
-		// Bottom central part
-		if(surfaceCondition==0){
-			for (long long iz=0; iz<zPadPlus+fat; iz++){
-				(*data->_mat)[0][ix+fat+xPad][iz+fat+zPad+nz] = (*model->_mat)[0][ix][nz-1];
-			}
-		}
-		else if(surfaceCondition==1){
-			for (long long iz=0; iz<zPadPlus+fat; iz++){
-				(*data->_mat)[0][ix+fat+xPad][iz+zPad+nz] = (*model->_mat)[0][ix][nz-1];
-			}
-		}
-
-	}
-
-	// Left part
-	for (long long ix=0; ix<xPad+fat; ix++){
-		for (long long iz=0; iz<nzNewTotal; iz++) {
-			(*data->_mat)[0][ix][iz] = (*data->_mat)[0][xPad+fat][iz];
-		}
-	}
-
-	// Right part
-	for (long long ix=0; ix<xPadPlus+fat; ix++){
-		for (long long iz=0; iz<nzNewTotal; iz++){
-			(*data->_mat)[0][ix+fat+nx+xPad][iz] = (*data->_mat)[0][fat+xPad+nx-1][iz];
-		}
-	}
-
-	/****************************************************************************/
-	//Lame and mu padding
-	for (int iPar=1; iPar<nPar; iPar++) {
-
+	for (int iPar=0; iPar<nPar; iPar++) {
 		// Copy central part
 		for (long long ix=0; ix<nx; ix++){
 			for (long long iz=0; iz<nz; iz++){
@@ -174,57 +117,45 @@ int main(int argc, char **argv) {
 
 		for (long long ix=0; ix<nx; ix++){
 			// Top central part
-			for (long long iz=0; iz<zPad; iz++){
-				if(surfaceCondition==0){
-					(*data->_mat)[iPar][ix+fat+xPad][iz+fat] = (*model->_mat)[iPar][ix][0];
-				}
-				else if(surfaceCondition==1){
+			if(surfaceCondition==0){
+				for (long long iz=0; iz<zPad+fat; iz++){
 					(*data->_mat)[iPar][ix+fat+xPad][iz] = (*model->_mat)[iPar][ix][0];
 				}
 			}
+			else if(surfaceCondition==1){
+				for (long long iz=0; iz<zPad; iz++){
+					(*data->_mat)[iPar][ix+fat+xPad][iz] = (*model->_mat)[iPar][ix][0];
+				}
+			}
+
 			// Bottom central part
-			for (long long iz=0; iz<zPadPlus; iz++){
-				if(surfaceCondition==0){
+			if(surfaceCondition==0){
+				for (long long iz=0; iz<zPadPlus+fat; iz++){
 					(*data->_mat)[iPar][ix+fat+xPad][iz+fat+zPad+nz] = (*model->_mat)[iPar][ix][nz-1];
 				}
-				else if(surfaceCondition==1){
+			}
+			else if(surfaceCondition==1){
+				for (long long iz=0; iz<zPadPlus+fat; iz++){
 					(*data->_mat)[iPar][ix+fat+xPad][iz+zPad+nz] = (*model->_mat)[iPar][ix][nz-1];
 				}
-
 			}
+
 		}
 
 		// Left part
-		for (long long ix=0; ix<xPad; ix++){
-			if(surfaceCondition==0){
-				for (long long iz=0; iz<nzNew; iz++) {
-					(*data->_mat)[iPar][ix+fat][iz+fat] = (*data->_mat)[iPar][xPad+fat][iz+fat];
-				}
+		for (long long ix=0; ix<xPad+fat; ix++){
+			for (long long iz=0; iz<nzNewTotal; iz++) {
+				(*data->_mat)[iPar][ix][iz] = (*data->_mat)[iPar][xPad+fat][iz];
 			}
-			else if(surfaceCondition==1){
-				for (long long iz=0; iz<nzNewTotal; iz++) {
-					(*data->_mat)[iPar][ix+fat][iz] = (*data->_mat)[iPar][xPad+fat][iz];
-				}
-			}
-
 		}
 
 		// Right part
-		for (long long ix=0; ix<xPadPlus; ix++){
-			if(surfaceCondition==0){
-				for (long long iz=0; iz<nzNew; iz++){
-					(*data->_mat)[iPar][ix+fat+nx+xPad][iz+fat] = (*data->_mat)[iPar][fat+xPad+nx-1][iz+fat];
-				}
+		for (long long ix=0; ix<xPadPlus+fat; ix++){
+			for (long long iz=0; iz<nzNewTotal; iz++){
+				(*data->_mat)[iPar][ix+fat+nx+xPad][iz] = (*data->_mat)[iPar][fat+xPad+nx-1][iz];
 			}
-			else if(surfaceCondition==1){
-				for (long long iz=0; iz<nzNewTotal; iz++){
-					(*data->_mat)[iPar][ix+fat+nx+xPad][iz] = (*data->_mat)[iPar][fat+xPad+nx-1][iz];
-				}
-			}
-
 		}
-	}
-
+  }
 	/****************************************************************************/
 	// Write model
 	dataFile->writeFloatStream(data);

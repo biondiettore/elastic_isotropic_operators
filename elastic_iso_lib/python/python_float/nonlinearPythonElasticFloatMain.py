@@ -116,11 +116,6 @@ if __name__ == '__main__':
 		modelTMat=modelTemp.getNdArray()
 		modelFMat[0,:,0,:]=modelTMat
 
-		domain_hyper=nonlinearElasticOp.domain.getHyper()
-		model_hyper=modelFloat.getHyper()
-		range_hyper=nonlinearElasticOp.range.getHyper()
-		data_hyper=dataFloat.getHyper()
-
 		#check if we want to save wavefield
 		if (parObject.getInt("saveWavefield",0) == 1):
 			wfldFile=parObject.getString("wfldFile","noWfldFile")

@@ -45,6 +45,8 @@ PYBIND11_MODULE(pyElastic_iso_float_nl, clsGeneric) {
 
       .def("forwardWavefield", (void (nonlinearPropElasticShotsGpu::*)(const bool, const std::shared_ptr<float4DReg>, std::shared_ptr<float4DReg>)) &nonlinearPropElasticShotsGpu::forwardWavefield, "Forward with wavefield")
 
+      .def("setBackground", (void (nonlinearPropElasticShotsGpu::*)(std::shared_ptr<float3DReg>)) &nonlinearPropElasticShotsGpu::setBackground, "set elastic model parameters")
+
       .def("adjointWavefield",(void (nonlinearPropElasticShotsGpu::*)(const bool, const std::shared_ptr<float4DReg>, std::shared_ptr<float4DReg>)) &nonlinearPropElasticShotsGpu::adjointWavefield, "Adjoint wavefield")
 
       .def("getWavefield", (std::shared_ptr<SEP::float4DReg> (nonlinearPropElasticShotsGpu::*)()) &nonlinearPropElasticShotsGpu::getWavefield, "get wavefield")
