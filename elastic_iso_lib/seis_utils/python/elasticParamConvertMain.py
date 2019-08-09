@@ -15,7 +15,7 @@ if __name__ == '__main__':
 	   conv_type    = [no default] - int; Conversion kind
 		1 = VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
 	   -1 = RhoLameMu to VpVsRho (m/s|m/s|kg/m3 <- kg/m3|Pa|Pa)
-		verbose = [0] int. verbose mode or not.
+	   verbose = [0] int. verbose mode or not.
 	"""
 	########################## PARSE COMMAND LINE ##############################
 	# IO stuff

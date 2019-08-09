@@ -20,7 +20,7 @@ def parsePosParFile(PosParFile):
 	devCoords = []
 	with open(PosParFile,"r") as fid:
 		for line in fid:
-			if("#" not in line):
+			if("#" != line[0]):
 				lineCur = line.split()
 				if(len(lineCur)==1):
 					nDevices=float(lineCur[0])
@@ -160,12 +160,12 @@ def buildReceiversGeometry(parObject,elasticParam):
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
 		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
 		zCoordFloatNd = zCoordFloat.getNdArray()
-		zCoordFloatNd = zCoord
+		zCoordFloatNd[:] = zCoord
 		recAxisHorizontal=Hypercube.axis(n=len(xCoord),o=0.0,d=1.0)
 		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
 		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
 		xCoordFloatNd = xCoordFloat.getNdArray()
-		xCoordFloatNd = xCoord
+		xCoordFloatNd[:] = xCoord
 
 	else:
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
@@ -317,7 +317,7 @@ def nonlinearFwiOpInitFloat(args):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
 	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
-	
+
 	# Build sources/receivers geometry
 	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
 	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)

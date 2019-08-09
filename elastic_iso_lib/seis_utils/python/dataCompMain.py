@@ -1,0 +1,61 @@
+#!/usr/bin/env python3.5
+"""
+Elastic data sampling operator
+
+USAGE EXAMPLE:
+	dataCompMain.py input=elasticModel.H output=elastic_wavelet.H comp=vx,vz,sxx,szz,sxz
+
+INPUT PARAMETERS:
+	input  = [no default] - string; Header file defining elastic data directly outputted by elastic propagator
+
+	output = [no default] - string; Header file defining elastic data sampled according to user-defined comp
+
+	comp = [no default] - string; Comma-separated list of the output/sampled components (e.g., 'vx,vz,sxx,szz,sxz' or 'p,vx,vz'; the order matters!).
+	                              Currently, supported: vx,vz,sxx,szz,sxz,p (i.e., p = 0.5*(sxx+szz))
+
+"""
+
+import genericIO
+import SepVector
+from dataCompModule import ElasticDatComp
+import numpy as np
+import sys
+import os.path
+
+
+if __name__ == '__main__':
+	#Printing documentation if no arguments were provided
+	if(len(sys.argv) == 1):
+		print(__doc__)
+		quit(0)
+
+	########################## PARSE COMMAND LINE ##############################
+	# IO stuff
+	io=genericIO.pyGenericIO.ioModes(sys.argv)
+	ioDef=io.getDefaultIO()
+	parObject=ioDef.getParamObj()
+
+	#check if verbose
+	verbose = parObject.getInt("verbose",0)
+	#check conversion kind
+	comp = parObject.getString("comp")
+
+	#read in file if it exists
+	inputFile=parObject.getString("input","noFile")
+	if (not os.path.isfile(inputFile)) or (inputFile == "noFile"):
+		raise IOError("ERROR! no inputFile specified or given file does not exist!")
+	model = genericIO.defaultIO.getVector(inputFile,ndims=4)
+
+	#obtain output file
+	outputFile=parObject.getString("output","noFile")
+	if outputFile == "noFile":
+		raise IOError("ERROR! no outputFile specified!")
+
+	############################ Apply operator ################################
+
+	sampOp = ElasticDatComp(comp,model)
+	data = sampOp.range.clone()
+	sampOp.forward(False,model,data)
+
+	############################## Write output ################################
+	genericIO.defaultIO.writeVector(outputFile, data)

@@ -18,6 +18,7 @@ import os
 # Modeling operators
 import Elastic_iso_float_prop
 import elasticParamConvertModule as ElaConv
+from dataCompModule import ElasticDatComp
 import interpBSplineModule
 import dataTaperModule
 import spatialDerivModule
@@ -50,12 +51,15 @@ def createBoundVectors(parObject,model):
 		minBound1=parObject.getFloat("minBound_par1",-np.inf)
 		minBound2=parObject.getFloat("minBound_par2",-np.inf)
 		minBound3=parObject.getFloat("minBound_par3",-np.inf)
-		minBoundVector=model.clone()
-		minBoundVector.set(0.0)
-		minBoundVectorNd=minBoundVector.getNdArray()
-		minBoundVectorNd[0,fat:nx-fat,fat:nz-fat]=minBound1
-		minBoundVectorNd[1,fat:nx-fat,fat:nz-fat]=minBound2
-		minBoundVectorNd[2,fat:nx-fat,fat:nz-fat]=minBound3
+		if(minBound1 == minBound2 == minBound3 == -np.inf):
+			minBoundVector = None
+		else:
+			minBoundVector=model.clone()
+			minBoundVector.set(0.0)
+			minBoundVectorNd=minBoundVector.getNdArray()
+			minBoundVectorNd[0,:,:]=minBound1
+			minBoundVectorNd[1,:,:]=minBound2
+			minBoundVectorNd[2,:,:]=minBound3
 	else:
 		minBoundVector=genericIO.defaultIO.getVector(minBoundVectorFile)
 
@@ -65,12 +69,15 @@ def createBoundVectors(parObject,model):
 		maxBound1=parObject.getFloat("maxBound_par1",np.inf)
 		maxBound2=parObject.getFloat("maxBound_par2",np.inf)
 		maxBound3=parObject.getFloat("maxBound_par3",np.inf)
-		maxBoundVector=model.clone()
-		maxBoundVector.set(0.0)
-		maxBoundVectorNd=maxBoundVector.getNdArray()
-		maxBoundVectorNd[0,fat:nx-fat,fat:nz-fat]=maxBound1
-		maxBoundVectorNd[1,fat:nx-fat,fat:nz-fat]=maxBound2
-		maxBoundVectorNd[2,fat:nx-fat,fat:nz-fat]=maxBound3
+		if(maxBound1 == maxBound2 == maxBound3 == np.inf):
+			maxBoundVector = None
+		else:
+			maxBoundVector=model.clone()
+			maxBoundVector.set(0.0)
+			maxBoundVectorNd=maxBoundVector.getNdArray()
+			maxBoundVectorNd[0,:,:]=maxBound1
+			maxBoundVectorNd[1,:,:]=maxBound2
+			maxBoundVectorNd[2,:,:]=maxBound3
 
 	else:
 		maxBoundVector=genericIO.defaultIO.getVector(maxBoundVectorFile)
@@ -117,7 +124,7 @@ if __name__ == '__main__':
 	############################# Initialization ###############################
 
 	# FWI nonlinear operator
-	elasticParamFloat,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.nonlinearFwiOpInitFloat(sys.argv)
+	modelInit,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.nonlinearFwiOpInitFloat(sys.argv)
 
 	# Born
 	# Initialize operator
@@ -140,27 +147,92 @@ if __name__ == '__main__':
 		raise IOError("**** ERROR: User did not provide data file ****\n")
 	data=genericIO.defaultIO.getVector(dataFile)
 
+	########################### Data components ################################
+	comp = parObject.getString("comp")
+	if(comp != "vx,vz,sxx,szz,sxz"):
+		sampOp = ElasticDatComp(comp,dataFloat)
+		sampOpNl = pyOp.NonLinearOperator(sampOp,sampOp)
+	else:
+		if(not dataFloat.checkSame(data)):
+			raise ValueError("ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file")
+		dataFloat = data
+		sampOpNl = None
+
 	############################# Instanciation ################################
 	# Nonlinear
-	nonlinearElasticOp=Elastic_iso_float_prop.nonlinearFwiPropElasticShotsGpu(elasticParamFloat,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+	nonlinearElasticOp=Elastic_iso_float_prop.nonlinearFwiPropElasticShotsGpu(modelInit,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
 	# Construct nonlinear operator object
-	BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(elasticParamFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+	BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelInit,dataFloat,modelInit,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
 	# Conventional FWI non-linear operator
-	fwiOp=pyOp.NonLinearOperator(nonlinearElasticOp,BornElasticOp,BornElasticOp.setBackground)
+	fwiInvOp=pyOp.NonLinearOperator(nonlinearElasticOp,BornElasticOp,BornElasticOp.setBackground)
 
 	#Elastic parameter conversion if any
 	mod_par = parObject.getInt("mod_par",0)
 	if(mod_par != 0):
-		convOp = ElaConv.ElasticConv(elasticParamFloat,mod_par)
+		convOp = ElaConv.ElasticConv(modelInit,mod_par)
 		#Jacobian
-		convOpJac = ElaConv.ElasticConvJab(elasticParamFloat,elasticParamFloat,mod_par)
+		convOpJac = ElaConv.ElasticConvJab(modelInit,modelInit,mod_par)
 		#Creating non-linear operator
 		convOpNl=pyOp.NonLinearOperator(convOp,convOpJac,convOpJac.setBackground)
 		#Chanining non-linear operators if not using Lame,Mu,Density parameterization
 		#f(g(m)) where f is the non-linear modeling operator and g is the non-linear change of variables
-		fwiOp=pyOp.CombNonlinearOp(convOpNl,fwiOp)
+		fwiInvOp=pyOp.CombNonlinearOp(convOpNl,fwiInvOp)
+
+	#Sampling of elastic data if necessary
+	if (sampOpNl):
+		#modeling operator = Sf(m)
+		fwiInvOp=pyOp.CombNonlinearOp(fwiInvOp,sampOpNl)
+
+	############################# Gradient mask ################################
+	maskGradientFile=parObject.getString("maskGradient","NoMask")
+	if (maskGradientFile=="NoMask"):
+		maskGradient=None
+	else:
+		if(pyinfo): print("--- User provided a mask for the gradients ---")
+		inv_log.addToLog("--- User provided a mask for the gradients ---")
+		maskGradient=genericIO.defaultIO.getVector(maskGradientFile)
 
 	############################### Bounds #####################################
 	minBoundVector,maxBoundVector=createBoundVectors(parObject,modelInit)
+
+	########################### Inverse Problem ################################
+	fwiProb=Prblm.ProblemL2NonLinear(modelInit,data,fwiInvOp,grad_mask=maskGradient,minBound=minBoundVector,maxBound=maxBoundVector)
+
+	############################# Solver #######################################
+	# Nonlinear conjugate gradient
+	if (solverType=="nlcg"):
+		nlSolver=NLCG.NLCGsolver(stop,logger=inv_log)
+	# LBFGS
+	elif (solverType=="lbfgs"):
+		nlSolver=LBFGS.LBFGSsolver(stop,logger=inv_log)
+	# Steepest descent
+	elif (solverType=="sd"):
+		nlSolver=NLCG.NLCGsolver(stop,beta_type="SD",logger=inv_log)
+	else:
+		raise ValueError("ERROR! Provided unknonw solver type: %s"%(solverType))
+
+	############################# Stepper ######################################
+	if (stepper == "parabolic"):
+		nlSolver.stepper.eval_parab=True
+	elif (stepper == "linear"):
+		nlSolver.stepper.eval_parab=False
+	elif (stepper == "parabolicNew"):
+		nlSolver.stepper = Stepper.ParabolicStepConst()
+	else:
+		raise ValueError("ERROR! Provided unknonw stepper type: %s"%(stepper))
+
+	####################### Manual initial step length #########################
+	initStep=parObject.getFloat("initStep",-1.0)
+	if (initStep>0):
+		nlSolver.stepper.alpha=initStep
+
+	nlSolver.setDefaults(save_obj=saveObj,save_res=saveRes,save_grad=saveGrad,save_model=saveModel,prefix=prefix,iter_buffer_size=bufferSize,iter_sampling=iterSampling,flush_memory=flushMemory)
+
+	# Run solver
+	nlSolver.run(fwiProb,verbose=info)
+
+	if(pyinfo): print("-------------------------------------------------------------------")
+	if(pyinfo): print("--------------------------- All done ------------------------------")
+	if(pyinfo): print("-------------------------------------------------------------------\n")
