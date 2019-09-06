@@ -13,6 +13,8 @@ INPUT PARAMETERS:
 	comp = [no default] - string; Comma-separated list of the output/sampled components (e.g., 'vx,vz,sxx,szz,sxz' or 'p,vx,vz'; the order matters!).
 	                              Currently, supported: vx,vz,sxx,szz,sxz,p (i.e., p = 0.5*(sxx+szz))
 
+	dpTest = [False] - boolean; Dot-product test for the specified sampling operation
+
 """
 
 import genericIO
@@ -55,6 +57,13 @@ if __name__ == '__main__':
 
 	sampOp = ElasticDatComp(comp,model)
 	data = sampOp.range.clone()
+
+	#Testing dot-product test of the operator
+	if (parObject.getInt("dpTest",0) == 1):
+		sampOp.dotTest(True)
+		quit()
+
+	#Applying sampling operator
 	sampOp.forward(False,model,data)
 
 	############################## Write output ################################

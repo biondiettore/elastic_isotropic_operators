@@ -348,15 +348,24 @@ class nonlinearFwiPropElasticShotsGpu(Op.Operator):
 		#Domain = source wavelet
 		#Range = recorded data space
 		self.setDomainRange(domain,range)
+		#Converting model parameters to Rho|Lame|Mu if necessary [kg/m3|Pa|Pa]
+		# 0 ==> correct parameterization
+		# 1 ==> VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
+		domainTemp = domain
+		mod_par = paramP.getInt("mod_par",0)
+		if(mod_par != 0):
+			convOp = ElaConv.ElasticConv(domain,mod_par)
+			domainTemp = domain.clone()
+			convOp.forward(False,domain,domainTemp)
 		#Checking if getCpp is present
-		if("getCpp" in dir(domain)):
-			domain = domain.getCpp()
+		if("getCpp" in dir(domainTemp)):
+			domainTemp = domainTemp.getCpp()
 		if("getCpp" in dir(paramP)):
 			paramP = paramP.getCpp()
 		if("getCpp" in dir(sources)):
 			sources = sources.getCpp()
 			self.sources = sources.clone()
-		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(domain,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(domainTemp,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
 	def forward(self,add,model,data):

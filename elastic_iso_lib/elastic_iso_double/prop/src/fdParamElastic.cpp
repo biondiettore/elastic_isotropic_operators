@@ -81,10 +81,10 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<double3DReg> elasticParam, 
 			double vpTemp = sqrt((lamdbTemp + 2*muTemp)/rhoTemp);
 			double vsTemp = sqrt(muTemp/rhoTemp);
 
-			if(vpTemp<=0){
-			std::cerr << "**** ERROR: a vp value <=0 exists within the fat boundary ****" << std::endl;
-			assert(false);
-			}
+			// if(vpTemp<=0){
+			// std::cerr << "**** ERROR: a vp value <=0 exists within the fat boundary ****" << std::endl;
+			// assert(false);
+			// }
 
 			if (vpTemp < _minVpVs) _minVpVs = vpTemp;
 			if (vpTemp > _maxVpVs) _maxVpVs = vpTemp;
