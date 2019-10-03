@@ -1,6 +1,3 @@
-[submodule "elastic_iso_lib/external/genericIO"]
-	path = elastic_iso_lib/external/genericIO
-	url = http://cees-gitlab.Stanford.EDU/bob/genericIO.git
-[submodule "elastic_iso_lib/external/python-solver"]
-	path = elastic_iso_lib/external/python-solver
-	url = http://zapad.Stanford.EDU/ettore88/python-solver.git
+[submodule "elastic_iso_lib/external/ioLibs"]
+	path = elastic_iso_lib/external/ioLibs
+	url = http://cees-gitlab.Stanford.EDU/SEP-external/sep-iolibs.git
