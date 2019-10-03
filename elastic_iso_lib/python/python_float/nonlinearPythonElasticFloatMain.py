@@ -88,7 +88,7 @@ if __name__ == '__main__':
 	modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.nonlinearOpInitFloat(sys.argv)
 
 	# Construct nonlinear operator object
-	nonlinearElasticOp=Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+	nonlinearElasticOp=Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject.param,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
 
 	#Testing dot-product test of the operator
