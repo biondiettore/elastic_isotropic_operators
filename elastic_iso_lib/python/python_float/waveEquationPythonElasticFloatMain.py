@@ -13,7 +13,7 @@ if __name__ == '__main__':
     modelFloat,dataFloat,elasticParamFloat,parObject = Elastic_iso_float_we.waveEquationOpInitFloat(sys.argv)
 
     # Construct nonlinear operator object
-    waveEquationElasticOp=Elastic_iso_float_we.waveEquationElasticGpu(modelFloat,dataFloat,elasticParamFloat,parObject)
+    waveEquationElasticOp=Elastic_iso_float_we.waveEquationElasticGpu(modelFloat,dataFloat,elasticParamFloat,parObject.param)
 
     # Forward
     if (parObject.getInt("adj",0) == 0):

@@ -13,10 +13,8 @@ def space_interp_multi_init_source(args):
 	"""Function to correctly initialize space interp for multiple component wflds
 	   The function will return the necessary variables for operator construction
 	"""
-	# Bullshit stuff
-	io=genericIO.pyGenericIO.ioModes(args)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	# IO object
+	parObject=genericIO.io(params=sys.argv)
 
 	# elatic params
 	elasticParamFile=parObject.getString("elasticParam", "noElasticParamFile")
@@ -80,10 +78,8 @@ def space_interp_multi_init_rec(args):
 	"""Function to correctly initialize space interp for multiple component wflds
 	   The function will return the necessary variables for operator construction
 	"""
-	# Bullshit stuff
-	io=genericIO.pyGenericIO.ioModes(args)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	# IO object
+	parObject=genericIO.io(params=sys.argv)
 
 	# elatic params
 	elasticParamFile=parObject.getString("elasticParam", "noElasticParamFile")

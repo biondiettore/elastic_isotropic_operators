@@ -17,10 +17,8 @@ import pyOperator as Op
 
 def forcing_term_op_init(args):
 
-	# Bullshit stuff
-	io=genericIO.pyGenericIO.ioModes(args)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	# IO object
+	parObject=genericIO.io(params=sys.argv)
 
 	# Interp operator init
 	zCoord,xCoord,centerHyper = SpaceInterpMultiDouble.space_interp_multi_init_source(args)
@@ -79,10 +77,8 @@ def forcing_term_op_init(args):
 #
 def data_extraction_op_init(args):
 
-	# Bullshit stuff
-	io=genericIO.pyGenericIO.ioModes(args)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	# IO object
+	parObject=genericIO.io(params=sys.argv)
 
 	# Interp operator init
 	zCoord,xCoord,centerHyper = SpaceInterpMultiDouble.space_interp_multi_init_rec(args)

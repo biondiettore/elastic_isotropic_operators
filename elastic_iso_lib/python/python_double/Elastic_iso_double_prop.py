@@ -195,9 +195,7 @@ def nonlinearOpInitDouble(args):
 	   The function will return the necessary variables for operator construction
 	"""
 	# IO objects
-	io=genericIO.pyGenericIO.ioModes(args)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	parObject=genericIO.io(params=sys.argv)
 
 	# elatic params
 	elasticParam=parObject.getString("elasticParam", "noElasticParamFile")
@@ -324,9 +322,7 @@ def BornOpInitDouble(args):
 	   The function will return the necessary variables for operator construction
 	"""
 	# IO objects
-	io=genericIO.pyGenericIO.ioModes(args)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	parObject=genericIO.io(params=sys.argv)
 
 	# elatic params
 	elasticParam=parObject.getString("elasticParam", "noElasticParamFile")

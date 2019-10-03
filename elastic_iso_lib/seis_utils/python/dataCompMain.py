@@ -32,10 +32,8 @@ if __name__ == '__main__':
 		quit(0)
 
 	########################## PARSE COMMAND LINE ##############################
-	# IO stuff
-	io=genericIO.pyGenericIO.ioModes(sys.argv)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	# IO object
+	parObject=genericIO.io(params=sys.argv)
 
 	#check if verbose
 	verbose = parObject.getInt("verbose",0)

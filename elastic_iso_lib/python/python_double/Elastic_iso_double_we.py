@@ -14,10 +14,8 @@ def waveEquationOpInitDouble(args):
 	"""Function to correctly initialize wave equation operator
 	   The function will return the necessary variables for operator construction
 	"""
-	# Bullshit stuff
-	io=genericIO.pyGenericIO.ioModes(args)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	# IO objects
+	parObject=genericIO.io(params=sys.argv)
 
 	# elatic params
 	elasticParam=parObject.getString("elasticParam", "noElasticParamFile")
