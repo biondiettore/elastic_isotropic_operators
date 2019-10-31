@@ -8,9 +8,7 @@ import sys
 if __name__ == '__main__':
 
 	# Bullshit stuff
-	io=genericIO.pyGenericIO.ioModes(sys.argv)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+	parObject=genericIO.io(sys.argv)
 
 	# Ali's wavelet
 	if (parObject.getString("type", "ali") == "ali"):
