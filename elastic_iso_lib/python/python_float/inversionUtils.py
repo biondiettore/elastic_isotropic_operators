@@ -10,7 +10,7 @@ import pyStopperBase as Stopper
 def inversionInit(args):
 
 	# IO object
-	parObject=genericIO.io(params=sys.argv)
+	par=genericIO.io(params=sys.argv)
 
 	# Stopper
 	nIter=par.getInt("nIter")
