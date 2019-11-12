@@ -179,16 +179,16 @@ void fdParamElastic::getInfo(){
 		// Vertical spatial sampling
 		std::cerr << "-------------------- Vertical spatial sampling --------------------" << std::endl;
 		std::cerr << std::setprecision(2);
-		std::cerr << "nz = " << _nz-2*_fat-_zPadMinus-_zPadPlus << " [samples], dz = " << _dz << "[km], oz = " << _oz+(_fat+_zPadMinus)*_dz << " [km]" << std::endl;
-		std::cerr << "Model depth = " << _oz+(_nz-2*_fat-_zPadMinus-_zPadPlus-1)*_dz << " [km]" << std::endl;
+		std::cerr << "nz = " << _nz-2*_fat-_zPadMinus-_zPadPlus << " [samples], dz = " << _dz << "[m], oz = " << _oz+(_fat+_zPadMinus)*_dz << " [m]" << std::endl;
+		std::cerr << "Model depth = " << _oz+(_nz-2*_fat-_zPadMinus-_zPadPlus-1)*_dz << " [m]" << std::endl;
 		std::cerr << "Top padding = " << _zPadMinus << " [samples], bottom padding = " << _zPadPlus << " [samples]" << std::endl;
 		std::cerr << " " << std::endl;
 
 		// Horizontal spatial sampling
 		std::cerr << "-------------------- Horizontal spatial sampling ------------------" << std::endl;
 		std::cerr << std::setprecision(2);
-		std::cerr << "nx = " << _nx << " [samples], dx = " << _dx << " [km], ox = " << _ox+(_fat+_xPadMinus)*_dx << " [km]" << std::endl;
-		std::cerr << "Model width = " << _ox+(_nx-2*_fat-_xPadMinus-_xPadPlus-1)*_dx << " [km]" << std::endl;
+		std::cerr << "nx = " << _nx << " [samples], dx = " << _dx << " [m], ox = " << _ox+(_fat+_xPadMinus)*_dx << " [m]" << std::endl;
+		std::cerr << "Model width = " << _ox+(_nx-2*_fat-_xPadMinus-_xPadPlus-1)*_dx << " [m]" << std::endl;
 		std::cerr << "Left padding = " << _xPadMinus << " [samples], right padding = " << _xPadPlus << " [samples]" << std::endl;
 		std::cerr << " " << std::endl;
 
@@ -203,8 +203,8 @@ void fdParamElastic::getInfo(){
 		// if ( (_nExt>1) && (_extension=="offset") ){
 		// 	std::cerr << std::setprecision(2);
 		// 	std::cerr << "---------- Extended axis: horizontal subsurface offsets -----------" << std::endl;
-		// 	std::cerr << "nOffset = " << _hExt << " [samples], dOffset= " << _dExt << " [km], oOffset = " << _oExt << " [km]" << std::endl;
-		// 	std::cerr << "Total extension length nOffset = " << _nExt << " [samples], which corresponds to " << _nExt*_dExt << " [km]" << std::endl;
+		// 	std::cerr << "nOffset = " << _hExt << " [samples], dOffset= " << _dExt << " [m], oOffset = " << _oExt << " [m]" << std::endl;
+		// 	std::cerr << "Total extension length nOffset = " << _nExt << " [samples], which corresponds to " << _nExt*_dExt << " [m]" << std::endl;
 		// }
 
 		// GPU FD parameters
@@ -219,8 +219,8 @@ void fdParamElastic::getInfo(){
 		std::cerr << std::setprecision(2);
 		std::cerr << "Courant number = " << _Courant << " [-]" << std::endl;
 		std::cerr << "Dispersion ratio = " << _dispersionRatio << " [points/min wavelength]" << std::endl;
-		std::cerr << "Minimum velocity value (of either vp or vs) = " << _minVpVs << " [km/s]" << std::endl;
-		std::cerr << "Maximum velocity value (of either vp or vs) = " << _maxVpVs << " [km/s]" << std::endl;
+		std::cerr << "Minimum velocity value (of either vp or vs) = " << _minVpVs << " [m/s]" << std::endl;
+		std::cerr << "Maximum velocity value (of either vp or vs) = " << _maxVpVs << " [m/s]" << std::endl;
 		std::cerr << std::setprecision(1);
 		std::cerr << "Maximum frequency without dispersion = " << _minVpVs/(3.0*std::max(_dz, _dx)) << " [Hz]" << std::endl;
 		std::cerr << " " << std::endl;

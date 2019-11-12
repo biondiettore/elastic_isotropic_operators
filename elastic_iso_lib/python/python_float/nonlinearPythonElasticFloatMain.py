@@ -63,9 +63,13 @@ INPUT PARAMETERS:
 
 	saveWavefield [0] - boolean; Flag to save the wavefield for a given shot defined by the flag wavefieldShotNumber
 
+	wfldFile [no default] - string; Header-file name where the wavefield is written if saveWavefield is 1
+
 	wavefieldShotNumber [0] - int; Shot index of the wavefield to be saved
 
 	useStreams [0] - boolean; Flag to use CUDA streams when the wavefield needs to be saved (useful for large wavefield and does not fit in GPU memory)
+
+	blockSize [16] - int; GPU-grid-related block size (i.e., number of threads per block in a GPU grid)
 
 """
 
