@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 """
 GPU-based elastic isotropic velocity-stress wave-equation full-waveform inversion script
 
