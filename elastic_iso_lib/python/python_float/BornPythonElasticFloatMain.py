@@ -12,7 +12,7 @@ if __name__ == '__main__':
 	modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.BornOpInitFloat(sys.argv)
 
 	# Construct nonlinear operator object
-	BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject.param,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+	BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
 	#Testing dot-product test of the operator
 	if (parObject.getInt("dpTest",0) == 1):

@@ -168,7 +168,7 @@ if __name__ == '__main__':
 		quit(0)
 
     # IO object
-	parObject=genericIO.io(sys.argv)
+	parObject=genericIO.io(params=sys.argv)
 	pyinfo=parObject.getInt("pyinfo",1)
 	spline=parObject.getInt("spline",0)
 	dataTaper=parObject.getInt("dataTaper",0)
