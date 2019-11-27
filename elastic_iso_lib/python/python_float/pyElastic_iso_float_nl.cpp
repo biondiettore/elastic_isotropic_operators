@@ -17,9 +17,9 @@ PYBIND11_MODULE(pyElastic_iso_float_nl, clsGeneric) {
   py::add_ostream_redirect(clsGeneric, "ostream_redirect");
 
   py::class_<spaceInterpGpu, std::shared_ptr<spaceInterpGpu>>(clsGeneric, "spaceInterpGpu")
-      .def(py::init<const std::shared_ptr<SEP::float1DReg>, const std::shared_ptr<SEP::float1DReg>, const std::shared_ptr<SEP::hypercube>, int &,std::string , int >(), "Initialize a spaceInterpGpu object using location, velocity, and nt")
+      // .def(py::init<const std::shared_ptr<SEP::float1DReg>, const std::shared_ptr<SEP::float1DReg>, const std::shared_ptr<SEP::hypercube>, int &,std::string , int >(), "Initialize a spaceInterpGpu object using location, velocity, and nt")
 
-      .def(py::init<const std::shared_ptr<float1DReg> , const std::shared_ptr<float1DReg> , const std::shared_ptr<SEP::hypercube> , int&,std::string , int >(), "Initialize a spaceInterpGpu object using zcoord, xcoord, velocity, and nt")
+      .def(py::init<const std::shared_ptr<float1DReg> , const std::shared_ptr<float1DReg> , const std::shared_ptr<SEP::hypercube> , int&,std::string , int, int, float, float >(), "Initialize a spaceInterpGpu object using zcoord, xcoord, velocity, and nt")
 
       // .def(py::init<const std::vector<int> &, const std::vector<int> &, const std::shared_ptr<SEP::hypercube>, int &>(), "Initialize a spaceInterpGpu object using coordinates and nt")
       //

@@ -28,13 +28,15 @@ class spaceInterpGpu : public Operator<SEP::float2DReg, SEP::float2DReg> {
 		float *_weight;
 		int *_gridPointIndex;
 		int _nDeviceIrreg, _nDeviceReg, _nt, _nz, _nFilt,_nFilt2D,_nFiltTotal;
+		int _dipole;
+		float _zDipoleShift, _xDipoleShift;
 		float _ox,_oz,_dx,_dz;
 		std::string _interpMethod;
 
 	public:
 
 		/* Overloaded constructors */
-		spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const std::shared_ptr<float1DReg> xCoord, const std::shared_ptr<SEP::hypercube> elasticParamHyper, int &nt, std::string interpMethod, int nFilt);
+		spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const std::shared_ptr<float1DReg> xCoord, const std::shared_ptr<SEP::hypercube> elasticParamHyper, int &nt, std::string interpMethod, int nFilt, int dipole, float zDipoleShift, float xDipoleShift);
 		// spaceInterpGpu(const std::vector<int> &zGridVector, const std::vector<int> &xGridVector, const std::shared_ptr<SEP::hypercube> elasticParamHyper, int &nt);
 		// spaceInterpGpu(const int &nzDevice, const int &ozDevice, const int &dzDevice , const int &nxDevice, const int &oxDevice, const int &dxDevice, const std::shared_ptr<SEP::hypercube> elasticParamHyper, int &nt);
 

@@ -8,16 +8,17 @@
 #include <math.h>
 
 // Constructor #1
-spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const std::shared_ptr<float1DReg> xCoord, const std::shared_ptr<SEP::hypercube> elasticParamHypercube, int &nt, std::string interpMethod, int nFilt) {
+spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const std::shared_ptr<float1DReg> xCoord, const std::shared_ptr<SEP::hypercube> elasticParamHypercube, int &nt, std::string interpMethod, int nFilt, int dipole, float zDipoleShift, float xDipoleShift) {
 
 	_interpMethod = interpMethod;
-  _elasticParamHypercube = elasticParamHypercube;
+  	_elasticParamHypercube = elasticParamHypercube;
 	_oz = _elasticParamHypercube->getAxis(1).o;
 	_ox = _elasticParamHypercube->getAxis(2).o;
 	_dz = _elasticParamHypercube->getAxis(1).d;
 	_dx = _elasticParamHypercube->getAxis(2).d;
 	_zCoord = zCoord;
 	_xCoord = xCoord;
+
 	if(!_interpMethod.compare("linear")){ // if linear force nfilt to 1
 		_nFilt = 1;
 	}
@@ -31,6 +32,17 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const s
 	_nt = nt;
 	_nz = _elasticParamHypercube->getAxis(1).n;
 
+	// Treat the specific case wher dipole=1 AND interpolation method is linear
+	_dipole = dipole;
+	_zDipoleShift = zDipoleShift;
+	_xDipoleShift = xDipoleShift;
+
+	// If dipole is required, set _nFiltTotal to 8
+	// Otherwise, set it to 4
+	// Dipole is only implemented for linear interpolation (so far)
+	if (_dipole == 1){_nFiltTotal=8;}
+	else {_nFiltTotal=4;}
+
 	_gridPointIndex = new int[_nFiltTotal*_nDeviceIrreg]; // Index of all the neighboring points of each device (non-unique) on the regular "1D" grid
 	_weight = new float[_nFiltTotal*_nDeviceIrreg]; // Weights for spatial interpolation
 
@@ -41,10 +53,19 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const s
 	}
 	// sinc
 	else if(!_interpMethod.compare("sinc")){
+		// If user asks for dipole + sinc interpolation, throw an error (not implemented ey)
+		if (_dipole == 1) {
+			std::cerr << "**** ERROR: Spatial sinc interpolation and dipole acquisition not implemented ****" << std::endl;
+			assert(1==2);
+		}
 		calcSincWeights();
 	}
 	// gaussian
 	else if(!_interpMethod.compare("gauss")){
+		if (_dipole == 1) {
+			std::cerr << "**** ERROR: Gaussian spatial interpolation and dipole acquisition not implemented ****" << std::endl;
+			assert(1==2);
+		}
 		calcGaussWeights();
 	}
 	else{
@@ -52,14 +73,13 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const s
 		assert(1==2);
 	}
 
-
 	convertIrregToReg();
 }
 void spaceInterpGpu::calcLinearWeights(){
 	for (int iDevice = 0; iDevice < _nDeviceIrreg; iDevice++) {
 
 		// Find the 4 neighboring points for all devices and compute the weights for the spatial interpolation
-		int i1 = iDevice * 4;
+		int i1 = iDevice * _nFiltTotal;
 		float wz = ( (*_zCoord->_mat)[iDevice] - _elasticParamHypercube->getAxis(1).o ) / _elasticParamHypercube->getAxis(1).d;
 		float wx = ( (*_xCoord->_mat)[iDevice] - _elasticParamHypercube->getAxis(2).o ) / _elasticParamHypercube->getAxis(2).d;
 		int zReg = wz; // z-coordinate on regular grid
@@ -84,6 +104,36 @@ void spaceInterpGpu::calcLinearWeights(){
 		// Bottom right
 		_gridPointIndex[i1+3] = _gridPointIndex[i1] + _nz + 1;
 		_weight[i1+3] = (1.0 - wz) * (1.0 - wx);
+
+		if (_dipole == 1){
+
+			// Find the 4 neighboring points for all devices dipole points and compute the weights for the spatial interpolation
+			float wzDipole = ( (*_zCoord->_mat)[iDevice] + _zDipoleShift - _elasticParamHypercube->getAxis(1).o ) / _elasticParamHypercube->getAxis(1).d;
+			float wxDipole = ( (*_xCoord->_mat)[iDevice] + _xDipoleShift - _elasticParamHypercube->getAxis(2).o ) / _elasticParamHypercube->getAxis(2).d;
+			int zRegDipole = wzDipole; // z-coordinate on regular grid
+			wzDipole = wzDipole - zRegDipole;
+			wzDipole = 1.0 - wzDipole;
+			int xRegDipole = wxDipole; // x-coordinate on regular grid
+			wxDipole = wxDipole - xRegDipole;
+			wxDipole = 1.0 - wxDipole;
+
+			// Top left (dipole point)
+			_gridPointIndex[i1+4] = xRegDipole * _nz + zRegDipole; // Index of this point for a 1D array representation
+			_weight[i1+4] = (-1.0) * wzDipole * wxDipole;
+
+			// Bottom left (dipole point)
+			_gridPointIndex[i1+5] = _gridPointIndex[i1+4] + 1;
+			_weight[i1+5] = (-1.0) * (1.0 - wzDipole) * wxDipole;
+
+			// Top right (dipole point)
+			_gridPointIndex[i1+6] = _gridPointIndex[i1+4] + _nz;
+			_weight[i1+6] = (-1.0) * wzDipole * (1.0 - wxDipole);
+
+			// Bottom right (dipole point)
+			_gridPointIndex[i1+7] = _gridPointIndex[i1+4] + _nz + 1;
+			_weight[i1+7] = (-1.0) * (1.0 - wzDipole) * (1.0 - wxDipole);
+
+		}
 	}
 }
 void spaceInterpGpu::calcSincWeights(){

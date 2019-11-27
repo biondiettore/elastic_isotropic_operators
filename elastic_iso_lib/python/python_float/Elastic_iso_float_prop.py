@@ -39,6 +39,12 @@ def parsePosParFile(PosParFile):
 # Build sources geometry
 def buildSourceGeometry(parObject,elasticParam):
 
+
+	#Dipole parameters
+	dipole = parObject.getInt("dipole",0)
+	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
+	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
+
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
 	dx=elasticParam.getHyper().axes[1].d
@@ -96,10 +102,10 @@ def buildSourceGeometry(parObject,elasticParam):
 		zCoordFloat.set(oz+ozSource*dz)
 		xCoordFloat.set(ox+oxSource*dx)
 
-		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
 
 		oxSource=oxSource+spacingShots # Shift source
 
@@ -107,6 +113,11 @@ def buildSourceGeometry(parObject,elasticParam):
 
 # Build receivers geometry
 def buildReceiversGeometry(parObject,elasticParam):
+
+	#Dipole parameters
+	dipole = parObject.getInt("dipole",0)
+	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
+	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
 
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
@@ -181,10 +192,10 @@ def buildReceiversGeometry(parObject,elasticParam):
 			xCoordFloatNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
 
 	for iRec in range(nRecGeom):
-		recVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
+		recVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
 
 	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
 
