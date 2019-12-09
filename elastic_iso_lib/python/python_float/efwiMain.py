@@ -102,11 +102,11 @@ import maskGradientModule
 
 # Solver library
 import pyOperator as pyOp
-import pyNLCGsolver as NLCG
-import pyLBFGSsolver as LBFGS
+from pyNonLinearSolver import pyNLCGsolver as NLCG
+from pyNonLinearSolver import pyLBFGSsolver as LBFGS
 import pyProblem as Prblm
-import pyStopperBase as Stopper
-import pyStepperParabolic as Stepper
+from pyStopper import pyStopperBase as Stopper
+from pyStepper import pyStepperParabolic as Stepper
 import inversionUtils
 from sys_util import logger
 
