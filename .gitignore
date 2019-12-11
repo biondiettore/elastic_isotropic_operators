@@ -7,3 +7,4 @@ build/
 *.H@@@
 local/
 *.ipynb_check*
+._*
