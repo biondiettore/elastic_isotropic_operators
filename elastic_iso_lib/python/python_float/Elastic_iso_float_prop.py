@@ -261,6 +261,10 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
+	def __str__(self):
+		"""Name of the operator"""
+		return " NLOper "
+
 	def forward(self,add,model,data):
 		#Checking if getCpp is present
 		if("getCpp" in dir(model)):
@@ -375,6 +379,10 @@ class nonlinearFwiPropElasticShotsGpu(Op.Operator):
 		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(domainTemp,paramP.param,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
+	def __str__(self):
+		"""Name of the operator"""
+		return " NLOper "
+
 	def forward(self,add,model,data):
 		#Setting elastic model parameters
 		self.setBackground(model)
@@ -463,6 +471,10 @@ class BornElasticShotsGpu(Op.Operator):
 				sourcesSignalsVector[idx] = sourceSignal.getCpp()
 		self.pyOp = pyElastic_iso_float_born.BornElasticShotsGpu(elasticParam,paramP.param,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
+
+	def __str__(self):
+		"""Name of the operator"""
+		return " BornOp "
 
 	def forward(self,add,model,data):
 		#Checking if getCpp is present
