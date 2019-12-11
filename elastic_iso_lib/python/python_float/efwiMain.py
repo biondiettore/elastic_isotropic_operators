@@ -105,8 +105,7 @@ import pyOperator as pyOp
 from pyNonLinearSolver import NLCGsolver as NLCG
 from pyNonLinearSolver import LBFGSsolver as LBFGS
 import pyProblem as Prblm
-from pyStopper import BasicStopper as Stopper
-from pyStepper import StepperParabolic as Stepper
+import pyStepper as Stepper
 import inversionUtils
 from sys_util import logger
 
@@ -275,13 +274,13 @@ if __name__ == '__main__':
 	############################# Solver #######################################
 	# Nonlinear conjugate gradient
 	if (solverType=="nlcg"):
-		nlSolver=NLCG.NLCGsolver(stop,logger=inv_log)
+		nlSolver=NLCG(stop,logger=inv_log)
 	# LBFGS
 	elif (solverType=="lbfgs"):
-		nlSolver=LBFGS.LBFGSsolver(stop,logger=inv_log)
+		nlSolver=LBFGS(stop,logger=inv_log)
 	# Steepest descent
 	elif (solverType=="sd"):
-		nlSolver=NLCG.NLCGsolver(stop,beta_type="SD",logger=inv_log)
+		nlSolver=NLCG(stop,beta_type="SD",logger=inv_log)
 	else:
 		raise ValueError("ERROR! Provided unknonw solver type: %s"%(solverType))
 

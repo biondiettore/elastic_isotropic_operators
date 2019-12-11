@@ -5,7 +5,7 @@ import numpy as np
 import time
 import sys
 import os
-from pyStopper import pyStopperBase as Stopper
+import pyStopper as Stopper
 
 def inversionInit(args):
 
