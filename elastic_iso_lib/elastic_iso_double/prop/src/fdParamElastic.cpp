@@ -180,7 +180,7 @@ void fdParamElastic::getInfo(){
 		std::cerr << "-------------------- Vertical spatial sampling --------------------" << std::endl;
 		std::cerr << std::setprecision(2);
 		std::cerr << "nz = " << _nz-2*_fat-_zPadMinus-_zPadPlus << " [samples], dz = " << _dz << "[m], oz = " << _oz+(_fat+_zPadMinus)*_dz << " [m]" << std::endl;
-		std::cerr << "Model depth = " << _oz+(_nz-2*_fat-_zPadMinus-_zPadPlus-1)*_dz << " [m]" << std::endl;
+		std::cerr << "Model depth = " << (_nz-2*_fat-_zPadMinus-_zPadPlus-1)*_dz << " [m]" << std::endl;
 		std::cerr << "Top padding = " << _zPadMinus << " [samples], bottom padding = " << _zPadPlus << " [samples]" << std::endl;
 		std::cerr << " " << std::endl;
 
@@ -188,7 +188,7 @@ void fdParamElastic::getInfo(){
 		std::cerr << "-------------------- Horizontal spatial sampling ------------------" << std::endl;
 		std::cerr << std::setprecision(2);
 		std::cerr << "nx = " << _nx << " [samples], dx = " << _dx << " [m], ox = " << _ox+(_fat+_xPadMinus)*_dx << " [m]" << std::endl;
-		std::cerr << "Model width = " << _ox+(_nx-2*_fat-_xPadMinus-_xPadPlus-1)*_dx << " [m]" << std::endl;
+		std::cerr << "Model width = " << (_nx-2*_fat-_xPadMinus-_xPadPlus-1)*_dx << " [m]" << std::endl;
 		std::cerr << "Left padding = " << _xPadMinus << " [samples], right padding = " << _xPadPlus << " [samples]" << std::endl;
 		std::cerr << " " << std::endl;
 
