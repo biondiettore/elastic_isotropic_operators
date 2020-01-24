@@ -29,7 +29,7 @@ def inversionInit(args):
 	if (bufferSize==0): bufferSize=None
 	iterSampling=par.getInt("iterSampling",10)
 	restartFolder=par.getString("restartFolder","None")
-	flushMemory=par.getInt("flushMemory",0)
+	flushMemory=par.getInt("flushMemory",1)
 
 	# Inversion components to save
 	saveObj=par.getInt("saveObj",1)
