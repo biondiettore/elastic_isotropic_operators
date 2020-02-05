@@ -537,6 +537,7 @@ void propShotsElasticFwdGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 		//Finite-difference grid and blocks
 		int nblockx;
 		if(surfaceCondition==1){
+			// Free-surface boundary condition
 			nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
 		}
 		else if(surfaceCondition==0){
@@ -871,6 +872,7 @@ void propShotsElasticAdjGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 		// Grid and block dimensions for stepper
 		int nblockx;
 		if(surfaceCondition==0){
+			// Free-surface boundary condition
 			nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
 		}
 		else if(surfaceCondition==1){
