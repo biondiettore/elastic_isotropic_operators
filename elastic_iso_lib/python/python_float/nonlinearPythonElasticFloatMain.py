@@ -129,7 +129,8 @@ if __name__ == '__main__':
 			nonlinearElasticOp.forwardWavefield(False,modelFloat,dataFloat)
 			#save wavefield to disk
 			wavefieldFloat = nonlinearElasticOp.getWavefield()
-			genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
+			# genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
+			wavefieldFloat.writeVec(wfldFile)
 		else:
 			#run Nonlinear forward without wavefield saving
 			nonlinearElasticOp.forward(False,modelFloat,dataFloat)
