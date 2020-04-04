@@ -96,7 +96,7 @@ import Elastic_iso_float_prop
 import elasticParamConvertModule as ElaConv
 from dataCompModule import ElasticDatComp
 import interpBSplineModule
-import dataTaperModule
+# import dataTaperModule
 import spatialDerivModule
 import maskGradientModule
 
@@ -111,7 +111,7 @@ from sys_util import logger
 
 ############################ Bounds vectors ####################################
 # Create bound vectors for FWI
-def createBoundVectors(parObject,model):
+def createBoundVectors(parObject,model,inv_log):
 
 	# Get model dimensions
 	nz=parObject.getInt("nz")
@@ -127,6 +127,8 @@ def createBoundVectors(parObject,model):
 		if(minBound1 == minBound2 == minBound3 == -np.inf):
 			minBoundVector = None
 		else:
+			if(pyinfo): print("--- User provided minimum bounds ---")
+			inv_log.addToLog("--- User provided minimum bounds ---")
 			minBoundVector=model.clone()
 			minBoundVector.set(0.0)
 			minBoundVectorNd=minBoundVector.getNdArray()
@@ -134,6 +136,8 @@ def createBoundVectors(parObject,model):
 			minBoundVectorNd[1,:,:]=minBound2
 			minBoundVectorNd[2,:,:]=minBound3
 	else:
+		if(pyinfo): print("--- User provided a minimum-bound vector ---")
+		inv_log.addToLog("--- User provided a minimum-bound vector ---")
 		minBoundVector=genericIO.defaultIO.getVector(minBoundVectorFile)
 
 	# Max bound
@@ -145,6 +149,8 @@ def createBoundVectors(parObject,model):
 		if(maxBound1 == maxBound2 == maxBound3 == np.inf):
 			maxBoundVector = None
 		else:
+			if(pyinfo): print("--- User provided maximum bounds ---")
+			inv_log.addToLog("--- User provided maximum bounds ---")
 			maxBoundVector=model.clone()
 			maxBoundVector.set(0.0)
 			maxBoundVectorNd=maxBoundVector.getNdArray()
@@ -153,6 +159,8 @@ def createBoundVectors(parObject,model):
 			maxBoundVectorNd[2,:,:]=maxBound3
 
 	else:
+		if(pyinfo): print("--- User provided a maximum-bound vector ---")
+		inv_log.addToLog("--- User provided a maximum-bound vector ---")
 		maxBoundVector=genericIO.defaultIO.getVector(maxBoundVectorFile)
 
 
@@ -229,6 +237,18 @@ if __name__ == '__main__':
 		dataFloat = data
 		sampOpNl = None
 
+	##################### Data muting with mask ################################
+	dataMaskFile = parObject.getString("dataMaskFile","noDataMask")
+	if (dataMaskFile!="noDataMask"):
+		if(pyinfo): print("--- User provided a mask for the data ---")
+		inv_log.addToLog("--- User provided a mask for the data ---")
+		dataMask = genericIO.defaultIO.getVector(dataMaskFile)
+		dataMask = pyOp.DiagonalOp(dataMask)
+		dataMaskNl = pyOp.NonLinearOperator(dataMask,dataMask)
+	else:
+		dataMaskNl = None
+
+
 	############################# Instanciation ################################
 	# Nonlinear
 	nonlinearElasticOp=Elastic_iso_float_prop.nonlinearFwiPropElasticShotsGpu(modelInit,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
@@ -252,9 +272,17 @@ if __name__ == '__main__':
 		fwiInvOp=pyOp.CombNonlinearOp(convOpNl,fwiInvOp)
 
 	#Sampling of elastic data if necessary
-	if (sampOpNl):
+	if sampOpNl:
 		#modeling operator = Sf(m)
 		fwiInvOp=pyOp.CombNonlinearOp(fwiInvOp,sampOpNl)
+
+	#Data muting
+	if dataMaskNl:
+		fwiInvOp=pyOp.CombNonlinearOp(fwiInvOp,dataMaskNl)
+		# Applying mask to observed data
+		data_tmp = data.clone()
+		dataMask.forward(False,data,data_tmp)
+		data = data_tmp
 
 	############################# Gradient mask ################################
 	maskGradientFile=parObject.getString("maskGradient","NoMask")
@@ -266,7 +294,7 @@ if __name__ == '__main__':
 		maskGradient=genericIO.defaultIO.getVector(maskGradientFile)
 
 	############################### Bounds #####################################
-	minBoundVector,maxBoundVector=createBoundVectors(parObject,modelInit)
+	minBoundVector,maxBoundVector=createBoundVectors(parObject,modelInit,inv_log)
 
 	########################### Inverse Problem ################################
 	fwiProb=Prblm.ProblemL2NonLinear(modelInit,data,fwiInvOp,grad_mask=maskGradient,minBound=minBoundVector,maxBound=maxBoundVector)
