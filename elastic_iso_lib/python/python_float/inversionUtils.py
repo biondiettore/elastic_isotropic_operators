@@ -25,7 +25,7 @@ def inversionInit(args):
 	logFile=invPrefix+"_logFile"
 
 	# Recording parameters
-	bufferSize=par.getInt("bufferSize",0)
+	bufferSize=par.getInt("bufferSize",1)
 	if (bufferSize==0): bufferSize=None
 	iterSampling=par.getInt("iterSampling",10)
 	restartFolder=par.getString("restartFolder","None")
