@@ -116,7 +116,6 @@ def createBoundVectors(parObject,model,inv_log):
 	# Get model dimensions
 	nz=parObject.getInt("nz")
 	nx=parObject.getInt("nx")
-	spline=parObject.getInt("spline",0)
 
 	# Min bound
 	minBoundVectorFile=parObject.getString("minBoundVector","noMinBoundVectorFile")
@@ -248,6 +247,16 @@ if __name__ == '__main__':
 	else:
 		dataMaskNl = None
 
+	############################# Gradient mask ################################
+	maskGradientFile=parObject.getString("maskGradient","NoMask")
+	if (maskGradientFile=="NoMask"):
+		maskGradientOp=None
+	else:
+		if(pyinfo): print("--- User provided a mask for the gradients ---")
+		inv_log.addToLog("--- User provided a mask for the gradients ---")
+		maskGradient=genericIO.defaultIO.getVector(maskGradientFile)
+		maskGradientOp = pyOp.DiagonalOp(maskGradient)
+
 
 	############################# Instanciation ################################
 	# Nonlinear
@@ -255,9 +264,12 @@ if __name__ == '__main__':
 
 	# Construct nonlinear operator object
 	BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelInit,dataFloat,elasticParamTemp,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+	BornElasticOpInv=BornElasticOp
 
 	# Conventional FWI non-linear operator
-	fwiInvOp=pyOp.NonLinearOperator(nonlinearElasticOp,BornElasticOp,BornElasticOp.setBackground)
+	if maskGradientOp is not None:
+		BornElasticOpInv=pyOp.ChainOperator(maskGradientOp,BornElasticOp)
+	fwiInvOp=pyOp.NonLinearOperator(nonlinearElasticOp,BornElasticOpInv,BornElasticOp.setBackground)
 
 	#Elastic parameter conversion if any
 	mod_par = parObject.getInt("mod_par",0)
@@ -284,20 +296,26 @@ if __name__ == '__main__':
 		dataMask.forward(False,data,data_tmp)
 		data = data_tmp
 
-	############################# Gradient mask ################################
-	maskGradientFile=parObject.getString("maskGradient","NoMask")
-	if (maskGradientFile=="NoMask"):
-		maskGradient=None
-	else:
-		if(pyinfo): print("--- User provided a mask for the gradients ---")
-		inv_log.addToLog("--- User provided a mask for the gradients ---")
-		maskGradient=genericIO.defaultIO.getVector(maskGradientFile)
+	############################# Spline operator ##############################
+	if (spline==1):
+		if(pyinfo): print("--- Using spline interpolation ---")
+		inv_log.addToLog("--- Using spline interpolation ---")
+		# Coarse-grid model
+		modelCoarseInitFile=parObject.getString("modelCoarseInit")
+		modelCoarseInit=genericIO.defaultIO.getVector(modelCoarseInitFile)
+		modelFineInit=modelInit
+		modelInit=modelCoarseInit
+		# Parameter parsing
+		_,_,zOrder,xOrder,zSplineMesh,xSplineMesh,zDataAxis,xDataAxis,nzParam,nxParam,scaling,zTolerance,xTolerance,_=interpBSplineModule.bSplineIter2dInit(sys.argv,fat=0)
+		splineOp=interpBSplineModule.bSplineIter2d(modelCoarseInit,modelFineInit,zOrder,xOrder,zSplineMesh,xSplineMesh,zDataAxis,xDataAxis,nzParam,nxParam,scaling,zTolerance,xTolerance,fat=0)
+		splineNlOp=pyOp.NonLinearOperator(splineOp,splineOp) # Create spline nonlinear operator
+		fwiInvOp=pyOp.CombNonlinearOp(splineNlOp,fwiInvOp)
 
 	############################### Bounds #####################################
 	minBoundVector,maxBoundVector=createBoundVectors(parObject,modelInit,inv_log)
 
 	########################### Inverse Problem ################################
-	fwiProb=Prblm.ProblemL2NonLinear(modelInit,data,fwiInvOp,grad_mask=maskGradient,minBound=minBoundVector,maxBound=maxBoundVector)
+	fwiProb=Prblm.ProblemL2NonLinear(modelInit,data,fwiInvOp,minBound=minBoundVector,maxBound=maxBoundVector)
 
 	############################# Solver #######################################
 	# Nonlinear conjugate gradient
