@@ -51,26 +51,27 @@ pybind11_add_module(pyPadTruncateSourceFloat MODULE pyPadTruncateSourceFloat.cpp
 target_link_libraries(pyPadTruncateSourceFloat PRIVATE ELASTIC_ISO_FLOAT_WE ELASTIC_ISO_FLOAT_NL ${LIBS})
 
 #Installing library
-install( TARGETS pyElastic_iso_float_nl DESTINATION lib/python) #Module for non-linear operator
-install( TARGETS pyElastic_iso_float_born DESTINATION lib/python) #Module for Born operator
-install( FILES Elastic_iso_float_prop.py DESTINATION lib/python)
+set(PYTHON_DIR "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+install( TARGETS pyElastic_iso_float_nl DESTINATION ${PYTHON_DIR}) #Module for non-linear operator
+install( TARGETS pyElastic_iso_float_born DESTINATION ${PYTHON_DIR}) #Module for Born operator
+install( FILES Elastic_iso_float_prop.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pyElastic_iso_float_we DESTINATION lib/python) #Module for non-linear operator
-install( FILES Elastic_iso_float_we.py DESTINATION lib/python)
+install( TARGETS pyElastic_iso_float_we DESTINATION ${PYTHON_DIR}) #Module for non-linear operator
+install( FILES Elastic_iso_float_we.py DESTINATION ${PYTHON_DIR})
 #
-install( TARGETS pyStaggerFloat  DESTINATION lib/python)
-install( FILES StaggerFloat.py DESTINATION lib/python)
+install( TARGETS pyStaggerFloat  DESTINATION ${PYTHON_DIR})
+install( FILES StaggerFloat.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pySpaceInterpMultiFloat  DESTINATION lib/python)
-install( FILES SpaceInterpMultiFloat.py DESTINATION lib/python)
+install( TARGETS pySpaceInterpMultiFloat  DESTINATION ${PYTHON_DIR})
+install( FILES SpaceInterpMultiFloat.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pyPadTruncateSourceFloat  DESTINATION lib/python)
-install( FILES PadTruncateSourceFloat.py DESTINATION lib/python)
+install( TARGETS pyPadTruncateSourceFloat  DESTINATION ${PYTHON_DIR})
+install( FILES PadTruncateSourceFloat.py DESTINATION ${PYTHON_DIR})
 
-install( FILES wriUtilFloat.py DESTINATION lib/python)
+install( FILES wriUtilFloat.py DESTINATION ${PYTHON_DIR})
 
 #Inversion-related files
-install( FILES inversionUtils.py DESTINATION lib/python)
+install( FILES inversionUtils.py DESTINATION ${PYTHON_DIR})
 install( FILES efwiMain.py PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ DESTINATION bin)
 
 #Installing Python executables

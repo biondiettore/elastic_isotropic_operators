@@ -51,23 +51,24 @@ pybind11_add_module(pyPadTruncateSourceDouble MODULE pyPadTruncateSourceDouble.c
 target_link_libraries(pyPadTruncateSourceDouble PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
 
 #Installing library
-install( TARGETS pyElastic_iso_double_nl DESTINATION lib/python) #Module for non-linear operator
-install( TARGETS pyElastic_iso_double_born DESTINATION lib/python) #Module for Born operator
-install( FILES Elastic_iso_double_prop.py DESTINATION lib/python)
+set(PYTHON_DIR "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+install( TARGETS pyElastic_iso_double_nl DESTINATION ${PYTHON_DIR}) #Module for non-linear operator
+install( TARGETS pyElastic_iso_double_born DESTINATION ${PYTHON_DIR}) #Module for Born operator
+install( FILES Elastic_iso_double_prop.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pyElastic_iso_double_we DESTINATION lib/python) #Module for wave-equation operator
-install( FILES Elastic_iso_double_we.py DESTINATION lib/python)
+install( TARGETS pyElastic_iso_double_we DESTINATION ${PYTHON_DIR}) #Module for wave-equation operator
+install( FILES Elastic_iso_double_we.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pyStaggerDouble  DESTINATION lib/python)
-install( FILES StaggerDouble.py DESTINATION lib/python)
+install( TARGETS pyStaggerDouble  DESTINATION ${PYTHON_DIR})
+install( FILES StaggerDouble.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pySpaceInterpMultiDouble  DESTINATION lib/python)
-install( FILES SpaceInterpMultiDouble.py DESTINATION lib/python)
+install( TARGETS pySpaceInterpMultiDouble  DESTINATION ${PYTHON_DIR})
+install( FILES SpaceInterpMultiDouble.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pyPadTruncateSourceDouble  DESTINATION lib/python)
-install( FILES PadTruncateSourceDouble.py DESTINATION lib/python)
+install( TARGETS pyPadTruncateSourceDouble  DESTINATION ${PYTHON_DIR})
+install( FILES PadTruncateSourceDouble.py DESTINATION ${PYTHON_DIR})
 
-install( FILES wriUtilDouble.py DESTINATION lib/python)
+install( FILES wriUtilDouble.py DESTINATION ${PYTHON_DIR})
 
 
 #Installing Python executables
