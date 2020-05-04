@@ -34,8 +34,8 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const s
 
 	// Treat the specific case wher dipole=1 AND interpolation method is linear
 	_dipole = dipole;
-	_zDipoleShift = zDipoleShift;
-	_xDipoleShift = xDipoleShift;
+	_zDipoleShift = zDipoleShift * _dz;
+	_xDipoleShift = xDipoleShift * _dx;
 
 	// If dipole is required, set _nFiltTotal to 8
 	// Otherwise, set it to 4
