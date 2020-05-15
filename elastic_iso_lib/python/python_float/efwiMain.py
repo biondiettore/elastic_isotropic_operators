@@ -21,7 +21,8 @@ INPUT PARAMETERS:
 	info [0] - int; boolean; Verbosity of the program. If true, certain program information will be displayed (Set this always to 0)
 
 	mod_par [0] - int; Choice of parameterization for the elasticParam header file. [0 = Density [Kg/m^3],Lame [Pa],Shear modulus [Pa];
-	                   1 = Vp [m/s],Vs [m/s], Density [Kg/m^3]]
+	                   1 = Vp [m/s],Vs [m/s], Density [Kg/m^3];
+					   2 = Vp [km/s],Vs [km/s], Density [g/cm^3]]
 
 	nts [no default] - int; Number of time samples within the elastic source/data
 

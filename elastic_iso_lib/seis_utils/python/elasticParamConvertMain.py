@@ -14,6 +14,7 @@ if __name__ == '__main__':
 	   outputFile = [no default] - string. Path to output file.
 	   conv_type    = [no default] - int; Conversion kind
 		1 = VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
+		2 = VpVsRho to RhoLameMu (km/s|km/s|g/cm3 -> kg/m3|Pa|Pa)
 	   -1 = RhoLameMu to VpVsRho (m/s|m/s|kg/m3 <- kg/m3|Pa|Pa)
 	   verbose = [0] int. verbose mode or not.
 	"""
@@ -40,6 +41,8 @@ if __name__ == '__main__':
 		if(verbose): print("CONVERSION: VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)")
 	elif(conv_type == 1):
 		if(verbose): print("CONVERSION: RhoLameMu to VpVsRho (m/s|m/s|kg/m3 <- kg/m3|Pa|Pa)")
+	elif(conv_type == 2):
+		if(verbose): print("CONVERSION: RhoLameMu to VpVsRho (km/s|km/s|g/cm3 <- kg/m3|Pa|Pa)")
 	else:
 		raise ValueError("ERROR! Unsupported conv_type (current value: %s)!"%(self.conv_type))
 

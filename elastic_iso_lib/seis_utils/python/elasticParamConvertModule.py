@@ -13,6 +13,7 @@ class ElasticConv(pyOperator.Operator):
 		   domain    	= [no default] - vector class; Vector for defining domain of the transformation
 		   conv_type    = [no default] - int; Conversion kind
 			1 = VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
+			2 = VpVsRho to RhoLameMu (km/s|km/s|g/cm3 -> kg/m3|Pa|Pa)
 		   -1 = RhoLameMu to VpVsRho (m/s|m/s|kg/m3 <- kg/m3|Pa|Pa)
 		"""
 		self.setDomainRange(domain,domain)
@@ -31,6 +32,11 @@ class ElasticConv(pyOperator.Operator):
 			dataNd[0,:,:] += modelNd[2,:,:] #rho
 			dataNd[1,:,:] += modelNd[2,:,:]*(modelNd[0,:,:]*modelNd[0,:,:]-2.0*modelNd[1,:,:]*modelNd[1,:,:]) #lame
 			dataNd[2,:,:] += modelNd[2,:,:]*modelNd[1,:,:]*modelNd[1,:,:] #mu
+		elif(self.conv_type == 2):
+			#VpVsRho to RhoLameMu (km/s|km/s|g/m3 -> kg/m3|Pa|Pa)
+			dataNd[0,:,:] += modelNd[2,:,:]*1e3 #rho
+			dataNd[1,:,:] += modelNd[2,:,:]*(modelNd[0,:,:]*modelNd[0,:,:]-2.0*modelNd[1,:,:]*modelNd[1,:,:])*1e9 #lame
+			dataNd[2,:,:] += modelNd[2,:,:]*modelNd[1,:,:]*modelNd[1,:,:]*1e9 #mu
 		elif(self.conv_type == -1):
 			#RhoLameMu to VpVsRho (kg/m3|Pa|Pa -> m/s|m/s|kg/m3)
 			dataNd[0,:,:] += np.sqrt(np.divide((modelNd[1,:,:]+2*modelNd[2,:,:]),modelNd[0,:,:])) #vp
@@ -55,6 +61,7 @@ class ElasticConvJab(pyOperator.Operator):
 		   background  	= [no default] - vector class; Vector defining the background elastic parameters on which the Jacobian is computed
 		   conv_type    = [no default] - int; Conversion kind
 		    1 = VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
+			2 = VpVsRho to RhoLameMu (km/s|km/s|g/cm3 -> kg/m3|Pa|Pa)
 		"""
 		self.setDomainRange(domain,domain)
 		self.background=domain.clone() #Background elastic model
@@ -70,7 +77,7 @@ class ElasticConvJab(pyOperator.Operator):
 		dataNd = data.getNdArray()
 
 		if(not add): data.zero()
-		if(self.conv_type == 1):
+		if(self.conv_type == 1 or self.conv_type == 2):
 			#rho' = rho => drho'/drho = 1
 			dataNd[0,:,:] += modelNd[2,:,:]
 			#lame = (Vp*Vp-2*Vs*Vs)*rho => dlame/drho = (Vp*Vp-2*Vs*Vs), dlame/dVs = -4*Vs*Vs*rho, dlame/dVp = 2*Vp*Vp*rho
@@ -89,7 +96,7 @@ class ElasticConvJab(pyOperator.Operator):
 		dataNd = data.getNdArray()
 
 		if(not add): model.zero()
-		if(self.conv_type == 1):
+		if(self.conv_type == 1 or self.conv_type == 2):
 			#Vp
 			modelNd[0,:,:] += 2.0*backgroundNd[0,:,:]*backgroundNd[0,:,:]*dataNd[1,:,:]
 			#Vs
@@ -105,4 +112,6 @@ class ElasticConvJab(pyOperator.Operator):
 		   Function to set the background elastic parameters
 		"""
 		self.background.copy(background)
+		if(self.conv_type == 2):
+			self.background.getNdArray()[:] *= 1e3
 		return
