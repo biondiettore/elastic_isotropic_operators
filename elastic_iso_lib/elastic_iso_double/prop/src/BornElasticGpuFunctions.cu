@@ -645,10 +645,10 @@ void BornShotsFwdGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 
 	//Finite-difference grid and blocks
 	int nblockx;
-	if(surfaceCondition==0){
+	if(surfaceCondition==1){
 		nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
 	}
-	else if(surfaceCondition==1){
+	else if(surfaceCondition==0){
 		nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 	}
 	int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
@@ -791,10 +791,10 @@ void BornShotsAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 
 	//Finite-difference grid and blocks
 	int nblockx;
-	if(surfaceCondition==0){
+	if(surfaceCondition==1){
 		nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
 	}
-	else if(surfaceCondition==1){
+	else if(surfaceCondition==0){
 		nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 	}
 	int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
