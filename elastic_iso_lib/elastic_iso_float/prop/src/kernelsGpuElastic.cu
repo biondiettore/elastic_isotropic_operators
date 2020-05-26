@@ -359,50 +359,50 @@ __global__ void ker_step_adj(float* dev_o_vx, float* dev_o_vz, float* dev_o_sigm
 
     // Copy current slice from global to shared memory for each wavefield component -- edges
     if (threadIdx.y < FAT) {
-    // vx*rho*dtw
-    shared_c_vx_rhodtw[ixLocal-FAT][izLocal]        = dev_rhoxDtw[iGlobal-dev_nz*FAT]*dev_c_vx[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_vx_rhodtw[ixLocal+BLOCK_SIZE][izLocal] = dev_rhoxDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // vz*rho*dtw
-    shared_c_vz_rhodtw[ixLocal-FAT][izLocal]         = dev_rhozDtw[iGlobal-dev_nz*FAT]*dev_c_vz[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_vz_rhodtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_rhozDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmaxx*dtw*(lamb+2Mu)
-    shared_c_sigmaxx_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmaxx_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmaxx*dtw*(lamb)
-    shared_c_sigmaxx_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmaxx_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmazz*dtw*(lamb+2Mu)
-    shared_c_sigmazz_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmazz_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmazz*dtw*(lamb)
-    shared_c_sigmazz_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmazz_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
-    // sigmaxz
-    shared_c_sigmaxz_muxzDtw[ixLocal-FAT][izLocal]        = dev_muxzDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxz[iGlobal-dev_nz*FAT]; // Left side
-    shared_c_sigmaxz_muxzDtw[ixLocal+BLOCK_SIZE][izLocal] = dev_muxzDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	    // vx*rho*dtw
+	    shared_c_vx_rhodtw[ixLocal-FAT][izLocal]        = dev_rhoxDtw[iGlobal-dev_nz*FAT]*dev_c_vx[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_vx_rhodtw[ixLocal+BLOCK_SIZE][izLocal] = dev_rhoxDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+	    // vz*rho*dtw
+	    shared_c_vz_rhodtw[ixLocal-FAT][izLocal]         = dev_rhozDtw[iGlobal-dev_nz*FAT]*dev_c_vz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_vz_rhodtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_rhozDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+	    // sigmaxx*dtw*(lamb+2Mu)
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+	    // sigmaxx*dtw*(lamb)
+	    shared_c_sigmaxx_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmaxx_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+	    // sigmazz*dtw*(lamb+2Mu)
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+	    // sigmazz*dtw*(lamb)
+	    shared_c_sigmazz_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmazz_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+	    // sigmaxz
+	    shared_c_sigmaxz_muxzDtw[ixLocal-FAT][izLocal]        = dev_muxzDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmaxz_muxzDtw[ixLocal+BLOCK_SIZE][izLocal] = dev_muxzDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
     }
     if (threadIdx.x < FAT) {
-    // vx*rho*dtw
-    shared_c_vx_rhodtw[ixLocal][izLocal-FAT]        = dev_rhoxDtw[iGlobal-FAT]*dev_c_vx[iGlobal-FAT]; // Up
-    shared_c_vx_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhoxDtw[iGlobal+BLOCK_SIZE]*dev_c_vx[iGlobal+BLOCK_SIZE]; // Down
-    // vz*rho*dtw
-    shared_c_vz_rhodtw[ixLocal][izLocal-FAT]        = dev_rhozDtw[iGlobal-FAT]*dev_c_vz[iGlobal-FAT]; // Up
-    shared_c_vz_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhozDtw[iGlobal+BLOCK_SIZE]*dev_c_vz[iGlobal+BLOCK_SIZE]; // Down
-    // sigmaxx*dtw*(lamb+2Mu)
-    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
-    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
-    // sigmaxx*dtw*(lamb)
-    shared_c_sigmaxx_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
-    shared_c_sigmaxx_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
-    // sigmazz*dtw*(lamb+2Mu)
-    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
-    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
-    // sigmaxx*dtw*(lamb)
-    shared_c_sigmazz_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
-    shared_c_sigmazz_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
-    // sigmaxz
-    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-FAT]        = dev_muxzDtw[iGlobal-FAT]*dev_c_sigmaxz[iGlobal-FAT]; // Up
-    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+BLOCK_SIZE] = dev_muxzDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+BLOCK_SIZE]; // Down
+	    // vx*rho*dtw
+	    shared_c_vx_rhodtw[ixLocal][izLocal-FAT]        = dev_rhoxDtw[iGlobal-FAT]*dev_c_vx[iGlobal-FAT]; // Up
+	    shared_c_vx_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhoxDtw[iGlobal+BLOCK_SIZE]*dev_c_vx[iGlobal+BLOCK_SIZE]; // Down
+	    // vz*rho*dtw
+	    shared_c_vz_rhodtw[ixLocal][izLocal-FAT]        = dev_rhozDtw[iGlobal-FAT]*dev_c_vz[iGlobal-FAT]; // Up
+	    shared_c_vz_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhozDtw[iGlobal+BLOCK_SIZE]*dev_c_vz[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxx*dtw*(lamb+2Mu)
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxx*dtw*(lamb)
+	    shared_c_sigmaxx_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
+	    shared_c_sigmaxx_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmazz*dtw*(lamb+2Mu)
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxx*dtw*(lamb)
+	    shared_c_sigmazz_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
+	    shared_c_sigmazz_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxz
+	    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-FAT]        = dev_muxzDtw[iGlobal-FAT]*dev_c_sigmaxz[iGlobal-FAT]; // Up
+	    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+BLOCK_SIZE] = dev_muxzDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+BLOCK_SIZE]; // Down
     }
     __syncthreads(); // Synchronise all threads within each block -- look new sync options
 
