@@ -932,12 +932,12 @@ __global__ void imagingElaFwdGpu(float* dev_wavefieldVx, float* dev_wavefieldVz,
         shared_c_vz[ixLocal-FAT][izLocal] = dev_wavefieldVz[iGlobal_cur-dev_nz*FAT]; // Left side
         shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVz[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
     }
-    if (threadIdx.x < 5) {
+    if (threadIdx.x < FAT) {
         // vx
-        shared_c_vx[ixLocal][izLocal-5] = dev_wavefieldVx[iGlobal_cur-5]; // Up
+        shared_c_vx[ixLocal][izLocal-FAT] = dev_wavefieldVx[iGlobal_cur-FAT]; // Up
         shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVx[iGlobal_cur+BLOCK_SIZE]; // Down
         // vz
-        shared_c_vz[ixLocal][izLocal-5] = dev_wavefieldVz[iGlobal_cur-5]; // Up
+        shared_c_vz[ixLocal][izLocal-FAT] = dev_wavefieldVz[iGlobal_cur-FAT]; // Up
         shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVz[iGlobal_cur+BLOCK_SIZE]; // Down
     }
     __syncthreads(); // Synchronise all threads within each block -- look new sync options
@@ -1012,12 +1012,12 @@ __global__ void imagingElaAdjGpu(float* dev_wavefieldVx, float* dev_wavefieldVz,
         shared_c_vz[ixLocal-FAT][izLocal] = dev_wavefieldVz[iGlobal_cur-dev_nz*FAT]; // Left side
         shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVz[iGlobal_cur+dev_nz*BLOCK_SIZE] ; // Right side
     }
-    if (threadIdx.x < 5) {
+    if (threadIdx.x < FAT) {
         // vx
-        shared_c_vx[ixLocal][izLocal-5] = dev_wavefieldVx[iGlobal_cur-5]; // Up
+        shared_c_vx[ixLocal][izLocal-FAT] = dev_wavefieldVx[iGlobal_cur-FAT]; // Up
         shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVx[iGlobal_cur+BLOCK_SIZE]; // Down
         // vz
-        shared_c_vz[ixLocal][izLocal-5] = dev_wavefieldVz[iGlobal_cur-5]; // Up
+        shared_c_vz[ixLocal][izLocal-FAT] = dev_wavefieldVz[iGlobal_cur-FAT]; // Up
         shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVz[iGlobal_cur+BLOCK_SIZE]; // Down
     }
     __syncthreads(); // Synchronise all threads within each block -- look new sync options
