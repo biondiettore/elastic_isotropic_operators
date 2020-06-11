@@ -1139,7 +1139,7 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
     dev_dlame[iGlobal] += (dev_sigmaxx[iGlobal] + dev_sigmazz[iGlobal]) * (dvx_dx + dvz_dz);
     //Imaging dmu component
     dev_dmu[iGlobal] += 2.0 * (dvx_dx * dev_sigmaxx[iGlobal] + dvz_dz * dev_sigmazz[iGlobal]);
-    //Scattering Sigmaxz component             //first deriv in negative z direction of current vx
+    //Imaging muxz              //first deriv in negative z direction of current vx
     dev_dmuxz[iGlobal] += dev_sigmaxz[iGlobal]*(dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1]) +
                                                 dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
                                                 dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
@@ -1149,4 +1149,81 @@ __global__ void imagingElaAdjGpu(double* dev_wavefieldVx, double* dev_wavefieldV
                                                 dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
                                                 dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
                                                 dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
+}
+
+__global__ void imagingElaAdjGpuStreams(double* dev_wavefieldVx_old, double* dev_wavefieldVx_cur, double* dev_wavefieldVx_new, double* dev_wavefieldVz_old, double* dev_wavefieldVz_cur, double* dev_wavefieldVz_new,
+    double* dev_vx, double* dev_vz, double* dev_sigmaxx, double* dev_sigmazz, double* dev_sigmaxz, double* dev_drhox, double* dev_drhoz, double* dev_dlame, double* dev_dmu, double* dev_dmuxz, int its){
+    //Index definition
+    unsigned long long int izGlobal = FAT + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate
+    unsigned long long int ixGlobal = FAT + blockIdx.y * BLOCK_SIZE + threadIdx.y; // Global x-coordinate
+    unsigned long long int iGlobal = dev_nz * ixGlobal + izGlobal; // 1D array index for the model on the global memory
+    int izLocal = FAT + threadIdx.x; // z-coordinate on the shared grid
+    int ixLocal = FAT + threadIdx.y; // x-coordinate on the shared grid
+
+    // Allocate shared memory for each wavefield component
+    __shared__ double shared_c_vx[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // vx
+    __shared__ double shared_c_vz[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // vz
+
+    // Copy current slice from global to shared memory for each wavefield component -- center
+    shared_c_vx[ixLocal][izLocal] = dev_wavefieldVx_cur[iGlobal]; // vx
+    shared_c_vz[ixLocal][izLocal] = dev_wavefieldVz_cur[iGlobal]; // vz
+
+    // Copy current slice from global to shared memory for each wavefield component -- edges
+    if (threadIdx.y < FAT) {
+        // vx
+        shared_c_vx[ixLocal-FAT][izLocal] = dev_wavefieldVx_cur[iGlobal-dev_nz*FAT]; // Left side
+        shared_c_vx[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVx_cur[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+        // vz
+        shared_c_vz[ixLocal-FAT][izLocal] = dev_wavefieldVz_cur[iGlobal-dev_nz*FAT]; // Left side
+        shared_c_vz[ixLocal+BLOCK_SIZE][izLocal] = dev_wavefieldVz_cur[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
+    }
+    if (threadIdx.x < FAT) {
+        // vx
+        shared_c_vx[ixLocal][izLocal-FAT] = dev_wavefieldVx_cur[iGlobal-FAT]; // Up
+        shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVx_cur[iGlobal+BLOCK_SIZE]; // Down
+        // vz
+        shared_c_vz[ixLocal][izLocal-FAT] = dev_wavefieldVz_cur[iGlobal-FAT]; // Up
+        shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_wavefieldVz_cur[iGlobal+BLOCK_SIZE]; // Down
+    }
+    __syncthreads(); // Synchronise all threads within each block -- look new sync options
+
+    //Computing dVx/dx (forward staggering)
+    double dvx_dx = dev_xCoeff[0]*(shared_c_vx[ixLocal+1][izLocal]-shared_c_vx[ixLocal][izLocal])  +
+								    dev_xCoeff[1]*(shared_c_vx[ixLocal+2][izLocal]-shared_c_vx[ixLocal-1][izLocal])+
+								    dev_xCoeff[2]*(shared_c_vx[ixLocal+3][izLocal]-shared_c_vx[ixLocal-2][izLocal])+
+								    dev_xCoeff[3]*(shared_c_vx[ixLocal+4][izLocal]-shared_c_vx[ixLocal-3][izLocal]);
+    //Computing dVz/dz (forward staggering)
+    double dvz_dz = dev_zCoeff[0]*(shared_c_vz[ixLocal][izLocal+1]-shared_c_vz[ixLocal][izLocal])  +
+								    dev_zCoeff[1]*(shared_c_vz[ixLocal][izLocal+2]-shared_c_vz[ixLocal][izLocal-1])+
+								    dev_zCoeff[2]*(shared_c_vz[ixLocal][izLocal+3]-shared_c_vz[ixLocal][izLocal-2])+
+								    dev_zCoeff[3]*(shared_c_vz[ixLocal][izLocal+4]-shared_c_vz[ixLocal][izLocal-3]);
+
+    //Note we assume zero wavefield for its < 0 and its > ntw
+    //Imaging drhox and drhoz components
+    if(its == 0){
+        dev_drhox[iGlobal] += dev_vx[iGlobal] * (- dev_wavefieldVx_new[iGlobal])*dev_dts_inv;
+        dev_drhoz[iGlobal] += dev_vz[iGlobal] * (- dev_wavefieldVz_new[iGlobal])*dev_dts_inv;
+    } else if(its == dev_nts-1){
+        dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx_old[iGlobal])*dev_dts_inv;
+        dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz_old[iGlobal])*dev_dts_inv;
+    } else {
+				dev_drhox[iGlobal] += dev_vx[iGlobal] * (dev_wavefieldVx_old[iGlobal] - dev_wavefieldVx_new[iGlobal])*dev_dts_inv;
+        dev_drhoz[iGlobal] += dev_vz[iGlobal] * (dev_wavefieldVz_old[iGlobal] - dev_wavefieldVz_new[iGlobal])*dev_dts_inv;
+    }
+		//Imaging dlame component
+		dev_dlame[iGlobal] += (dev_sigmaxx[iGlobal] + dev_sigmazz[iGlobal]) * (dvx_dx + dvz_dz);
+		//Imaging dmu component
+		dev_dmu[iGlobal] += 2.0 * (dvx_dx * dev_sigmaxx[iGlobal] + dvz_dz * dev_sigmazz[iGlobal]);
+    //Imaging muxz        //first deriv in negative z direction of current vx
+    dev_dmuxz[iGlobal] += dev_sigmaxz[iGlobal]*(dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1])  +
+                                                dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
+                                                dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
+                                                dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
+                                                //first deriv in negative x direction of current vz
+                                                dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
+                                                dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
+                                                dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
+                                                dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
+
+
 }
