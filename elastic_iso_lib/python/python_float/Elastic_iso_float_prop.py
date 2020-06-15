@@ -13,6 +13,149 @@ import sys
 
 from pyElastic_iso_float_nl import spaceInterpGpu
 
+############################ Dask interface ####################################
+#Dask-related modules and functions
+import dask.distributed as daskD
+from dask_util import DaskClient
+import pyDaskVector
+import re
+
+def create_client(parObject):
+	"""
+	   Function to create Dask client if requested
+	"""
+	hostnames = parObject.getString("hostnames","noHost")
+	pbs_args = parObject.getString("pbs_args","noPBS")
+	lsf_args = parObject.getString("lsf_args","noLSF")
+	cluster_args = None
+	if pbs_args != "noPBS":
+		cluster_args = pbs_args
+		cluster_name = "pbs_params"
+	elif lsf_args != "noLSF":
+		cluster_args = lsf_args
+		cluster_name = "lsf_params"
+	if hostnames != "noHost" and cluster_args is not None:
+		raise ValueError("Only one interface can be used for a client! User provided both SSH and PBS/LSF parameters!")
+	#Starting Dask client if requested
+	client = None
+	nWrks = None
+	args = None
+	if hostnames != "noHost":
+		args = {"hostnames":hostnames.split(",")}
+		scheduler_file = parObject.getString("scheduler_file","noFile")
+		if scheduler_file != "noFile":
+			args.update({"scheduler_file_prefix":scheduler_file})
+		print("Starting Dask client using the following workers: %s"%(hostnames))
+	elif cluster_args:
+		n_wrks = parObject.getInt("n_wrks",1)
+		n_jobs = parObject.getInt("n_jobs")
+		args = {"n_jobs":n_jobs}
+		args.update({"n_wrks":n_wrks})
+		cluster_dict={elem.split(";")[0] : elem.split(";")[1] for elem in cluster_args.split(",")}
+		if "cores" in cluster_dict.keys():
+			cluster_dict.update({"cores":int(cluster_dict["cores"])})
+		if "mem" in cluster_dict.keys():
+			cluster_dict.update({"mem":int(cluster_dict["mem"])})
+		if "ncpus" in cluster_dict.keys():
+			cluster_dict.update({"ncpus":int(cluster_dict["ncpus"])})
+		if "nanny" in cluster_dict.keys():
+			nanny_flag = True
+			if cluster_dict["nanny"] in "0falseFalse":
+				nanny_flag = False
+			cluster_dict.update({"nanny":nanny_flag})
+		if "dashboard_address" in cluster_dict.keys():
+			if cluster_dict["dashboard_address"] in "Nonenone":
+				cluster_dict.update({"dashboard_address":None})
+		if "env_extra" in cluster_dict.keys():
+			cluster_dict.update({"env_extra":cluster_dict["env_extra"].split(":")})
+		if "job_extra" in cluster_dict.keys():
+			cluster_dict.update({"job_extra":cluster_dict["job_extra"].split("|")})
+		cluster_dict={cluster_name:cluster_dict}
+		args.update(cluster_dict)
+		print("Starting jobqueue Dask client using %s workers on %s jobs"%(n_wrks,n_jobs))
+
+	if args:
+		client = DaskClient(**args)
+		print("Client has started!")
+		nWrks = client.getNworkers()
+	return client, nWrks
+
+def parfile2pars(args):
+	"""Function to expand arguments in parfile to parameters"""
+	#Check if par argument was provided
+	par_arg = None
+	match = [arg for arg in args if "par" in arg]
+	if len(match) > 0:
+		par_arg = match[-1] #Taking last par argument
+	#If par was found expand arguments
+	if par_arg:
+		par_file = par_arg.split("=")[-1]
+		with open(par_file) as fid:
+			lines = fid.read().splitlines()
+		#Substitute par with its arguments
+		idx = args.index(par_arg)
+		args = args[:idx] + lines + args[idx+1:]
+	return args
+
+def create_parObj(args):
+	"""Function to call genericIO correctly"""
+	obj = genericIO.io(params=args)
+	return obj
+
+def spreadParObj(client,args,par):
+	"""Function to spread parameter object to workers"""
+	#Spreading/Instantiating the parameter objects
+	List_Shots = par.getInts("nExp",0)
+	parObject = []
+	args1=parfile2pars(args)
+	#Finding index of nShot parameter
+	idx_nshot = [ii for ii,el in enumerate(args1) if "nExp" in el][-1]
+	for idx,wrkId in enumerate(client.getWorkerIds()):
+		#Substituting nShot with the correct number of shots
+		args1[idx_nshot]="nExp=%s"%(List_Shots[idx])
+		parObject.append(client.getClient().submit(create_parObj,args1,workers=[wrkId],pure=False))
+	daskD.wait(parObject)
+	return parObject
+
+def call_spaceInterpGpu(zAxes,xAxes,zCoord,xCoord,GridAxes,nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift):
+	"""Function instantiate a spaceInterpGpu object"""
+	GridHyper = Hypercube.hypercube(axes=GridAxes)
+	xCoordFloat = SepVector.getSepVector(axes=xAxes,storage="dataFloat")
+	zCoordFloat = SepVector.getSepVector(axes=zAxes,storage="dataFloat")
+	xCoordFloat.getNdArray()[:] = xCoord
+	zCoordFloat.getNdArray()[:] = zCoord
+	obj = spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),GridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift)
+	return obj
+
+def get_axes(vecObj):
+	"""Function to return Axes from vector"""
+	return vecObj.getHyper().axes
+
+def chunkData(dataVecLocal,dataSpaceRemote):
+	"""Function to chunk and spread the data vector across dask workers"""
+	dask_client = dataSpaceRemote.dask_client #Getting Dask client
+	client = dask_client.getClient()
+	wrkIds = dask_client.getWorkerIds()
+	dataAxes = client.gather(client.map(get_axes,dataSpaceRemote.vecDask,pure=False)) #Getting hypercubes of remote vector chunks
+	List_Shots = [axes[-1].n for axes in dataAxes]
+	dataNd = dataVecLocal.getNdArray()
+	if(np.sum(List_Shots) != dataNd.shape[0]):
+		raise ValueError("Number of shot within provide data vector (%s) not consistent with total number of shots from nShot parameter (%s)"%(dataNd.shape[0],np.sum(List_Shots)))
+	#Pointer-wise chunking
+	dataArrays = []
+	firstShot = 0
+	for nShot in List_Shots:
+		dataArrays.append(dataNd[firstShot:firstShot+nShot,:,:,:])
+		firstShot += nShot
+	#Copying the data to remove vector
+	dataVecRemote = dataSpaceRemote.clone()
+	for idx,wrkId in enumerate(wrkIds):
+		arrD = client.scatter(dataArrays[idx],workers=[wrkId])
+		daskD.wait(arrD)
+		daskD.wait(client.submit(pyDaskVector.copy_from_NdArray,dataVecRemote.vecDask[idx],arrD,pure=False))
+	# daskD.wait(client.map(pyDaskVector.copy_from_NdArray,dataVecRemote.vecDask,dataArrays,pure=False))
+	return dataVecRemote
+
 ############################ Acquisition geometry ##############################
 # Reads source or receiver x,y,z locations from parFile
 def parsePosParFile(PosParFile):
@@ -44,6 +187,7 @@ def buildSourceGeometry(parObject,elasticParam):
 	dipole = parObject.getInt("dipole",0)
 	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
 	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
+	nts = parObject.getInt("nts")
 
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
@@ -102,12 +246,96 @@ def buildSourceGeometry(parObject,elasticParam):
 		zCoordFloat.set(oz+ozSource*dz)
 		xCoordFloat.set(ox+oxSource*dx)
 
-		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
-		sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
-		sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
-		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
 
 		oxSource=oxSource+spacingShots # Shift source
+
+	return sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis
+
+# Build sources geometry for Dask interface
+def buildSourceGeometryDask(parObject,elasticParamHyper,client):
+
+	#Dipole parameters
+	dipole = parObject.getInt("dipole",0)
+	List_Exps = parObject.getInts("nExp",0)
+	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
+	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
+	nts = parObject.getInt("nts")
+
+	#Checking if list of shots is consistent with number of workers
+	nWrks = client.getNworkers()
+	if len(List_Exps) != nWrks:
+		raise ValueError("Number of workers (#nWrk=%s) not consistent with length of the provided list of experiments (nExp=%s)"%(nWrks,List_Exps))
+
+	# Horizontal axis
+	nx=elasticParamHyper.axes[1].n
+	dx=elasticParamHyper.axes[1].d
+	ox=elasticParamHyper.axes[1].o
+
+	# vertical axis
+	nz=elasticParamHyper.axes[0].n
+	dz=elasticParamHyper.axes[0].d
+	oz=elasticParamHyper.axes[0].o
+
+	# Sources geometry
+	nzSource=1
+	ozSource=parObject.getInt("zSource")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+	dzSource=1
+	nxSource=1
+	oxSource=parObject.getInt("xSource")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
+	dxSource=1
+	spacingShots=parObject.getInt("spacingShots")
+
+	#need a hypercube for centerGrid, x shifted, z shifted, and xz shifted grid
+	zAxis=Hypercube.axis(n=elasticParamHyper.axes[0].n,o=elasticParamHyper.axes[0].o,d=elasticParamHyper.axes[0].d)
+	zAxisShifted=Hypercube.axis(n=elasticParamHyper.axes[0].n,o=elasticParamHyper.axes[0].o-0.5*elasticParamHyper.axes[0].d,d=elasticParamHyper.axes[0].d)
+
+	xAxis=Hypercube.axis(n=elasticParamHyper.axes[1].n,o=elasticParamHyper.axes[1].o,d=elasticParamHyper.axes[1].d)
+	xAxisShifted=Hypercube.axis(n=elasticParamHyper.axes[1].n,o=elasticParamHyper.axes[1].o-0.5*elasticParamHyper.axes[1].d,d=elasticParamHyper.axes[1].d)
+
+	paramAxis=Hypercube.axis(n=elasticParamHyper.axes[2].n,o=elasticParamHyper.axes[2].o,d=elasticParamHyper.axes[2].d)
+
+	#check which source injection interp method
+	sourceInterpMethod = parObject.getString("sourceInterpMethod","linear")
+	sourceInterpNumFilters = parObject.getInt("sourceInterpNumFilters",4)
+
+	#Dask-related lists
+	sourcesVectorCenterGrid = [[] for ii in range(nWrks)]
+	sourcesVectorXGrid = [[] for ii in range(nWrks)]
+	sourcesVectorZGrid = [[] for ii in range(nWrks)]
+	sourcesVectorXZGrid = [[] for ii in range(nWrks)]
+	sourceAxis=[]
+
+	centerGridAxes=[zAxis,xAxis,paramAxis]
+	xGridAxes=[zAxis,xAxisShifted,paramAxis]
+	zGridHAxes=[zAxisShifted,xAxis,paramAxis]
+	xzGridAxes=[zAxisShifted,xAxisShifted,paramAxis]
+
+	oxExp = ox+oxSource*dx
+	dxExp = spacingShots*dx
+	for idx,nExp in enumerate(List_Exps):
+		#Shot axis for given shots
+		sourceAxis.append(Hypercube.axis(n=nExp,o=oxExp,d=dxExp))
+		for ishot in range(parObject.getInt("nExp")):
+			# sources _zCoord and _xCoord
+			zAxes=Hypercube.axis(n=nzSource,o=0.0,d=1.0)
+			xAxes=Hypercube.axis(n=nxSource,o=0.0,d=1.0)
+			#Setting z and x position of the source for the given experiment
+			zCoord=oz+ozSource*dz
+			xCoord=ox+oxSource*dx
+			# Constructing injection/estraction operators
+			sourcesVectorCenterGrid[idx].append(client.getClient().submit(call_spaceInterpGpu,zAxes,xAxes,zCoord,xCoord,centerGridAxes,nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift,pure=False))
+			sourcesVectorXGrid[idx].append(client.getClient().submit(call_spaceInterpGpu,zAxes,xAxes,zCoord,xCoord,xGridAxes,nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift,pure=False))
+			sourcesVectorZGrid[idx].append(client.getClient().submit(call_spaceInterpGpu,zAxes,xAxes,zCoord,xCoord,zGridAxes,nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift,pure=False))
+			sourcesVectorXZGrid[idx].append(client.getClient().submit(call_spaceInterpGpu,zAxes,xAxes,zCoord,xCoord,xzGridAxes,nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift,pure=False))
+			# Shift source
+			oxSource=oxSource+spacingShots
+		daskD.wait(sourcesVectorCenterGrid[idx]+sourcesVectorXGrid[idx]+sourcesVectorZGrid[idx]+sourcesVectorXZGrid[idx])
+		#Adding shots offset to origin of shot axis
+		oxExp = (nExp-1)*dxExp
 
 	return sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis
 
@@ -118,6 +346,7 @@ def buildReceiversGeometry(parObject,elasticParam):
 	dipole = parObject.getInt("dipole",0)
 	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
 	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
+	nts = parObject.getInt("nts")
 
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
@@ -192,20 +421,123 @@ def buildReceiversGeometry(parObject,elasticParam):
 			xCoordFloatNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
 
 	for iRec in range(nRecGeom):
-		recVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
-		recVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
-		recVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
-		recVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+
+	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
+
+# Build receivers geometry
+def buildReceiversGeometryDask(parObject,elasticParamHyper,client):
+
+	#Dipole parameters
+	dipole = parObject.getInt("dipole",0)
+	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
+	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
+	nts = parObject.getInt("nts")
+
+	#Getting number of workers
+	nWrks = client.getNworkers()
+
+	# Horizontal axis
+	nx=elasticParamHyper.axes[1].n
+	dx=elasticParamHyper.axes[1].d
+	ox=elasticParamHyper.axes[1].o
+
+	# Vertical axis
+	nz=elasticParamHyper.axes[0].n
+	dz=elasticParamHyper.axes[0].d
+	oz=elasticParamHyper.axes[0].o
+
+	nzReceiver=1
+	ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+	dzReceiver=0
+	nxReceiver=parObject.getInt("nReceiver")
+	oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
+	dxReceiver=parObject.getInt("dReceiver")
+	nRecGeom=1; # Constant receivers' geometry
+
+	##need a hypercube for centerGrid, x shifted, z shifted, and xz shifted grid
+	zAxis=Hypercube.axis(n=elasticParamHyper.axes[0].n,o=elasticParamHyper.axes[0].o,d=elasticParamHyper.axes[0].d)
+	zAxisShifted=Hypercube.axis(n=elasticParamHyper.axes[0].n,o=elasticParamHyper.axes[0].o-0.5*elasticParamHyper.axes[0].d,d=elasticParamHyper.axes[0].d)
+
+	xAxis=Hypercube.axis(n=elasticParamHyper.axes[1].n,o=elasticParamHyper.axes[1].o,d=elasticParamHyper.axes[1].d)
+	xAxisShifted=Hypercube.axis(n=elasticParamHyper.axes[1].n,o=elasticParamHyper.axes[1].o-0.5*elasticParamHyper.axes[1].d,d=elasticParamHyper.axes[1].d)
+
+	paramAxis=Hypercube.axis(n=elasticParamHyper.axes[2].n,o=elasticParamHyper.axes[2].o,d=elasticParamHyper.axes[2].d)
+
+	#check which source injection interp method
+	recInterpMethod = parObject.getString("recInterpMethod","linear")
+	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
+
+	# receiver _zCoord and _xCoord
+	recParFile = parObject.getString("recParFile","none")
+	if(recParFile != "none"):
+		xCoord,zCoord = parsePosParFile(recParFile)
+		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
+		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
+		zCoordFloatNd = zCoordFloat.getNdArray()
+		zCoordFloatNd[:] = zCoord
+		recAxisHorizontal=Hypercube.axis(n=len(xCoord),o=0.0,d=1.0)
+		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
+		xCoordFloatNd = xCoordFloat.getNdArray()
+		xCoordFloatNd[:] = xCoord
+
+	else:
+		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
+		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
+		zCoordFloatNd = zCoordFloat.getNdArray()
+		recAxisHorizontal=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
+		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataFloat")
+		xCoordFloatNd = xCoordFloat.getNdArray()
+		for irec in range(nxReceiver):
+			zCoordFloatNd[irec] = oz + ozReceiver*dz + dzReceiver*dz*irec
+			xCoordFloatNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
+
+	centerGridAxes=[zAxis,xAxis,paramAxis]
+	xGridAxes=[zAxis,xAxisShifted,paramAxis]
+	zGridAxes=[zAxisShifted,xAxis,paramAxis]
+	xzGridAxes=[zAxisShifted,xAxisShifted,paramAxis]
+
+	#need a receiver vector for centerGrid, x shifted, z shifted, and xz shifted grid
+	recVectorCenterGrid=[[] for ii in range(nWrks)]
+	recVectorXGrid=[[] for ii in range(nWrks)]
+	recVectorZGrid=[[] for ii in range(nWrks)]
+	recVectorXZGrid=[[] for ii in range(nWrks)]
+
+	receiverAxis=[Hypercube.axis(n=nxReceiver,o=ox+oxReceiver*dx,d=dxReceiver*dx)]*nWrks
+	for iwrk in range(nWrks):
+		recVectorCenterGrid[iwrk].append(client.getClient().submit(call_spaceInterpGpu, recAxisVertical,recAxisHorizontal,zCoordFloatNd,xCoordFloatNd,centerGridAxes,nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXGrid[iwrk].append(client.getClient().submit(call_spaceInterpGpu,recAxisVertical,recAxisHorizontal,zCoordFloatNd,xCoordFloatNd,xGridAxes,nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorZGrid[iwrk].append(client.getClient().submit(call_spaceInterpGpu,recAxisVertical,recAxisHorizontal,zCoordFloatNd,xCoordFloatNd,zGridAxes,nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXZGrid[iwrk].append(client.getClient().submit(call_spaceInterpGpu,recAxisVertical,recAxisHorizontal,zCoordFloatNd,xCoordFloatNd,xzGridAxes,nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
 
 	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
 
 ############################### Nonlinear ######################################
-def nonlinearOpInitFloat(args):
+def nonlinearOpInitFloat(args,client=None):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
 	# IO objects
 	parObject=genericIO.io(params=sys.argv)
+
+	# Time Axis
+	nts=parObject.getInt("nts",-1)
+	ots=parObject.getFloat("ots",0.0)
+	dts=parObject.getFloat("dts",-1.0)
+	timeAxis=Hypercube.axis(n=nts,o=ots,d=dts)
+
+	# Allocate model
+	dummyAxis=Hypercube.axis(n=1)
+	wavefieldAxis=Hypercube.axis(n=5)
+	modelHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
+	modelFloat=SepVector.getSepVector(modelHyper,storage="dataFloat")
 
 	# elatic params
 	elasticParam=parObject.getString("elasticParam", "noElasticParamFile")
@@ -223,28 +555,42 @@ def nonlinearOpInitFloat(args):
 		convOp.forward(False,elasticParamFloatTemp,elasticParamFloat)
 		del elasticParamFloatTemp
 
-	# Build sources/receivers geometry
-	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
-	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
+	#Setting variables if Dask is employed
+	if client:
+		#Getting number of workers and passing
+		nWrks = client.getNworkers()
+		#Spreading domain vector (i.e., wavelet)
+		modelFloat = pyDaskVector.DaskVector(client,vectors=[modelFloat]*nWrks)
 
-	# Time Axis
-	nts=parObject.getInt("nts",-1)
-	ots=parObject.getFloat("ots",0.0)
-	dts=parObject.getFloat("dts",-1.0)
-	timeAxis=Hypercube.axis(n=nts,o=ots,d=dts)
+		#Spreading velocity model to workers
+		elasticParamHyper = elasticParamFloat.getHyper()
+		elasticParamFloat = pyDaskVector.DaskVector(client,vectors=[elasticParamFloat]*nWrks).vecDask
 
-	# Allocate model
-	dummyAxis=Hypercube.axis(n=1)
-	wavefieldAxis=Hypercube.axis(n=5)
-	modelHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
-	modelFloat=SepVector.getSepVector(modelHyper,storage="dataFloat")
+		# Build sources/receivers geometry
+		sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometryDask(parObject,elasticParamHyper,client)
+		recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometryDask(parObject,elasticParamHyper,client)
 
-	# Allocate data
-	dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
-	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
+		#Allocating data vectors to be spread
+		dataFloat = []
+		for iwrk in range(nWrks):
+			dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis[iwrk],wavefieldAxis,sourceAxis[iwrk]])
+			dataFloat.append(SepVector.getSepVector(dataHyper))
+		dataFloat = pyDaskVector.DaskVector(client,vectors=dataFloat,copy=False)
+
+		#Spreading/Instantiating the parameter objects
+		parObject = spreadParObj(client,args,parObject)
+
+	else:
+		# Build sources/receivers geometry
+		sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
+		recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
+
+		# Allocate data
+		dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
+		dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
 
 	# Outputs
-	return modelFloat,dataFloat,elasticParamFloat,parObject.param,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
+	return  modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
 
 class nonlinearPropElasticShotsGpu(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module for non-linear propagator"""
@@ -258,7 +604,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			elasticParam = elasticParam.getCpp()
 		if("getCpp" in dir(paramP)):
 			paramP = paramP.getCpp()
-		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(elasticParam,paramP,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(elasticParam,paramP.param,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
 	def __str__(self):

@@ -17,9 +17,9 @@ PYBIND11_MODULE(pyElastic_iso_double_nl, clsGeneric) {
   py::add_ostream_redirect(clsGeneric, "ostream_redirect");
 
   py::class_<spaceInterpGpu, std::shared_ptr<spaceInterpGpu>>(clsGeneric, "spaceInterpGpu")
-      .def(py::init<const std::shared_ptr<SEP::double1DReg>, const std::shared_ptr<SEP::double1DReg>, const std::shared_ptr<SEP::hypercube>, int &,std::string , int >(), "Initialize a spaceInterpGpu object using location, velocity, and nt")
+      // .def(py::init<const std::shared_ptr<SEP::double1DReg>, const std::shared_ptr<SEP::double1DReg>, const std::shared_ptr<SEP::hypercube>, int &,std::string , int >(), "Initialize a spaceInterpGpu object using location, velocity, and nt")
 
-      .def(py::init<const std::shared_ptr<double1DReg> , const std::shared_ptr<double1DReg> , const std::shared_ptr<SEP::hypercube> , int&,std::string , int >(), "Initialize a spaceInterpGpu object using zcoord, xcoord, velocity, and nt")
+      .def(py::init<const std::shared_ptr<double1DReg> , const std::shared_ptr<double1DReg> , const std::shared_ptr<SEP::hypercube> , int&,std::string , int, int, double, double >(), "Initialize a spaceInterpGpu object using zcoord, xcoord, velocity, and nt")
 
       // .def(py::init<const std::vector<int> &, const std::vector<int> &, const std::shared_ptr<SEP::hypercube>, int &>(), "Initialize a spaceInterpGpu object using coordinates and nt")
       //
@@ -45,13 +45,13 @@ PYBIND11_MODULE(pyElastic_iso_double_nl, clsGeneric) {
 
       .def("forwardWavefield", (void (nonlinearPropElasticShotsGpu::*)(const bool, const std::shared_ptr<double4DReg>, std::shared_ptr<double4DReg>)) &nonlinearPropElasticShotsGpu::forwardWavefield, "Forward with wavefield")
 
+      .def("setBackground", (void (nonlinearPropElasticShotsGpu::*)(std::shared_ptr<double3DReg>)) &nonlinearPropElasticShotsGpu::setBackground, "set elastic model parameters")
+
       .def("adjointWavefield",(void (nonlinearPropElasticShotsGpu::*)(const bool, const std::shared_ptr<double4DReg>, std::shared_ptr<double4DReg>)) &nonlinearPropElasticShotsGpu::adjointWavefield, "Adjoint wavefield")
 
       .def("getWavefield", (std::shared_ptr<SEP::double4DReg> (nonlinearPropElasticShotsGpu::*)()) &nonlinearPropElasticShotsGpu::getWavefield, "get wavefield")
 
-			.def("setBackground", (void (nonlinearPropElasticShotsGpu::*)(std::shared_ptr<SEP::double3DReg>)) &nonlinearPropElasticShotsGpu::setBackground, "setBackground")
-
-      .def("dotTest",(bool (nonlinearPropElasticShotsGpu::*)(const bool, const float)) &nonlinearPropElasticShotsGpu::dotTest,"Dot-Product Test")
+      .def("dotTest",(bool (nonlinearPropElasticShotsGpu::*)(const bool, const double)) &nonlinearPropElasticShotsGpu::dotTest,"Dot-Product Test")
 
       ;
 }

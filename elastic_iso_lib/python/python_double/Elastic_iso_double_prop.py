@@ -97,10 +97,10 @@ def buildSourceGeometry(parObject,elasticParam):
 		zCoordDouble.set(oz+ozSource*dz)
 		xCoordDouble.set(ox+oxSource*dx)
 
-		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
-		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters))
+		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
+		sourcesVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
+		sourcesVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
+		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
 
 		oxSource=oxSource+spacingShots # Shift source
 
@@ -182,10 +182,10 @@ def buildReceiversGeometry(parObject,elasticParam):
 			xCoordDoubleNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
 
 	for iRec in range(nRecGeom):
-		recVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
-		recVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters))
+		recVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
+		recVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
+		recVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
+		recVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
 
 	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
 

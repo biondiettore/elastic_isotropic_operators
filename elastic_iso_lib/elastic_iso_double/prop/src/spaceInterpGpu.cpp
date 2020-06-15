@@ -8,16 +8,17 @@
 #include <math.h>
 
 // Constructor #1
-spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<double1DReg> zCoord, const std::shared_ptr<double1DReg> xCoord, const std::shared_ptr<SEP::hypercube> elasticParamHypercube, int &nt, std::string interpMethod, int nFilt) {
+spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<double1DReg> zCoord, const std::shared_ptr<double1DReg> xCoord, const std::shared_ptr<SEP::hypercube> elasticParamHypercube, int &nt, std::string interpMethod, int nFilt, int dipole, double zDipoleShift, double xDipoleShift) {
 
 	_interpMethod = interpMethod;
-  _elasticParamHypercube = elasticParamHypercube;
+  	_elasticParamHypercube = elasticParamHypercube;
 	_oz = _elasticParamHypercube->getAxis(1).o;
 	_ox = _elasticParamHypercube->getAxis(2).o;
 	_dz = _elasticParamHypercube->getAxis(1).d;
 	_dx = _elasticParamHypercube->getAxis(2).d;
 	_zCoord = zCoord;
 	_xCoord = xCoord;
+
 	if(!_interpMethod.compare("linear")){ // if linear force nfilt to 1
 		_nFilt = 1;
 	}
@@ -31,6 +32,17 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<double1DReg> zCoord, const 
 	_nt = nt;
 	_nz = _elasticParamHypercube->getAxis(1).n;
 
+	// Treat the specific case wher dipole=1 AND interpolation method is linear
+	_dipole = dipole;
+	_zDipoleShift = zDipoleShift * _dz;
+	_xDipoleShift = xDipoleShift * _dx;
+
+	// If dipole is required, set _nFiltTotal to 8
+	// Otherwise, set it to 4
+	// Dipole is only implemented for linear interpolation (so far)
+	if (_dipole == 1){_nFiltTotal=8;}
+	else {_nFiltTotal=4;}
+
 	_gridPointIndex = new int[_nFiltTotal*_nDeviceIrreg]; // Index of all the neighboring points of each device (non-unique) on the regular "1D" grid
 	_weight = new double[_nFiltTotal*_nDeviceIrreg]; // Weights for spatial interpolation
 
@@ -41,10 +53,19 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<double1DReg> zCoord, const 
 	}
 	// sinc
 	else if(!_interpMethod.compare("sinc")){
+		// If user asks for dipole + sinc interpolation, throw an error (not implemented ey)
+		if (_dipole == 1) {
+			std::cerr << "**** ERROR: Spatial sinc interpolation and dipole acquisition not implemented ****" << std::endl;
+			assert(1==2);
+		}
 		calcSincWeights();
 	}
 	// gaussian
 	else if(!_interpMethod.compare("gauss")){
+		if (_dipole == 1) {
+			std::cerr << "**** ERROR: Gaussian spatial interpolation and dipole acquisition not implemented ****" << std::endl;
+			assert(1==2);
+		}
 		calcGaussWeights();
 	}
 	else{
@@ -52,14 +73,13 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<double1DReg> zCoord, const 
 		assert(1==2);
 	}
 
-
 	convertIrregToReg();
 }
 void spaceInterpGpu::calcLinearWeights(){
 	for (int iDevice = 0; iDevice < _nDeviceIrreg; iDevice++) {
 
 		// Find the 4 neighboring points for all devices and compute the weights for the spatial interpolation
-		int i1 = iDevice * 4;
+		int i1 = iDevice * _nFiltTotal;
 		double wz = ( (*_zCoord->_mat)[iDevice] - _elasticParamHypercube->getAxis(1).o ) / _elasticParamHypercube->getAxis(1).d;
 		double wx = ( (*_xCoord->_mat)[iDevice] - _elasticParamHypercube->getAxis(2).o ) / _elasticParamHypercube->getAxis(2).d;
 		int zReg = wz; // z-coordinate on regular grid
@@ -84,33 +104,63 @@ void spaceInterpGpu::calcLinearWeights(){
 		// Bottom right
 		_gridPointIndex[i1+3] = _gridPointIndex[i1] + _nz + 1;
 		_weight[i1+3] = (1.0 - wz) * (1.0 - wx);
+
+		if (_dipole == 1){
+
+			// Find the 4 neighboring points for all devices dipole points and compute the weights for the spatial interpolation
+			double wzDipole = ( (*_zCoord->_mat)[iDevice] + _zDipoleShift - _elasticParamHypercube->getAxis(1).o ) / _elasticParamHypercube->getAxis(1).d;
+			double wxDipole = ( (*_xCoord->_mat)[iDevice] + _xDipoleShift - _elasticParamHypercube->getAxis(2).o ) / _elasticParamHypercube->getAxis(2).d;
+			int zRegDipole = wzDipole; // z-coordinate on regular grid
+			wzDipole = wzDipole - zRegDipole;
+			wzDipole = 1.0 - wzDipole;
+			int xRegDipole = wxDipole; // x-coordinate on regular grid
+			wxDipole = wxDipole - xRegDipole;
+			wxDipole = 1.0 - wxDipole;
+
+			// Top left (dipole point)
+			_gridPointIndex[i1+4] = xRegDipole * _nz + zRegDipole; // Index of this point for a 1D array representation
+			_weight[i1+4] = (-1.0) * wzDipole * wxDipole;
+
+			// Bottom left (dipole point)
+			_gridPointIndex[i1+5] = _gridPointIndex[i1+4] + 1;
+			_weight[i1+5] = (-1.0) * (1.0 - wzDipole) * wxDipole;
+
+			// Top right (dipole point)
+			_gridPointIndex[i1+6] = _gridPointIndex[i1+4] + _nz;
+			_weight[i1+6] = (-1.0) * wzDipole * (1.0 - wxDipole);
+
+			// Bottom right (dipole point)
+			_gridPointIndex[i1+7] = _gridPointIndex[i1+4] + _nz + 1;
+			_weight[i1+7] = (-1.0) * (1.0 - wzDipole) * (1.0 - wxDipole);
+
+		}
 	}
 }
 void spaceInterpGpu::calcSincWeights(){
 	for (int iDevice = 0; iDevice < _nDeviceIrreg; iDevice++) {
 		int gridPointIndexOffset = iDevice*_nFiltTotal;
 
-		//find float index (x,y) value of current device
-		double z_irreg_float = (*_zCoord->_mat)[iDevice];
-		double x_irreg_float = (*_xCoord->_mat)[iDevice];
-		double z_reg_float = ( z_irreg_float - _oz ) / _dz;
-		double x_reg_float = ( x_irreg_float - _ox ) / _dx;
+		//find double index (x,y) value of current device
+		double z_irreg_double = (*_zCoord->_mat)[iDevice];
+		double x_irreg_double = (*_xCoord->_mat)[iDevice];
+		double z_reg_double = ( z_irreg_double - _oz ) / _dz;
+		double x_reg_double = ( x_irreg_double - _ox ) / _dx;
 		//find int index (x,y) immediatly above and to the left of the irregular device (x,z) value
-		int z_reg_int = z_reg_float;
-		int x_reg_int = x_reg_float;
+		int z_reg_int = z_reg_double;
+		int x_reg_int = x_reg_double;
 
-		boost::math::normal normal_dist_x(x_irreg_float,2*_dx);
-		boost::math::normal normal_dist_z(z_irreg_float,2*_dz);
+		boost::math::normal normal_dist_x(x_irreg_double,2*_dx);
+		boost::math::normal normal_dist_z(z_irreg_double,2*_dz);
 
 		double weight_sum=0;
 		// loop over filter points surrounding device irregular (x,z) value
 		for(int ix=0; ix<_nFilt2D; ix++){
 			for(int iz=0; iz<_nFilt2D; iz++){
-				float x_irreg_cur = (x_reg_int+ix-_nFilt+1)*_dx+_ox;
-				float z_irreg_cur = (z_reg_int+iz-_nFilt+1)*_dz+_oz;
+				double x_irreg_cur = (x_reg_int+ix-_nFilt+1)*_dx+_ox;
+				double z_irreg_cur = (z_reg_int+iz-_nFilt+1)*_dz+_oz;
 
-				float x_input = (x_irreg_float-x_irreg_cur)/_dx;
-				float z_input = (z_irreg_float-z_irreg_cur)/_dz;
+				double x_input = (x_irreg_double-x_irreg_cur)/_dx;
+				double z_input = (z_irreg_double-z_irreg_cur)/_dz;
 
 				_weight[gridPointIndexOffset + _nFilt2D*ix + iz] = boost::math::sinc_pi(M_PI*z_input)*boost::math::sinc_pi(M_PI*x_input);
 				_gridPointIndex[gridPointIndexOffset + _nFilt2D*ix + iz] = _nz * (x_reg_int+ix-_nFilt+1) + (z_reg_int+iz-_nFilt+1);
@@ -127,27 +177,27 @@ void spaceInterpGpu::calcGaussWeights(){
 	for (int iDevice = 0; iDevice < _nDeviceIrreg; iDevice++) {
 		int gridPointIndexOffset = iDevice*_nFiltTotal;
 
-		//find float index (x,y) value of current device
-		double z_irreg_float = (*_zCoord->_mat)[iDevice];
-		double x_irreg_float = (*_xCoord->_mat)[iDevice];
-		double z_reg_float = ( z_irreg_float - _oz ) / _dz;
-		double x_reg_float = ( x_irreg_float - _ox ) / _dx;
+		//find double index (x,y) value of current device
+		double z_irreg_double = (*_zCoord->_mat)[iDevice];
+		double x_irreg_double = (*_xCoord->_mat)[iDevice];
+		double z_reg_double = ( z_irreg_double - _oz ) / _dz;
+		double x_reg_double = ( x_irreg_double - _ox ) / _dx;
 		//find int index (x,y) immediatly above and to the left of the irregular device (x,z) value
-		int z_reg_int = z_reg_float;
-		int x_reg_int = x_reg_float;
+		int z_reg_int = z_reg_double;
+		int x_reg_int = x_reg_double;
 
-		boost::math::normal normal_dist_x(x_irreg_float,2*_dx);
-		boost::math::normal normal_dist_z(z_irreg_float,2*_dz);
+		boost::math::normal normal_dist_x(x_irreg_double,2*_dx);
+		boost::math::normal normal_dist_z(z_irreg_double,2*_dz);
 
 		double weight_sum=0;
 		// loop over filter points surrounding device irregular (x,z) value
 		for(int ix=0; ix<_nFilt2D; ix++){
 			for(int iz=0; iz<_nFilt2D; iz++){
-				float x_irreg_cur = (x_reg_int+ix-_nFilt+1)*_dx+_ox;
-				float z_irreg_cur = (z_reg_int+iz-_nFilt+1)*_dz+_oz;
+				double x_irreg_cur = (x_reg_int+ix-_nFilt+1)*_dx+_ox;
+				double z_irreg_cur = (z_reg_int+iz-_nFilt+1)*_dz+_oz;
 
-				float x_input = (x_irreg_float-x_irreg_cur)/_dx;
-				float z_input = (z_irreg_float-z_irreg_cur)/_dz;
+				double x_input = (x_irreg_double-x_irreg_cur)/_dx;
+				double z_input = (z_irreg_double-z_irreg_cur)/_dz;
 
 				_weight[gridPointIndexOffset + _nFilt2D*ix + iz] = boost::math::pdf(normal_dist_x, x_irreg_cur)*boost::math::pdf(normal_dist_z, z_irreg_cur);
 				_gridPointIndex[gridPointIndexOffset + _nFilt2D*ix + iz] = _nz * (x_reg_int+ix-_nFilt+1) + (z_reg_int+iz-_nFilt+1);
