@@ -54,8 +54,7 @@ class fdParamElastic{
 		float _dz, _dx, _oz, _ox, _fMax;
 		int _saveWavefield, _blockSize, _fat;
 		float _alphaCos;
-    int _surfaceCondition;
-		int _mod_par;
+        int _surfaceCondition;
 
 };
 

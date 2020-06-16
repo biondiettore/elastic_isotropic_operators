@@ -79,9 +79,13 @@ import sys
 import genericIO
 import SepVector
 import Hypercube
+import pyOperator as pyOp
 import Elastic_iso_float_prop
 import numpy as np
 import time
+
+#Dask-related modules
+import pyDaskOperator as DaskOp
 
 if __name__ == '__main__':
 	#Printing documentation if no arguments were provided
@@ -89,11 +93,26 @@ if __name__ == '__main__':
 		print(__doc__)
 		quit(0)
 
-	# Initialize operator
-	modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.nonlinearOpInitFloat(sys.argv)
+	#Getting parameter object
+	parObject=genericIO.io(params=sys.argv)
 
-	# Construct nonlinear operator object
-	nonlinearElasticOp=Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+	# Checking if Dask was requested
+	client, nWrks = Elastic_iso_float_prop.create_client(parObject)
+
+	# Initialize operator
+	modelFloat,dataFloat,elasticParamFloat,parObject1,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,modelFloatLocal = Elastic_iso_float_prop.nonlinearOpInitFloat(sys.argv,client)
+
+
+	if(client):
+		#Instantiating Dask Operator
+		nlOp_args = [(modelFloat.vecDask[iwrk],dataFloat.vecDask[iwrk],elasticParamFloat[iwrk],parObject1[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
+		nonlinearElasticOp = DaskOp.DaskOperator(client,Elastic_iso_float_prop.nonlinearPropElasticShotsGpu,nlOp_args,[1]*nWrks)
+		#Adding spreading operator and concatenating with non-linear operator (using modelFloatLocal)
+		Sprd = DaskOp.DaskSpreadOp(client,modelFloatLocal,[1]*nWrks)
+		nonlinearElasticOp = pyOp.ChainOperator(Sprd,nonlinearElasticOp)
+	else:
+		# Construct nonlinear operator object
+		nonlinearElasticOp=Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
 
 	#Testing dot-product test of the operator
@@ -117,7 +136,7 @@ if __name__ == '__main__':
 			raise IOError("**** ERROR: User did not provide data file name ****\n")
 		#modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
 		modelTemp=genericIO.defaultIO.getVector(modelFile)
-		modelFMat=modelFloat.getNdArray()
+		modelFMat=modelFloatLocal.getNdArray()
 		modelTMat=modelTemp.getNdArray()
 		modelFMat[0,:,0,:]=modelTMat
 
@@ -127,16 +146,16 @@ if __name__ == '__main__':
 			if (wfldFile == "noWfldFile"):
 				raise IOError("**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****")
 			#run Nonlinear forward with wavefield saving
-			nonlinearElasticOp.forwardWavefield(False,modelFloat,dataFloat)
+			nonlinearElasticOp.forwardWavefield(False,modelFloatLocal,dataFloat)
 			#save wavefield to disk
 			wavefieldFloat = nonlinearElasticOp.getWavefield()
 			# genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
 			wavefieldFloat.writeVec(wfldFile)
 		else:
 			#run Nonlinear forward without wavefield saving
-			nonlinearElasticOp.forward(False,modelFloat,dataFloat)
+			nonlinearElasticOp.forward(False,modelFloatLocal,dataFloat)
 		#write data to disk
-		genericIO.defaultIO.writeVector(dataFile,dataFloat)
+		dataFloat.writeVec(dataFile)
 
 		print("-------------------------------------------------------------------")
 		print("--------------------------- All done ------------------------------")

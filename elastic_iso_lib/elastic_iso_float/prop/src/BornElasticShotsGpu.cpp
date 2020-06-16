@@ -301,11 +301,11 @@ void BornElasticShotsGpu::adjoint(const bool add, const std::shared_ptr<float3DR
 	          modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
 		  }
 
-	      // Set GPU number for propagator object
-	      BornObjectVector[iGpu]->setGpuNumber(iGpu,iGpuId);
+      // Set GPU number for propagator object
+      BornObjectVector[iGpu]->setGpuNumber(iGpu,iGpuId);
 
-	      //Launch modeling
-	      BornObjectVector[iGpu]->adjoint(true, modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
+      //Launch modeling
+      BornObjectVector[iGpu]->adjoint(true, modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
 
 	  }
 

@@ -47,7 +47,7 @@ class BornElasticGpu : public seismicElasticOperator2D<SEP::float3DReg, SEP::flo
 
 		//! Accesor
 		std::shared_ptr<float4DReg> getSrcWavefield() { return _srcWavefield; }
-    	std::shared_ptr<float4DReg> getSecWavefield() { return _secWavefield; }
+    std::shared_ptr<float4DReg> getSecWavefield() { return _secWavefield; }
 
 
 };
