@@ -484,7 +484,7 @@ __global__ void ker_step_adj(float* dev_o_vx, float* dev_o_vz, float* dev_o_sigm
 /****************************************************************************************/
 /* kernel to compute forward time step for free surface condition. Only steps at surface.
 one thread for all x inside fat.
-1. set new sigmaxx at z=0 to zero
+1. set new sigmazz at z=0 to zero
 2. make current sigmazz, sigmaxz odd about z=0 by changing values above z=0
 3. set new vx at z=0
 4. do not update sigmaxz at or above z=0
@@ -504,7 +504,7 @@ __global__ void ker_step_fwd_surface_surface(float* dev_o_vx, float* dev_o_vz, f
     int iGlobal_3 = dev_nz * ixGlobal + 3; // 1D array index for the model on the global memory
     int iGlobal_surf = dev_nz * ixGlobal + 4; // 1D array index for the model on the global memory
 
-    // 1. set current sigmaxx at z=0 to zero
+    // 1. set current sigmazz at z=0 to zero
     dev_c_sigmazz[iGlobal_surf] = 0;
 
     // 2. make current sigmazz, sigmaxz odd about z=0 by changing values above z=0

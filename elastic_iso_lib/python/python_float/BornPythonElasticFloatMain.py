@@ -3,16 +3,35 @@ import sys
 import genericIO
 import SepVector
 import Hypercube
+import pyOperator as pyOp
 import Elastic_iso_float_prop
 import numpy as np
 import time
 
-if __name__ == '__main__':
-	# Initialize operator
-	modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.BornOpInitFloat(sys.argv)
+#Dask-related modules
+import pyDaskOperator as DaskOp
 
-	# Construct nonlinear operator object
-	BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+if __name__ == '__main__':
+
+	#Getting parameter object
+	parObject=genericIO.io(params=sys.argv)
+
+	# Checking if Dask was requested
+	client, nWrks = Elastic_iso_float_prop.create_client(parObject)
+
+	# Initialize operator
+	modelFloat,dataFloat,elasticParamFloat,parObject1,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,modelFloatLocal = Elastic_iso_float_prop.BornOpInitFloat(sys.argv,client)
+
+	if(client):
+		#Instantiating Dask Operator
+		nlOp_args = [(modelFloat.vecDask[iwrk],dataFloat.vecDask[iwrk],elasticParamFloat[iwrk],parObject1[iwrk],sourcesSignalsVector[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
+		BornElasticOp = DaskOp.DaskOperator(client,Elastic_iso_float_prop.BornElasticShotsGpu,nlOp_args,[1]*nWrks)
+		#Adding spreading operator and concatenating with non-linear operator (using modelFloatLocal)
+		Sprd = DaskOp.DaskSpreadOp(client,modelFloatLocal,[1]*nWrks)
+		BornElasticOp = pyOp.ChainOperator(Sprd,BornElasticOp)
+	else:
+		# Construct nonlinear operator object
+		BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject1,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
 	#Testing dot-product test of the operator
 	if (parObject.getInt("dpTest",0) == 1):
@@ -41,7 +60,7 @@ if __name__ == '__main__':
 		BornElasticOp.forward(False,modelFloat,dataFloat)
 
 		# Write data
-		genericIO.defaultIO.writeVector(dataFile,dataFloat)
+		dataFloat.writeVec(dataFile)
 
 
 	# Adjoint
@@ -60,12 +79,15 @@ if __name__ == '__main__':
 
 		#Reading model
 		dataFloat=genericIO.defaultIO.getVector(dataFile)
+		if(client):
+			#Chunking the data and spreading them across workers if dask was requested
+			dataFloat = Elastic_iso_float_prop.chunkData(dataFloat,BornElasticOp.getRange())
 
 		# Apply forward
-		BornElasticOp.adjoint(False,modelFloat,dataFloat)
+		BornElasticOp.adjoint(False,modelFloatLocal,dataFloat)
 
 		# Write data
-		genericIO.defaultIO.writeVector(modelFile,modelFloat)
+		modelFloatLocal.writeVec(modelFile)
 
 	print("-------------------------------------------------------------------")
 	print("--------------------------- All done ------------------------------")

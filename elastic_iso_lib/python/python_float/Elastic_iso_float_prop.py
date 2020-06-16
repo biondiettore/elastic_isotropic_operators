@@ -137,16 +137,16 @@ def chunkData(dataVecLocal,dataSpaceRemote):
 	client = dask_client.getClient()
 	wrkIds = dask_client.getWorkerIds()
 	dataAxes = client.gather(client.map(get_axes,dataSpaceRemote.vecDask,pure=False)) #Getting hypercubes of remote vector chunks
-	List_Shots = [axes[-1].n for axes in dataAxes]
+	List_Exps = [axes[-1].n for axes in dataAxes]
 	dataNd = dataVecLocal.getNdArray()
-	if(np.sum(List_Shots) != dataNd.shape[0]):
-		raise ValueError("Number of shot within provide data vector (%s) not consistent with total number of shots from nShot parameter (%s)"%(dataNd.shape[0],np.sum(List_Shots)))
+	if(np.sum(List_Exps) != dataNd.shape[0]):
+		raise ValueError("Number of shot within provide data vector (%s) not consistent with total number of shots from nShot parameter (%s)"%(dataNd.shape[0],np.sum(List_Exps)))
 	#Pointer-wise chunking
 	dataArrays = []
 	firstShot = 0
-	for nShot in List_Shots:
-		dataArrays.append(dataNd[firstShot:firstShot+nShot,:,:,:])
-		firstShot += nShot
+	for nExp in List_Exps:
+		dataArrays.append(dataNd[firstShot:firstShot+nExp,:,:,:])
+		firstShot += nExp
 	#Copying the data to remove vector
 	dataVecRemote = dataSpaceRemote.clone()
 	for idx,wrkId in enumerate(wrkIds):
@@ -666,7 +666,7 @@ class nonlinearPropElasticShotsGpu(Op.Operator):
 			result=self.pyOp.dotTest(verb,maxError)
 		return result
 
-def nonlinearFwiOpInitFloat(args):
+def nonlinearFwiOpInitFloat(args,client=None):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
@@ -680,9 +680,7 @@ def nonlinearFwiOpInitFloat(args):
 		sys.exit()
 	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
 
-	# Build sources/receivers geometry
-	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
-	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
+	elasticParamFloatLocal=elasticParamFloat
 
 	# Time Axis
 	nts=parObject.getInt("nts",-1)
@@ -696,12 +694,41 @@ def nonlinearFwiOpInitFloat(args):
 	sourceHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
 	sourceFloat=SepVector.getSepVector(sourceHyper,storage="dataFloat")
 
-	# Allocate data
-	dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
-	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
+	if client:
+		#Getting number of workers and passing
+		nWrks = client.getNworkers()
+
+		#Spreading source wavelet
+		sourceFloat = pyDaskVector.DaskVector(client,vectors=[sourceFloat]*nWrks)
+
+		#Spreading velocity model to workers
+		elasticParamHyper = elasticParamFloat.getHyper()
+		elasticParamFloat = pyDaskVector.DaskVector(client,vectors=[elasticParamFloat]*nWrks).vecDask
+
+		# Build sources/receivers geometry
+		sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometryDask(parObject,elasticParamHyper,client)
+		recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometryDask(parObject,elasticParamHyper,client)
+
+		#Allocating data vectors to be spread
+		dataFloat = []
+		for iwrk in range(nWrks):
+			dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis[iwrk],wavefieldAxis,sourceAxis[iwrk]])
+			dataFloat.append(SepVector.getSepVector(dataHyper))
+		dataFloat = pyDaskVector.DaskVector(client,vectors=dataFloat,copy=False)
+
+		#Spreading/Instantiating the parameter objects
+		parObject = spreadParObj(client,args,parObject)
+	else:
+		# Build sources/receivers geometry
+		sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
+		recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
+
+		# Allocate data
+		dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
+		dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
 
 	# Outputs
-	return elasticParamFloat,dataFloat,sourceFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
+	return elasticParamFloat,dataFloat,sourceFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,elasticParamFloatLocal
 
 class nonlinearFwiPropElasticShotsGpu(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module for non-linear propagator"""
@@ -752,7 +779,7 @@ class nonlinearFwiPropElasticShotsGpu(Op.Operator):
 			self.pyOp.setBackground(elasticParam)
 		return
 ################################### Born #######################################
-def BornOpInitFloat(args):
+def BornOpInitFloat(args,client=None):
 	"""Function to correctly initialize nonlinear operator
 	   The function will return the necessary variables for operator construction
 	"""
@@ -776,10 +803,6 @@ def BornOpInitFloat(args):
 		convOp.forward(False,elasticParamFloatTemp,elasticParamFloat)
 		del elasticParamFloatTemp
 
-	# Build sources/receivers geometry
-	sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
-	recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
-
 	# Time Axis
 	nts=parObject.getInt("nts",-1)
 	ots=parObject.getFloat("ots",0.0)
@@ -797,13 +820,50 @@ def BornOpInitFloat(args):
 
 	# Allocate model
 	modelFloat=SepVector.getSepVector(elasticParamFloat.getHyper(),storage="dataFloat")
+	modelFloatLocal=modelFloat
 
-	# Allocate data
-	dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
-	dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
+	if client:
+		#Getting number of workers and passing
+		nWrks = client.getNworkers()
+
+		#Spreading source wavelet
+		sourcesSignalsFloat = pyDaskVector.DaskVector(client,vectors=[sourcesSignalsFloat]*nWrks).vecDask
+		sourcesSignalsVector = client.getClient().map((lambda x: [x]),sourcesSignalsFloat,pure=False)
+		daskD.wait(sourcesSignalsVector)
+
+		#Spreading velocity model to workers
+		elasticParamHyper = elasticParamFloat.getHyper()
+		elasticParamFloatD = pyDaskVector.DaskVector(client,vectors=[elasticParamFloat]*nWrks)
+		elasticParamFloat = elasticParamFloatD.vecDask
+
+		#Allocate model
+		modelFloat = elasticParamFloatD.clone()
+		modelFloat.zero()
+
+		# Build sources/receivers geometry
+		sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometryDask(parObject,elasticParamHyper,client)
+		recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometryDask(parObject,elasticParamHyper,client)
+
+		#Allocating data vectors to be spread
+		dataFloat = []
+		for iwrk in range(nWrks):
+			dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis[iwrk],wavefieldAxis,sourceAxis[iwrk]])
+			dataFloat.append(SepVector.getSepVector(dataHyper))
+		dataFloat = pyDaskVector.DaskVector(client,vectors=dataFloat,copy=False)
+
+		#Spreading/Instantiating the parameter objects
+		parObject = spreadParObj(client,args,parObject)
+	else:
+		# Build sources/receivers geometry
+		sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometry(parObject,elasticParamFloat)
+		recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis=buildReceiversGeometry(parObject,elasticParamFloat)
+
+		# Allocate data
+		dataHyper=Hypercube.hypercube(axes=[timeAxis,receiverAxis,wavefieldAxis,sourceAxis])
+		dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
 
 	# Outputs
-	return modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid
+	return modelFloat,dataFloat,elasticParamFloat,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,modelFloatLocal
 
 class BornElasticShotsGpu(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module for elastic Born propagator"""
