@@ -10,6 +10,7 @@ import SepVector
 import Hypercube
 import numpy as np
 import sys
+import re
 
 from pyElastic_iso_float_nl import spaceInterpGpu
 
@@ -84,9 +85,14 @@ def parfile2pars(args):
 	"""Function to expand arguments in parfile to parameters"""
 	#Check if par argument was provided
 	par_arg = None
-	match = [arg for arg in args if "par" in arg]
+	reg_comp = re.compile("(^par=)(.*)")
+	match = []
+	for arg in args:
+		find = reg_comp.search(arg)
+		if find:
+			match.append(find.group(2))
 	if len(match) > 0:
-		par_arg = match[-1] #Taking last par argument
+		par_arg = "par="+match[-1] #Taking last par argument
 	#If par was found expand arguments
 	if par_arg:
 		par_file = par_arg.split("=")[-1]
@@ -105,14 +111,19 @@ def create_parObj(args):
 def spreadParObj(client,args,par):
 	"""Function to spread parameter object to workers"""
 	#Spreading/Instantiating the parameter objects
-	List_Shots = par.getInts("nExp",0)
+	List_Exps = par.getInts("nExp",0)
 	parObject = []
 	args1=parfile2pars(args)
 	#Finding index of nShot parameter
-	idx_nshot = [ii for ii,el in enumerate(args1) if "nExp" in el][-1]
+	idx_nshot = [ii for ii,el in enumerate(args1) if "nExp" in el]
+	#Removing all other nExp parameters
+	for idx in idx_nshot[:-1]:
+		args1.pop(idx)
+	#Correcting idx_nshot
+	idx_nshot = [ii for ii,el in enumerate(args1) if "nExp" in el]
 	for idx,wrkId in enumerate(client.getWorkerIds()):
 		#Substituting nShot with the correct number of shots
-		args1[idx_nshot]="nExp=%s"%(List_Shots[idx])
+		args1[idx_nshot[-1]]="nExp=%s"%(List_Exps[idx])
 		parObject.append(client.getClient().submit(create_parObj,args1,workers=[wrkId],pure=False))
 	daskD.wait(parObject)
 	return parObject
@@ -152,7 +163,7 @@ def chunkData(dataVecLocal,dataSpaceRemote):
 	for idx,wrkId in enumerate(wrkIds):
 		arrD = client.scatter(dataArrays[idx],workers=[wrkId])
 		daskD.wait(arrD)
-		daskD.wait(client.submit(pyDaskVector.copy_from_NdArray,dataVecRemote.vecDask[idx],arrD,pure=False))
+		daskD.wait(client.submit(pyDaskVector.copy_from_NdArray,dataVecRemote.vecDask[idx],arrD,workers=[wrkId],pure=False))
 	# daskD.wait(client.map(pyDaskVector.copy_from_NdArray,dataVecRemote.vecDask,dataArrays,pure=False))
 	return dataVecRemote
 
@@ -320,7 +331,7 @@ def buildSourceGeometryDask(parObject,elasticParamHyper,client):
 	for idx,nExp in enumerate(List_Exps):
 		#Shot axis for given shots
 		sourceAxis.append(Hypercube.axis(n=nExp,o=oxExp,d=dxExp))
-		for ishot in range(parObject.getInt("nExp")):
+		for ishot in range(nExp):
 			# sources _zCoord and _xCoord
 			zAxes=[Hypercube.axis(n=nzSource,o=0.0,d=1.0)]
 			xAxes=[Hypercube.axis(n=nxSource,o=0.0,d=1.0)]
@@ -336,7 +347,7 @@ def buildSourceGeometryDask(parObject,elasticParamHyper,client):
 			oxSource=oxSource+spacingShots
 		daskD.wait(sourcesVectorCenterGrid[idx]+sourcesVectorXGrid[idx]+sourcesVectorZGrid[idx]+sourcesVectorXZGrid[idx])
 		#Adding shots offset to origin of shot axis
-		oxExp = (nExp-1)*dxExp
+		oxExp += (nExp-1)*dxExp
 
 	return sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis
 
@@ -679,6 +690,15 @@ def nonlinearFwiOpInitFloat(args,client=None):
 		print("**** ERROR: User did not provide elastic parameter file ****\n")
 		sys.exit()
 	elasticParamFloat=genericIO.defaultIO.getVector(elasticParam)
+	#Converting model parameters to Rho|Lame|Mu if necessary [kg/m3|Pa|Pa]
+	# 0 ==> correct parameterization
+	# 1 ==> VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
+	elasticParamFloatConv = elasticParamFloat
+	mod_par = parObject.getInt("mod_par",0)
+	if(mod_par != 0):
+		convOp = ElaConv.ElasticConv(elasticParamFloat,mod_par)
+		elasticParamFloatConv = elasticParamFloat.clone()
+		convOp.forward(False,elasticParamFloat,elasticParamFloatConv)
 
 	elasticParamFloatLocal=elasticParamFloat
 
@@ -694,6 +714,16 @@ def nonlinearFwiOpInitFloat(args,client=None):
 	sourceHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
 	sourceFloat=SepVector.getSepVector(sourceHyper,storage="dataFloat")
 
+	# Read sources signals
+	sourcesFile=parObject.getString("sources","noSourcesFile")
+	if (sourcesFile == "noSourcesFile"):
+		raise IOError("**** ERROR: User did not provide seismic sources file ****")
+	sourcesTemp=genericIO.defaultIO.getVector(sourcesFile,ndims=3)
+	sourcesFMat=sourceFloat.getNdArray()
+	sourcesTMat=sourcesTemp.getNdArray()
+	sourcesFMat[0,:,0,:]=sourcesTMat
+	del sourcesTemp
+
 	if client:
 		#Getting number of workers and passing
 		nWrks = client.getNworkers()
@@ -703,7 +733,8 @@ def nonlinearFwiOpInitFloat(args,client=None):
 
 		#Spreading velocity model to workers
 		elasticParamHyper = elasticParamFloat.getHyper()
-		elasticParamFloat = pyDaskVector.DaskVector(client,vectors=[elasticParamFloat]*nWrks).vecDask
+		elasticParamFloat = pyDaskVector.DaskVector(client,vectors=[elasticParamFloat]*nWrks)
+		elasticParamFloatConv = pyDaskVector.DaskVector(client,vectors=[elasticParamFloatConv]*nWrks)
 
 		# Build sources/receivers geometry
 		sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis=buildSourceGeometryDask(parObject,elasticParamHyper,client)
@@ -728,7 +759,7 @@ def nonlinearFwiOpInitFloat(args,client=None):
 		dataFloat=SepVector.getSepVector(dataHyper,storage="dataFloat")
 
 	# Outputs
-	return elasticParamFloat,dataFloat,sourceFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,elasticParamFloatLocal
+	return elasticParamFloat,elasticParamFloatConv,dataFloat,sourceFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,elasticParamFloatLocal
 
 class nonlinearFwiPropElasticShotsGpu(Op.Operator):
 	"""Wrapper encapsulating PYBIND11 module for non-linear propagator"""
@@ -737,24 +768,15 @@ class nonlinearFwiPropElasticShotsGpu(Op.Operator):
 		#Domain = source wavelet
 		#Range = recorded data space
 		self.setDomainRange(domain,range)
-		#Converting model parameters to Rho|Lame|Mu if necessary [kg/m3|Pa|Pa]
-		# 0 ==> correct parameterization
-		# 1 ==> VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)
-		domainTemp = domain
-		mod_par = paramP.getInt("mod_par",0)
-		if(mod_par != 0):
-			convOp = ElaConv.ElasticConv(domain,mod_par)
-			domainTemp = domain.clone()
-			convOp.forward(False,domain,domainTemp)
 		#Checking if getCpp is present
-		if("getCpp" in dir(domainTemp)):
-			domainTemp = domainTemp.getCpp()
+		if("getCpp" in dir(domain)):
+			domain = domain.getCpp()
 		if("getCpp" in dir(paramP)):
 			paramP = paramP.getCpp()
 		if("getCpp" in dir(sources)):
 			sources = sources.getCpp()
 			self.sources = sources.clone()
-		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(domainTemp,paramP.param,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
+		self.pyOp = pyElastic_iso_float_nl.nonlinearPropElasticShotsGpu(domain,paramP.param,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,receiversVectorCenterGrid,receiversVectorXGrid,receiversVectorZGrid,receiversVectorXZGrid)
 		return
 
 	def __str__(self):

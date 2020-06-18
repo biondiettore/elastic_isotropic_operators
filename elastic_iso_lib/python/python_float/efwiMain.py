@@ -110,6 +110,10 @@ import pyStepper as Stepper
 import inversionUtils
 from sys_util import logger
 
+#Dask-related modules
+import pyDaskOperator as DaskOp
+import pyDaskVector
+
 ############################ Bounds vectors ####################################
 # Create bound vectors for FWI
 def createBoundVectors(parObject,model,inv_log):
@@ -176,6 +180,10 @@ if __name__ == '__main__':
 
     # IO object
 	parObject=genericIO.io(params=sys.argv)
+
+	# Checking if Dask was requested
+	client, nWrks = Elastic_iso_float_prop.create_client(parObject)
+
 	pyinfo=parObject.getInt("pyinfo",1)
 	spline=parObject.getInt("spline",0)
 	dataTaper=parObject.getInt("dataTaper",0)
@@ -203,50 +211,20 @@ if __name__ == '__main__':
 	############################# Initialization ###############################
 
 	# FWI nonlinear operator
-	modelInit,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid = Elastic_iso_float_prop.nonlinearFwiOpInitFloat(sys.argv)
+	modelInit,modelInitConv,dataFloat,sourcesFloat,parObject1,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,modelInitLocal = Elastic_iso_float_prop.nonlinearFwiOpInitFloat(sys.argv,client)
 
-	# Born
-	# Initialize operator
-	_,_,elasticParamTemp,_,sourcesSignalsVector,_,_,_,_,_,_,_,_ = Elastic_iso_float_prop.BornOpInitFloat(sys.argv)
+	# Born operator
+	_,_,_,_,sourcesSignalsVector,_,_,_,_,_,_,_,_,_ = Elastic_iso_float_prop.BornOpInitFloat(sys.argv,client)
 
 	############################# Read files ###################################
 	# Seismic source
-	sourceFile=parObject.getString("sources","noSourcesFile")
-	if (sourceFile == "noSourcesFile"):
-		raise IOError("**** ERROR: User did not provide sources file (sourceFile) ****\n")
-	sourcesTemp=genericIO.defaultIO.getVector(sourceFile)
-	sourcesFMat=sourcesFloat.getNdArray()
-	sourcesTMat=sourcesTemp.getNdArray()
-	sourcesFMat[0,:,0,:]=sourcesTMat
-	del sourcesTemp
+	# Read within nonlinearFwiOpInitFloat
 
 	# Data
 	dataFile=parObject.getString("data","noDataFile")
 	if (dataFile == "noDataFile"):
 		raise IOError("**** ERROR: User did not provide data file (data) ****\n")
 	data=genericIO.defaultIO.getVector(dataFile,ndims=4)
-
-	########################### Data components ################################
-	comp = parObject.getString("comp")
-	if(comp != "vx,vz,sxx,szz,sxz"):
-		sampOp = ElasticDatComp(comp,dataFloat)
-		sampOpNl = pyOp.NonLinearOperator(sampOp,sampOp)
-	else:
-		if(not dataFloat.checkSame(data)):
-			raise ValueError("ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file")
-		dataFloat = data
-		sampOpNl = None
-
-	##################### Data muting with mask ################################
-	dataMaskFile = parObject.getString("dataMaskFile","noDataMask")
-	if (dataMaskFile!="noDataMask"):
-		if(pyinfo): print("--- User provided a mask for the data ---")
-		inv_log.addToLog("--- User provided a mask for the data ---")
-		dataMask = genericIO.defaultIO.getVector(dataMaskFile)
-		dataMask = pyOp.DiagonalOp(dataMask)
-		dataMaskNl = pyOp.NonLinearOperator(dataMask,dataMask)
-	else:
-		dataMaskNl = None
 
 	############################# Gradient mask ################################
 	maskGradientFile=parObject.getString("maskGradient","NoMask")
@@ -258,20 +236,41 @@ if __name__ == '__main__':
 		maskGradient=genericIO.defaultIO.getVector(maskGradientFile)
 		maskGradientOp = pyOp.DiagonalOp(maskGradient)
 
+	############################# Instantiation ################################
+	if client:
+		#Spreading operator and concatenating with non-linear and born operators
+		Sprd = DaskOp.DaskSpreadOp(client,modelInitLocal,[1]*nWrks)
+		# Nonlinear
+		nlOp_args = [(modelInitConv.vecDask[iwrk],dataFloat.vecDask[iwrk],sourcesFloat.vecDask[iwrk],parObject1[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
+		nonlinearElasticOp = DaskOp.DaskOperator(client,Elastic_iso_float_prop.nonlinearFwiPropElasticShotsGpu,nlOp_args,[1]*nWrks)
+		#Concatenating spreading and non-linear
+		nonlinearElasticOp = pyOp.ChainOperator(Sprd,nonlinearElasticOp)
 
-	############################# Instanciation ################################
-	# Nonlinear
-	nonlinearElasticOp=Elastic_iso_float_prop.nonlinearFwiPropElasticShotsGpu(modelInit,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+		# Born
+		BornOp_args = [(modelInit.vecDask[iwrk],dataFloat.vecDask[iwrk],modelInitConv.vecDask[iwrk],parObject1[iwrk],sourcesSignalsVector[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
+		BornElasticOpDask = DaskOp.DaskOperator(client,Elastic_iso_float_prop.BornElasticShotsGpu,BornOp_args,[1]*nWrks,setbackground_func_name="setBackground",spread_op=Sprd)
+		# Concatenating spreading and Born
+		BornElasticOp = pyOp.ChainOperator(Sprd,BornElasticOpDask)
+	else:
+		# Nonlinear
+		nonlinearElasticOp=Elastic_iso_float_prop.nonlinearFwiPropElasticShotsGpu(modelInitConv,dataFloat,sourcesFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
 
-	# Construct nonlinear operator object
-	BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelInit,dataFloat,elasticParamTemp,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+		# Construct nonlinear operator object
+		BornElasticOp=Elastic_iso_float_prop.BornElasticShotsGpu(modelInit,dataFloat,modelInitConv,parObject,sourcesSignalsVector,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+
+	#Born operator pointer for inversion
 	BornElasticOpInv=BornElasticOp
 
-	# Conventional FWI non-linear operator
+	# Conventional FWI non-linear operator (with mask if requested)
 	if maskGradientOp is not None:
 		BornElasticOpInv=pyOp.ChainOperator(maskGradientOp,BornElasticOp)
-	fwiInvOp=pyOp.NonLinearOperator(nonlinearElasticOp,BornElasticOpInv,BornElasticOp.setBackground)
+	if client:
+		fwiInvOp=pyOp.NonLinearOperator(nonlinearElasticOp,BornElasticOpInv,BornElasticOpDask.set_background)
+	else:
+		fwiInvOp=pyOp.NonLinearOperator(nonlinearElasticOp,BornElasticOpInv,BornElasticOp.setBackground)
 
+	# Dask model vector not necessary any more
+	modelInit=modelInitLocal
 	#Elastic parameter conversion if any
 	mod_par = parObject.getInt("mod_par",0)
 	if(mod_par != 0):
@@ -284,17 +283,47 @@ if __name__ == '__main__':
 		#f(g(m)) where f is the non-linear modeling operator and g is the non-linear change of variables
 		fwiInvOp=pyOp.CombNonlinearOp(convOpNl,fwiInvOp)
 
-	#Sampling of elastic data if necessary
-	if sampOpNl:
+
+	########################### Data components ################################
+	comp = parObject.getString("comp")
+	if(comp != "vx,vz,sxx,szz,sxz"):
+		if client:
+			sampOp_args = [(comp,BornElasticOp.getRange().vecDask[iwrk]) for iwrk in range(nWrks)]
+			sampOp = DaskOp.DaskOperator(client,ElasticDatComp,sampOp_args,[1]*nWrks)
+			#Dask interface
+			if(client):
+				#Chunking the data and spreading them across workers if dask was requested
+				data = Elastic_iso_float_prop.chunkData(data,sampOp.getRange())
+		else:
+			sampOp = ElasticDatComp(comp,BornElasticOp.getRange())
+		sampOpNl = pyOp.NonLinearOperator(sampOp,sampOp)
 		#modeling operator = Sf(m)
 		fwiInvOp=pyOp.CombNonlinearOp(fwiInvOp,sampOpNl)
+	else:
+		#Dask interface
+		if(client):
+			#Chunking the data and spreading them across workers if dask was requested
+			data = Elastic_iso_float_prop.chunkData(data,BornElasticOp.getRange())
+		if(not dataFloat.checkSame(data)):
+			raise ValueError("ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file")
 
-	#Data muting
-	if dataMaskNl:
+	##################### Data muting with mask ################################
+	dataMaskFile = parObject.getString("dataMaskFile","noDataMask")
+	if (dataMaskFile!="noDataMask"):
+		if(pyinfo): print("--- User provided a mask for the data ---")
+		inv_log.addToLog("--- User provided a mask for the data ---")
+		dataMask = genericIO.defaultIO.getVector(dataMaskFile,ndims=4)
+		if client:
+			dataMaskD = Elastic_iso_float_prop.chunkData(dataMask,fwiInvOp.getRange())
+			dataMask_args = [dataMaskD.vecDask[iwrk] for iwrk in range(nWrks)]
+			dataMaskOp = DaskOp.DaskOperator(client,pyOp.DiagonalOp,dataMask_args,[1]*nWrks)
+		else:
+			dataMaskOp = pyOp.DiagonalOp(dataMask)
+		# Creating non-linear operator and concatenating with fwiInvOp
+		dataMaskNl = pyOp.NonLinearOperator(dataMaskOp,dataMaskOp)
 		fwiInvOp=pyOp.CombNonlinearOp(fwiInvOp,dataMaskNl)
-		# Applying mask to observed data
 		data_tmp = data.clone()
-		dataMask.forward(False,data,data_tmp)
+		dataMaskOp.forward(False,data,data_tmp)
 		data = data_tmp
 
 	############################# Spline operator ##############################

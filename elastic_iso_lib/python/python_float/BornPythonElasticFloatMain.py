@@ -24,9 +24,9 @@ if __name__ == '__main__':
 
 	if(client):
 		#Instantiating Dask Operator
-		nlOp_args = [(modelFloat.vecDask[iwrk],dataFloat.vecDask[iwrk],elasticParamFloat[iwrk],parObject1[iwrk],sourcesSignalsVector[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
-		BornElasticOp = DaskOp.DaskOperator(client,Elastic_iso_float_prop.BornElasticShotsGpu,nlOp_args,[1]*nWrks)
-		#Adding spreading operator and concatenating with non-linear operator (using modelFloatLocal)
+		BornOp_args = [(modelFloat.vecDask[iwrk],dataFloat.vecDask[iwrk],elasticParamFloat[iwrk],parObject1[iwrk],sourcesSignalsVector[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
+		BornElasticOp = DaskOp.DaskOperator(client,Elastic_iso_float_prop.BornElasticShotsGpu,BornOp_args,[1]*nWrks)
+		#Adding spreading operator and concatenating with Born operator (using modelFloatLocal)
 		Sprd = DaskOp.DaskSpreadOp(client,modelFloatLocal,[1]*nWrks)
 		BornElasticOp = pyOp.ChainOperator(Sprd,BornElasticOp)
 	else:
