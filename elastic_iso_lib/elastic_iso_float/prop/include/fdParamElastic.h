@@ -49,12 +49,12 @@ class fdParamElastic{
 		float _ots, _dts, _otw, _dtw;
 		float _Courant, _dispersionRatio;
 		int _nz, _nx;
-        const int _nwc=5;
+    const int _nwc=5;
 		int _zPadMinus, _zPadPlus, _xPadMinus, _xPadPlus, _zPad, _xPad, _minPad;
 		float _dz, _dx, _oz, _ox, _fMax;
 		int _saveWavefield, _blockSize, _fat;
 		float _alphaCos;
-        int _surfaceCondition;
+    int _surfaceCondition, _mod_par;
 
 };
 

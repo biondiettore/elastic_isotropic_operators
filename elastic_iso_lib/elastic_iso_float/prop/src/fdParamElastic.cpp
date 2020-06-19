@@ -40,6 +40,7 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 	_nz = _par->getInt("nz");
 	_zPadPlus = _par->getInt("zPadPlus");
 	_zPadMinus = _par->getInt("zPadMinus");
+	_mod_par = _par->getInt("mod_par",2);
 	if(_surfaceCondition==0) _zPad = std::min(_zPadMinus, _zPadPlus);
 	else if(_surfaceCondition==1) _zPad = _zPadPlus;
 	_dz = _par->getFloat("dz",-1.0);
@@ -54,6 +55,14 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 	_dx = _par->getFloat("dx",-1.0);
 	_ox = _elasticParam->getHyper()->getAxis(2).o;
 	_xAxis = axis(_nx, _ox, _dx);
+
+	if (_mod_par == 2){
+		// Scaling spacial samplings if km were provided
+		_dz *= 1000.;
+		_ox *= 1000.;
+		_dx *= 1000.;
+		_oz *= 1000.;
+	}
 
 	/***** Wavefield component axis *****/
 	_wavefieldCompAxis = axis(_nwc, 0, 1);
@@ -307,15 +316,21 @@ bool fdParamElastic::checkParfileConsistencyTime(const std::shared_ptr<float3DRe
 
 bool fdParamElastic::checkParfileConsistencySpace(const std::shared_ptr<float3DReg> model) const {
 
+	// Scaling factor in case km were provided within the parameter file
+	float scale = 1.0;
+	if (_mod_par == 2){
+		scale = 1000.0;
+	}
+
 	// Vertical axis
 	if (_nz != model->getHyper()->getAxis(1).n) {std::cerr << "**** ERROR: nz not consistent with parfile ****" << std::endl; return false;}
-	if ( std::abs(_dz - model->getHyper()->getAxis(1).d) > _errorTolerance ) {std::cerr << "**** ERROR: dz not consistent with parfile ****" << std::endl; return false;}
-	if ( std::abs(_oz - model->getHyper()->getAxis(1).o) > _errorTolerance ) {std::cerr << "**** ERROR: oz not consistent with parfile ****" << std::endl; return false;}
+	if ( std::abs(_dz - model->getHyper()->getAxis(1).d*scale) > _errorTolerance ) {std::cerr << "**** ERROR: dz not consistent with parfile ****" << std::endl; return false;}
+	if ( std::abs(_oz - model->getHyper()->getAxis(1).o*scale) > _errorTolerance ) {std::cerr << "**** ERROR: oz not consistent with parfile ****" << std::endl; return false;}
 
 	// Horizontal axis
 	if (_nx != model->getHyper()->getAxis(2).n) {std::cerr << "**** ERROR nx not consistent with parfile ****" << std::endl; return false;}
-	if ( std::abs(_dx - model->getHyper()->getAxis(2).d) > _errorTolerance ) {std::cerr << "**** ERROR: dx not consistent with parfile ****" << std::endl; return false;}
-	if ( std::abs(_ox - model->getHyper()->getAxis(2).o) > _errorTolerance ) {std::cerr << "**** ERROR: ox not consistent with parfile ****" << std::endl; return false;}
+	if ( std::abs(_dx - model->getHyper()->getAxis(2).d*scale) > _errorTolerance ) {std::cerr << "**** ERROR: dx not consistent with parfile ****" << std::endl; return false;}
+	if ( std::abs(_ox - model->getHyper()->getAxis(2).o*scale) > _errorTolerance ) {std::cerr << "**** ERROR: ox not consistent with parfile ****" << std::endl; return false;}
 
 	// Elastic Parameter axis
 	// if (3 != model->getHyper()->getAxis(3).n) {std::cerr << "**** ERROR number of elastic parameters != 3 ****" << std::endl; return false;}
