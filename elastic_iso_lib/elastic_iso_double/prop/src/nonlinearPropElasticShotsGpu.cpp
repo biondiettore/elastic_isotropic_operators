@@ -24,7 +24,7 @@ nonlinearPropElasticShotsGpu::nonlinearPropElasticShotsGpu(std::shared_ptr<SEP::
   	_info = par->getInt("info", 0);
   	_deviceNumberInfo = par->getInt("deviceNumberInfo", 0);
   	if( not getGpuInfo(_gpuList, _info, _deviceNumberInfo)){
-			throw std::runtime_error("");
+			throw std::runtime_error("Error in getGpuInfo");
 		}; // Get info on GPU cluster and check that there are enough available GPUs
   	_saveWavefield = _par->getInt("saveWavefield", 0);
   	_wavefieldShotNumber = _par->getInt("wavefieldShotNumber", 0);
@@ -40,7 +40,6 @@ nonlinearPropElasticShotsGpu::nonlinearPropElasticShotsGpu(std::shared_ptr<SEP::
     _receiversVectorXZGrid = receiversVectorXZGrid;
 
     _fdParamElastic = std::make_shared<fdParamElastic>(_elasticParam, _par);
-
   }
 
 void nonlinearPropElasticShotsGpu::createGpuIdList(){

@@ -78,7 +78,7 @@ if __name__ == '__main__':
 			raise IOError("**** ERROR: User did not provide data file name ****\n")
 
 		#Reading model
-		dataFloat=genericIO.defaultIO.getVector(dataFile)
+		dataFloat=genericIO.defaultIO.getVector(dataFile,ndims=4)
 		if(client):
 			#Chunking the data and spreading them across workers if dask was requested
 			dataFloat = Elastic_iso_float_prop.chunkData(dataFloat,BornElasticOp.getRange())

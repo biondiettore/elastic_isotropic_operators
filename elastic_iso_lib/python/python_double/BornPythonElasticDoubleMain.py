@@ -66,7 +66,7 @@ if __name__ == '__main__':
 			raise IOError("**** ERROR: User did not provide data file name ****\n")
 
 		#Reading model
-		dataFloat=genericIO.defaultIO.getVector(dataFile)
+		dataFloat=genericIO.defaultIO.getVector(dataFile,ndims=4)
 		dataDMat=dataDouble.getNdArray()
 		dataSMat=dataFloat.getNdArray()
 		dataDMat[:]=dataSMat

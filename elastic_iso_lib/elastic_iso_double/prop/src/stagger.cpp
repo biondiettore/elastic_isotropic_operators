@@ -36,7 +36,7 @@ void staggerX::forward(const bool add,const  std::shared_ptr<double2DReg> model,
 }
 
 void staggerX::adjoint(const bool add,const  std::shared_ptr<double2DReg> model,  std::shared_ptr<double2DReg> data) const{
-  if(checkDomainRange(model,data)){
+  if( not checkDomainRange(model,data)){
 		throw std::runtime_error("");
 	};
   if(!add) model->scale(0.);
@@ -61,7 +61,7 @@ staggerZ::staggerZ(const  std::shared_ptr<double2DReg> model, const  std::shared
   if( not data->getHyper()->getAxis(1).n == model->getHyper()->getAxis(1).n){
 		throw std::runtime_error("");
 	};
-  if(data->getHyper()->getAxis(2).n == model->getHyper()->getAxis(2).n){
+  if( not data->getHyper()->getAxis(2).n == model->getHyper()->getAxis(2).n){
 		throw std::runtime_error("");
 	};
 
@@ -73,7 +73,7 @@ staggerZ::staggerZ(const  std::shared_ptr<double2DReg> model, const  std::shared
 }
 
 void staggerZ::forward(const bool add,const  std::shared_ptr<double2DReg> model,  std::shared_ptr<double2DReg> data) const {
-  if(checkDomainRange(model,data)){
+  if( not checkDomainRange(model,data)){
 		throw std::runtime_error("");
 	};
   if(!add) data->scale(0.);
