@@ -2,8 +2,12 @@
 using namespace SEP;
 
 staggerX::staggerX(const std::shared_ptr<float2DReg> model, const std::shared_ptr<float2DReg> data){
-  assert(data->getHyper()->getAxis(1).n == model->getHyper()->getAxis(1).n);
-  assert(data->getHyper()->getAxis(2).n == model->getHyper()->getAxis(2).n);
+  if( not data->getHyper()->getAxis(1).n == model->getHyper()->getAxis(1).n){
+		throw std::runtime_error("");
+	};
+  if( not data->getHyper()->getAxis(2).n == model->getHyper()->getAxis(2).n){
+		throw std::runtime_error("");
+	};
 
   _nx = model->getHyper()->getAxis(2).n;
   _nz = model->getHyper()->getAxis(1).n;
@@ -12,7 +16,9 @@ staggerX::staggerX(const std::shared_ptr<float2DReg> model, const std::shared_pt
 }
 
 void staggerX::forward(const bool add,const  std::shared_ptr<float2DReg> model,  std::shared_ptr<float2DReg> data) const{
-  assert(checkDomainRange(model,data));
+  if( not checkDomainRange(model,data)){
+		throw std::runtime_error("");
+	};
   if(!add) data->scale(0.);
 
   #pragma omp parallel for collapse(2)
@@ -30,7 +36,9 @@ void staggerX::forward(const bool add,const  std::shared_ptr<float2DReg> model, 
 }
 
 void staggerX::adjoint(const bool add,const  std::shared_ptr<float2DReg> model,  std::shared_ptr<float2DReg> data) const{
-  assert(checkDomainRange(model,data));
+  if(checkDomainRange(model,data)){
+		throw std::runtime_error("");
+	};
   if(!add) model->scale(0.);
 
   #pragma omp parallel for collapse(2)
@@ -50,8 +58,12 @@ void staggerX::adjoint(const bool add,const  std::shared_ptr<float2DReg> model, 
 
 staggerZ::staggerZ(const  std::shared_ptr<float2DReg> model, const  std::shared_ptr<float2DReg> data) {
 
-  assert(data->getHyper()->getAxis(1).n == model->getHyper()->getAxis(1).n);
-  assert(data->getHyper()->getAxis(2).n == model->getHyper()->getAxis(2).n);
+  if( not data->getHyper()->getAxis(1).n == model->getHyper()->getAxis(1).n){
+		throw std::runtime_error("");
+	};
+  if(data->getHyper()->getAxis(2).n == model->getHyper()->getAxis(2).n){
+		throw std::runtime_error("");
+	};
 
   _nx = model->getHyper()->getAxis(2).n;
   _nz = model->getHyper()->getAxis(1).n;
@@ -61,7 +73,9 @@ staggerZ::staggerZ(const  std::shared_ptr<float2DReg> model, const  std::shared_
 }
 
 void staggerZ::forward(const bool add,const  std::shared_ptr<float2DReg> model,  std::shared_ptr<float2DReg> data) const {
-  assert(checkDomainRange(model,data));
+  if(checkDomainRange(model,data)){
+		throw std::runtime_error("");
+	};
   if(!add) data->scale(0.);
 
   #pragma omp parallel for collapse(2)
@@ -79,7 +93,9 @@ void staggerZ::forward(const bool add,const  std::shared_ptr<float2DReg> model, 
 }
 
 void staggerZ::adjoint(const bool add, std::shared_ptr<float2DReg> model, const std::shared_ptr<float2DReg> data) const{
-  assert(checkDomainRange(model,data));
+  if( not checkDomainRange(model,data)){
+		throw std::runtime_error("");
+	};
   if(!add) model->scale(0.);
 
   #pragma omp parallel for collapse(2)
@@ -96,7 +112,7 @@ void staggerZ::adjoint(const bool add, std::shared_ptr<float2DReg> model, const 
     (*model->_mat)[ix][_nz-1] += (*data->_mat)[ix][_nz-1] + 0.5 * (*data->_mat)[ix][_nz-2]; //bottom
   }
 }
-// 
+//
 // staggerWfld::staggerWfld(const  std::shared_ptr<float4DReg> model, const  std::shared_ptr<float4DReg> data) {
 //
 //   assert(data->getHyper()->getAxis(1).n == model->getHyper()->getAxis(1).n);

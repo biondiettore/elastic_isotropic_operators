@@ -64,8 +64,8 @@ int main(int argc, char **argv) {
 		nzNewTotal = nzNew + fat;
 	}
 	else{
-		std::cerr << "ERROR UNKNOWN SURFACE CONDITION PARAMETER " << '\n';
-		assert(1==2);
+		std::cerr << "ERROR UNKNOWN SURFACE CONDITION PARAMETER" << '\n';
+		throw std::runtime_error("ERROR UNKNOWN SURFACE CONDITION PARAMETER");
 	}
 
 	// Compute size of xPadPlus

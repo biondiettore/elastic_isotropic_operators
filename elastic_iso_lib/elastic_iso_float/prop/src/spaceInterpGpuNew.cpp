@@ -52,7 +52,7 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const s
 	}
 	else{
 		std::cerr << "**** ERROR: Space interp method not defined ****" << std::endl;
-		assert(1==2);
+		throw std::runtime_error("");;
 	}
 
 	convertIrregToReg();
@@ -265,7 +265,9 @@ void spaceInterpGpu::convertIrregToReg() {
 
 /* FORWARD: Go from REGULAR grid -> IRREGULAR grid */
 void spaceInterpGpu::forward(const bool add, const std::shared_ptr<float2DReg> signalReg, std::shared_ptr<float2DReg> signalIrreg) const {
-	assert(checkDomainRange(signalReg,signalIrreg));
+	if ( not checkDomainRange(signalReg,signalIrreg)){
+		throw std::runtime_error("");
+	}
 
 	if (!add) signalIrreg->scale(0.0);
 	std::shared_ptr<float2D> d = signalIrreg->_mat;
@@ -282,7 +284,9 @@ void spaceInterpGpu::forward(const bool add, const std::shared_ptr<float2DReg> s
 }
 /* ADJOINT: Go from IRREGULAR grid -> REGULAR grid */
 void spaceInterpGpu::adjoint(const bool add, std::shared_ptr<float2DReg> signalReg, const std::shared_ptr<float2DReg> signalIrreg) const {
-	assert(checkDomainRange(signalReg,signalIrreg));
+	if( not checkDomainRange(signalReg,signalIrreg)){
+		throw std::runtime_error("");
+	};
 
 	if (!add) signalReg->scale(0.0);
 	std::shared_ptr<float2D> d = signalIrreg->_mat;
@@ -314,14 +318,14 @@ void spaceInterpGpu::checkOutOfBounds(const std::shared_ptr<float1DReg> zCoord, 
 			std::cerr << "((*zCoord->_mat)[iDevice]= " << (*zCoord->_mat)[iDevice] << std::endl;
 			std::cerr << "zMax-zBuffer= " << zMax-zBuffer << std::endl;
 			std::cerr << "zMin+zBuffer= " << zMin+zBuffer << std::endl;
-			assert (1==2);
+			throw std::runtime_error("");
 		}
 		if( ((*xCoord->_mat)[iDevice] >= xMax-xBuffer) || ((*xCoord->_mat)[iDevice] <= xMin+xBuffer)){
 			std::cerr << "**** ERROR: One of the device is out of bounds in the x direction ****" << std::endl;
 			std::cerr << "((*xCoord->_mat)[iDevice]= " << (*xCoord->_mat)[iDevice] << std::endl;
 			std::cerr << "xMax-xBuffer= " << xMax-xBuffer << std::endl;
 			std::cerr << "xMin+xBuffer= " << xMin+xBuffer << std::endl;
-			assert (1==2);
+			throw std::runtime_error("");
 		}
 	}
 }
@@ -332,7 +336,7 @@ void spaceInterpGpu::checkOutOfBounds(const std::shared_ptr<float1DReg> zCoord, 
 // 	float xIntMax = *max_element(xGridVector.begin(), xGridVector.end());
 // 	if ( (zIntMax >= _elasticParamHypercube->getAxis(1).n) || (xIntMax >= _elasticParamHypercube->getAxis(2).n) ){
 // 		std::cout << "**** ERROR: One of the device is out of bounds ****" << std::endl;
-// 		assert (1==2);
+// 		throw std::runtime_error("");
 // 	}
 // }
 //
@@ -342,7 +346,7 @@ void spaceInterpGpu::checkOutOfBounds(const std::shared_ptr<float1DReg> zCoord, 
 // 	float xIntMax = oxDevice + (nxDevice - 1) * dxDevice;
 // 	if ( (zIntMax >= _elasticParamHypercube->getAxis(1).n) || (xIntMax >= _elasticParamHypercube->getAxis(2).n) ){
 // 		std::cout << "**** ERROR: One of the device is out of bounds ****" << std::endl;
-// 		assert (1==2);
+// 		throw std::runtime_error("");
 // 	}
 // }
 

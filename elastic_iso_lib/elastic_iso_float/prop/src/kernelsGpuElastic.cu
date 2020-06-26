@@ -494,7 +494,6 @@ __global__ void ker_step_fwd_surface_surface(float* dev_o_vx, float* dev_o_vz, f
      float* dev_c_vx, float* dev_c_vz, float* dev_c_sigmaxx, float* dev_c_sigmazz, float* dev_c_sigmaxz,
      float* dev_n_vx, float* dev_n_vz, float* dev_n_sigmaxx, float* dev_n_sigmazz, float* dev_n_sigmaxz,
      float* dev_rhoxDtw, float* dev_rhozDtw, float* dev_lamb2MuDtw, float* dev_lambDtw, float* dev_muxzDtw){
-     //float* dev_c_all,float* dev_n_all, float* dev_elastic_param_scaled) {
 
     // calculate global and local x/z coordinates
     int ixGlobal = FAT + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global x-coordinate

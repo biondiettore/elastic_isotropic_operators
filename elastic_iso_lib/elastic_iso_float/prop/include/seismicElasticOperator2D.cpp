@@ -151,7 +151,9 @@ void seismicElasticOperator2D <V1, V2>::setAcquisition(
 	setSources(sourcesCenterGrid, sourcesXGrid, sourcesZGrid, sourcesXZGrid);
 	setReceivers(receiversCenterGrid, receiversXGrid, receiversZGrid, receiversXZGrid);
 	this->setDomainRange(model, data);
-	assert(checkParfileConsistency(model, data));
+	if ( not checkParfileConsistency(model, data)){
+		throw std::runtime_error("");
+	}
 }
 
 // Set acquisiton for Nonlinear modeling
@@ -161,7 +163,9 @@ void seismicElasticOperator2D <V1, V2>::setAcquisition(
 	setSources(sourcesCenterGrid, sourcesXGrid, sourcesZGrid, sourcesXZGrid, sourcesSignals);
 	setReceivers(receiversCenterGrid, receiversXGrid, receiversZGrid, receiversXZGrid);
 	this->setDomainRange(model, data);
-	assert(checkParfileConsistency(model, data));
+	if (not checkParfileConsistency(model, data)){
+		throw std::runtime_error("");
+	};
 }
 
 

@@ -28,7 +28,7 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 	_sub = _sub*2;
 	if(_sub > SUB_MAX) {
 		std::cerr << "**** ERROR: 2*_sub is greater than the allowed SUB_MAX value. " << _sub << " > " << SUB_MAX << " ****" << std::endl;
-		assert(false);
+		throw std::runtime_error("");
 	}
 	_ntw = (_nts - 1) * _sub + 1;
 	_dtw = _dts / float(_sub);
@@ -40,9 +40,9 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 	_nz = _par->getInt("nz");
 	_zPadPlus = _par->getInt("zPadPlus");
 	_zPadMinus = _par->getInt("zPadMinus");
-	_mod_par = _par->getInt("mod_par",2);
 	if(_surfaceCondition==0) _zPad = std::min(_zPadMinus, _zPadPlus);
 	else if(_surfaceCondition==1) _zPad = _zPadPlus;
+	_mod_par = _par->getInt("mod_par",2);
 	_dz = _par->getFloat("dz",-1.0);
 	_oz = _elasticParam->getHyper()->getAxis(1).o;
 	_zAxis = axis(_nz, _oz, _dz);
@@ -90,11 +90,6 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 			float vpTemp = sqrt((lamdbTemp + 2*muTemp)/rhoTemp);
 			float vsTemp = sqrt(muTemp/rhoTemp);
 
-			// if(vpTemp<=0){
-			// std::cerr << "**** ERROR: a vp value <=0 exists within the fat boundary ****" << std::endl;
-			// assert(false);
-			// }
-
 			if (vpTemp < _minVpVs) _minVpVs = vpTemp;
 			if (vpTemp > _maxVpVs) _maxVpVs = vpTemp;
 			if (vsTemp < _minVpVs && vsTemp!=0) _minVpVs = vsTemp;
@@ -103,10 +98,18 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<float3DReg> elasticParam, c
 	}
 
 	/***** QC *****/
-	assert(checkParfileConsistencySpace(_elasticParam)); // Parfile - velocity file consistency
-	assert(checkFdStability());
-	assert(checkFdDispersion());
-	assert(checkModelSize());
+	if( not checkParfileConsistencySpace(_elasticParam)){
+		throw std::runtime_error("");
+	}; // Parfile - velocity file consistency
+	if( not checkFdStability()){
+		throw std::runtime_error("");
+	};
+	if ( not checkFdDispersion()){
+		throw std::runtime_error("");
+	};
+	if( not checkModelSize()){
+		throw std::runtime_error("");
+	};
 
 	/***** Scaling for propagation *****/
 	_rhoxDtw = new float[_nz * _nx * sizeof(float)]; // Precomputed scaling dtw / rho_x
@@ -242,7 +245,7 @@ void fdParamElastic::getInfo(){
 		else if(_surfaceCondition==1 ) std::cerr << "(1) free surface condition from Robertsson (1998) chosen." << '\n';
 		else{
 			std::cerr << "ERROR NO IMPROPER FREE SURFACE PARAM PROVIDED" << '\n';
-			assert(1==2);
+			throw std::runtime_error("");;
 		}
 
 		std::cerr << "\n----------------------- Source Interp Info -----------------------" << std::endl;

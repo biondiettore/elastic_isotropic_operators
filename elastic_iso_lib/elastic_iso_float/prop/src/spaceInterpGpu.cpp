@@ -56,7 +56,7 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const s
 		// If user asks for dipole + sinc interpolation, throw an error (not implemented ey)
 		if (_dipole == 1) {
 			std::cerr << "**** ERROR: Spatial sinc interpolation and dipole acquisition not implemented ****" << std::endl;
-			assert(1==2);
+			throw std::runtime_error("");;
 		}
 		calcSincWeights();
 	}
@@ -64,13 +64,13 @@ spaceInterpGpu::spaceInterpGpu(const std::shared_ptr<float1DReg> zCoord, const s
 	else if(!_interpMethod.compare("gauss")){
 		if (_dipole == 1) {
 			std::cerr << "**** ERROR: Gaussian spatial interpolation and dipole acquisition not implemented ****" << std::endl;
-			assert(1==2);
+			throw std::runtime_error("");;
 		}
 		calcGaussWeights();
 	}
 	else{
 		std::cerr << "**** ERROR: Space interp method not defined ****" << std::endl;
-		assert(1==2);
+		throw std::runtime_error("");;
 	}
 
 	convertIrregToReg();
@@ -390,14 +390,14 @@ void spaceInterpGpu::checkOutOfBounds(const std::shared_ptr<float1DReg> zCoord, 
 			std::cerr << "((*zCoord->_mat)[iDevice]= " << (*zCoord->_mat)[iDevice] << std::endl;
 			std::cerr << "zMax-zBuffer= " << zMax-zBuffer << std::endl;
 			std::cerr << "zMin+zBuffer= " << zMin+zBuffer << std::endl;
-			assert (1==2);
+			throw std::runtime_error("");
 		}
 		if( ((*xCoord->_mat)[iDevice] >= xMax-xBuffer) || ((*xCoord->_mat)[iDevice] <= xMin+xBuffer)){
 			std::cerr << "**** ERROR: One of the device is out of bounds in the x direction ****" << std::endl;
 			std::cerr << "((*xCoord->_mat)[iDevice]= " << (*xCoord->_mat)[iDevice] << std::endl;
 			std::cerr << "xMax-xBuffer= " << xMax-xBuffer << std::endl;
 			std::cerr << "xMin+xBuffer= " << xMin+xBuffer << std::endl;
-			assert (1==2);
+			throw std::runtime_error("");
 		}
 	}
 }
@@ -408,7 +408,7 @@ void spaceInterpGpu::checkOutOfBounds(const std::vector<int> &zGridVector, const
 	float xIntMax = *max_element(xGridVector.begin(), xGridVector.end());
 	if ( (zIntMax >= _elasticParamHypercube->getAxis(1).n) || (xIntMax >= _elasticParamHypercube->getAxis(2).n) ){
 		std::cout << "**** ERROR: One of the device is out of bounds ****" << std::endl;
-		assert (1==2);
+		throw std::runtime_error("");
 	}
 }
 
@@ -418,7 +418,7 @@ void spaceInterpGpu::checkOutOfBounds(const int &nzDevice, const int &ozDevice, 
 	float xIntMax = oxDevice + (nxDevice - 1) * dxDevice;
 	if ( (zIntMax >= _elasticParamHypercube->getAxis(1).n) || (xIntMax >= _elasticParamHypercube->getAxis(2).n) ){
 		std::cout << "**** ERROR: One of the device is out of bounds ****" << std::endl;
-		assert (1==2);
+		throw std::runtime_error("");
 	}
 }
 
