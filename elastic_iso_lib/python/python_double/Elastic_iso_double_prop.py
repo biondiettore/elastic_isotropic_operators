@@ -52,10 +52,13 @@ def buildSourceGeometry(parObject,elasticParam):
 
 	# Sources geometry
 	nzSource=1
-	ozSource=parObject.getInt("zSource")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat")
+	if parObject.getInt("surfaceCondition",0) == 0:
+		ozSource=parObject.getInt("zSource")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+	else:
+		ozSource=parObject.getInt("zSource")-1+parObject.getInt("fat",4)
 	dzSource=1
 	nxSource=1
-	oxSource=parObject.getInt("xSource")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat")
+	oxSource=parObject.getInt("xSource")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
 	dxSource=1
 	spacingShots=parObject.getInt("spacingShots")
 	sourceAxis=Hypercube.axis(n=parObject.getInt("nExp"),o=ox+oxSource*dx,d=spacingShots*dx)
@@ -120,10 +123,13 @@ def buildReceiversGeometry(parObject,elasticParam):
 	oz=elasticParam.getHyper().axes[0].o
 
 	nzReceiver=1
-	ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat")
+	if parObject.getInt("surfaceCondition",0) == 0:
+		ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+	else:
+		ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("fat",4)
 	dzReceiver=0
 	nxReceiver=parObject.getInt("nReceiver")
-	oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat")
+	oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
 	dxReceiver=parObject.getInt("dReceiver")
 	receiverAxis=Hypercube.axis(n=nxReceiver,o=ox+oxReceiver*dx,d=dxReceiver*dx)
 	nRecGeom=1; # Constant receivers' geometry

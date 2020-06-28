@@ -163,4 +163,43 @@ if __name__ == '__main__':
 
 	# Adjoint
 	else:
-		raise NotImplementedError("ERROR! Adjoint operator not implemented yet!")
+
+		print("-------------------------------------------------------------------")
+		print("------------------ Running Python nonlinear adjoint ---------------")
+		print("-------------------------------------------------------------------\n")
+
+
+		# Check that model was provided
+		modelFile=parObject.getString("model","noModelFile")
+		if (modelFile == "noModelFile"):
+			raise IOError("**** ERROR: User did not provide model file ****\n")
+		dataFile=parObject.getString("data","noDataFile")
+		if (dataFile == "noDataFile"):
+			raise IOError("**** ERROR: User did not provide data file name ****\n")
+
+		#Reading model
+		dataFloat=genericIO.defaultIO.getVector(dataFile,ndims=4)
+		if(client):
+			#Chunking the data and spreading them across workers if dask was requested
+			dataFloat = Elastic_iso_float_prop.chunkData(dataFloat,nonlinearElasticOp.getRange())
+
+		#check if we want to save wavefield
+		if (parObject.getInt("saveWavefield",0) == 1):
+			wfldFile=parObject.getString("wfldFile","noWfldFile")
+			if (wfldFile == "noWfldFile"):
+				raise IOError("**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****")
+			#run Nonlinear adjoint with wavefield saving
+			nonlinearElasticOp.adjointWavefield(False,modelFloatLocal,dataFloat)
+			#save wavefield to disk
+			wavefieldFloat = nonlinearElasticOp.getWavefield()
+			# genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
+			wavefieldFloat.writeVec(wfldFile)
+		else:
+			#run Nonlinear adjoint without wavefield saving
+			nonlinearElasticOp.adjoint(False,modelFloatLocal,dataFloat)
+		#write data to disk
+		modelFloatLocal.writeVec(modelFile)
+
+		print("-------------------------------------------------------------------")
+		print("--------------------------- All done ------------------------------")
+		print("-------------------------------------------------------------------\n")

@@ -490,63 +490,62 @@ one thread for all x inside fat.
 4. do not update sigmaxz at or above z=0
 5. set new sigmaxx at z=0
 6. set current vx and vz =0 above free surface*/
-__global__ void ker_step_fwd_surface_surface(double* dev_o_vx, double* dev_o_vz, double* dev_o_sigmaxx, double* dev_o_sigmazz, double* dev_o_sigmaxz,
+__global__ void ker_step_fwd_surface_top(double* dev_o_vx, double* dev_o_vz, double* dev_o_sigmaxx, double* dev_o_sigmazz, double* dev_o_sigmaxz,
      double* dev_c_vx, double* dev_c_vz, double* dev_c_sigmaxx, double* dev_c_sigmazz, double* dev_c_sigmaxz,
      double* dev_n_vx, double* dev_n_vz, double* dev_n_sigmaxx, double* dev_n_sigmazz, double* dev_n_sigmaxz,
      double* dev_rhoxDtw, double* dev_rhozDtw, double* dev_lamb2MuDtw, double* dev_lambDtw, double* dev_muxzDtw){
 
     // calculate global and local x/z coordinates
     int ixGlobal = FAT + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global x-coordinate
-    int iGlobal_0 = dev_nz * ixGlobal + 0; // 1D array index for the model on the global memory
-    int iGlobal_1 = dev_nz * ixGlobal + 1; // 1D array index for the model on the global memory
-    int iGlobal_2 = dev_nz * ixGlobal + 2; // 1D array index for the model on the global memory
-    int iGlobal_3 = dev_nz * ixGlobal + 3; // 1D array index for the model on the global memory
-    int iGlobal_surf = dev_nz * ixGlobal + 4; // 1D array index for the model on the global memory
+    int iGlobal_0 = dev_nz * ixGlobal + FAT - 4; // 1D array index for the model on the global memory
+    int iGlobal_1 = dev_nz * ixGlobal + FAT - 3; // 1D array index for the model on the global memory
+    int iGlobal_2 = dev_nz * ixGlobal + FAT - 2; // 1D array index for the model on the global memory
+    int iGlobal_3 = dev_nz * ixGlobal + FAT - 1; // 1D array index for the model on the global memory
+    int iGlobal_surf = dev_nz * ixGlobal + FAT; // 1D array index for the model on the global memory
 
     // 1. set current sigmazz at z=0 to zero
     dev_c_sigmazz[iGlobal_surf] = 0;
 
     // 2. make current sigmazz, sigmaxz odd about z=0 by changing values above z=0
-    dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+4];
-    dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+3];
-    dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+2];
-    dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+1];
-    dev_c_sigmaxz[iGlobal_0] = -dev_c_sigmaxz[iGlobal_surf+4];
-    dev_c_sigmaxz[iGlobal_1] = -dev_c_sigmaxz[iGlobal_surf+3];
-    dev_c_sigmaxz[iGlobal_2] = -dev_c_sigmaxz[iGlobal_surf+2];
-    dev_c_sigmaxz[iGlobal_3] = -dev_c_sigmaxz[iGlobal_surf+1];
+    dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+FAT+1];
+    dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+FAT+2];
+    dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+FAT+3];
+    dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+FAT+4];
+    dev_c_sigmaxz[iGlobal_1] = -dev_c_sigmaxz[iGlobal_surf+4];
+    dev_c_sigmaxz[iGlobal_2] = -dev_c_sigmaxz[iGlobal_surf+3];
+    dev_c_sigmaxz[iGlobal_3] = -dev_c_sigmaxz[iGlobal_surf+2];
+    dev_c_sigmaxz[iGlobal_surf] = -dev_c_sigmaxz[iGlobal_surf+1];
 
     // 3. set new vx at z=0
-    dev_n_vx[iGlobal_surf] = //old vx
-    dev_o_vx[iGlobal_surf] +
-    dev_rhoxDtw[iGlobal_surf] * (
-    //first derivative in negative x direction of current sigmaxx
-    dev_xCoeff[0]*(dev_c_sigmaxx[iGlobal_surf+0*dev_nz]-dev_c_sigmaxx[iGlobal_surf-1*dev_nz])+
-    dev_xCoeff[1]*(dev_c_sigmaxx[iGlobal_surf+1*dev_nz]-dev_c_sigmaxx[iGlobal_surf-2*dev_nz])+
-    dev_xCoeff[2]*(dev_c_sigmaxx[iGlobal_surf+2*dev_nz]-dev_c_sigmaxx[iGlobal_surf-3*dev_nz])+
-    dev_xCoeff[3]*(dev_c_sigmaxx[iGlobal_surf+3*dev_nz]-dev_c_sigmaxx[iGlobal_surf-4*dev_nz]));
+    dev_n_vx[iGlobal_surf] = dev_o_vx[iGlobal_surf] + //old vx
+    												 dev_rhoxDtw[iGlobal_surf] * (
+														    //first derivative in negative x direction of current sigmaxx
+														    dev_xCoeff[0]*(dev_c_sigmaxx[iGlobal_surf+0*dev_nz]-dev_c_sigmaxx[iGlobal_surf-1*dev_nz])+
+														    dev_xCoeff[1]*(dev_c_sigmaxx[iGlobal_surf+1*dev_nz]-dev_c_sigmaxx[iGlobal_surf-2*dev_nz])+
+														    dev_xCoeff[2]*(dev_c_sigmaxx[iGlobal_surf+2*dev_nz]-dev_c_sigmaxx[iGlobal_surf-3*dev_nz])+
+														    dev_xCoeff[3]*(dev_c_sigmaxx[iGlobal_surf+3*dev_nz]-dev_c_sigmaxx[iGlobal_surf-4*dev_nz]));
 
     // 4. do not update sigmaxz at or above z=0
 
     // 5. set new sigmaxx at z=0
-    dev_n_sigmaxx[iGlobal_surf] = //old sigmaxx
-     dev_o_sigmaxx[iGlobal_surf] +
+    dev_n_sigmaxx[iGlobal_surf] = dev_o_sigmaxx[iGlobal_surf] + //old sigmaxx
      //first deriv in positive x direction of current vx
      (dev_lamb2MuDtw[iGlobal_surf] + (dev_lambDtw[iGlobal_surf]/dev_lamb2MuDtw[iGlobal_surf])*dev_lambDtw[iGlobal_surf])* (
-    dev_xCoeff[0]*(dev_c_vx[iGlobal_surf+1*dev_nz]-dev_c_vx[iGlobal_surf-0*dev_nz])  +
-    dev_xCoeff[1]*(dev_c_vx[iGlobal_surf+2*dev_nz]-dev_c_vx[iGlobal_surf-1*dev_nz])+
-    dev_xCoeff[2]*(dev_c_vx[iGlobal_surf+3*dev_nz]-dev_c_vx[iGlobal_surf-2*dev_nz])+
-    dev_xCoeff[3]*(dev_c_vx[iGlobal_surf+4*dev_nz]-dev_c_vx[iGlobal_surf-3*dev_nz])
-    );
-    // 6. set current vx and vz =0 above free surface*/
-    dev_c_vx[iGlobal_0] = 0;
-    dev_c_vx[iGlobal_1] = 0;
-    dev_c_vx[iGlobal_2] = 0;
-    dev_c_vx[iGlobal_3] = 0;
-    dev_c_vz[iGlobal_0] = 0;
-    dev_c_vz[iGlobal_1] = 0;
-    dev_c_vz[iGlobal_2] = 0;
-    dev_c_vz[iGlobal_3] = 0;
+																	    dev_xCoeff[0]*(dev_c_vx[iGlobal_surf+1*dev_nz]-dev_c_vx[iGlobal_surf-0*dev_nz])  +
+																	    dev_xCoeff[1]*(dev_c_vx[iGlobal_surf+2*dev_nz]-dev_c_vx[iGlobal_surf-1*dev_nz])+
+																	    dev_xCoeff[2]*(dev_c_vx[iGlobal_surf+3*dev_nz]-dev_c_vx[iGlobal_surf-2*dev_nz])+
+																	    dev_xCoeff[3]*(dev_c_vx[iGlobal_surf+4*dev_nz]-dev_c_vx[iGlobal_surf-3*dev_nz])
+																	    );
+    // 6. set current vx and vz to 0.0 above free surface*/
+    dev_c_vx[iGlobal_0] = 0.0;
+    dev_c_vx[iGlobal_1] = 0.0;
+    dev_c_vx[iGlobal_2] = 0.0;
+    dev_c_vx[iGlobal_3] = 0.0;
+    dev_c_vz[iGlobal_0] = 0.0;
+    dev_c_vz[iGlobal_1] = 0.0;
+    dev_c_vz[iGlobal_2] = 0.0;
+    dev_c_vz[iGlobal_3] = 0.0;
+		dev_c_vz[iGlobal_surf] = 0.0;
 
 }
 
@@ -565,9 +564,9 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
     __shared__ double shared_c_sigmaxz[BLOCK_SIZE+2*FAT][BLOCK_SIZE+5+FAT]; // sigmaxz
 
     // calculate global and local x/z coordinates
-    int izGlobal = 5 + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate
+    int izGlobal = FAT+1 + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate
     int ixGlobal = FAT + blockIdx.y * BLOCK_SIZE + threadIdx.y; // Global x-coordinate
-    int izLocal = 5 + threadIdx.x; // z-coordinate on the shared grid
+    int izLocal = FAT+1 + threadIdx.x; // z-coordinate on the shared grid
     int ixLocal = FAT + threadIdx.y; // x-coordinate on the shared grid
     int iGlobal = dev_nz * ixGlobal + izGlobal; // 1D array index for the model on the global memory
 
@@ -596,15 +595,15 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
         shared_c_sigmaxz[ixLocal-FAT][izLocal] = dev_c_sigmaxz[iGlobal-dev_nz*FAT]; // Left side
         shared_c_sigmaxz[ixLocal+BLOCK_SIZE][izLocal] = dev_c_sigmaxz[iGlobal+dev_nz*BLOCK_SIZE] ; // Right side
     }
-    if (threadIdx.x < 5) {
+    if (threadIdx.x < (FAT+1)) {
         // vx
-        shared_c_vx[ixLocal][izLocal-5] = dev_c_vx[iGlobal-5]; // Up
+        shared_c_vx[ixLocal][izLocal-FAT-1] = dev_c_vx[iGlobal-FAT-1]; // Up
         shared_c_vx[ixLocal][izLocal+BLOCK_SIZE] = dev_c_vx[iGlobal+BLOCK_SIZE]; // Down
         // vz
-        shared_c_vz[ixLocal][izLocal-5] = dev_c_vz[iGlobal-5]; // Up
+        shared_c_vz[ixLocal][izLocal-FAT-1] = dev_c_vz[iGlobal-FAT-1]; // Up
         shared_c_vz[ixLocal][izLocal+BLOCK_SIZE] = dev_c_vz[iGlobal+BLOCK_SIZE]; // Down
         // sigmaxx
-        shared_c_sigmaxx[ixLocal][izLocal-5] = dev_c_sigmaxx[iGlobal-5]; // Up
+        shared_c_sigmaxx[ixLocal][izLocal-FAT-1] = dev_c_sigmaxx[iGlobal-FAT-1]; // Up
         shared_c_sigmaxx[ixLocal][izLocal+BLOCK_SIZE] = dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
         // sigmazz
         shared_c_sigmazz[ixLocal][izLocal-5] = dev_c_sigmazz[iGlobal-5]; // Up
@@ -735,7 +734,7 @@ __global__ void dampCosineEdge_surface_surface(double *dev_p1_vx, double *dev_p2
      double *dev_p1_sigmazz, double *dev_p2_sigmazz,
      double *dev_p1_sigmaxz, double *dev_p2_sigmaxz) {
 
-    int izGlobal = 4;
+    int izGlobal = FAT;
     int ixGlobal = FAT + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global x-coordinate
     int iGlobal = dev_nz * ixGlobal + izGlobal; // 1D array index for the model on the global memory
 
@@ -765,7 +764,7 @@ __global__ void dampCosineEdge_surface_body(double *dev_p1_vx, double *dev_p2_vx
      double *dev_p1_sigmazz, double *dev_p2_sigmazz,
      double *dev_p1_sigmaxz, double *dev_p2_sigmaxz) {
 
-    int izGlobal = 5 + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate
+    int izGlobal = FAT + 1 + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate
     int ixGlobal = FAT + blockIdx.y * BLOCK_SIZE + threadIdx.y; // Global x-coordinate
     int iGlobal = dev_nz * ixGlobal + izGlobal; // 1D array index for the model on the global memory
 

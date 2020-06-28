@@ -174,7 +174,7 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<doub
 															_receiversPositionRegZGrid, _nReceiversRegZGrid,
 															_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
 															_wavefield->getVals(),
-															 _iGpu, _iGpuId);
+															 _iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
 			} else {
 				propShotsElasticFwdGpuWavefieldStreams(modelRegDtw_vx->getVals(),
 															modelRegDtw_vz->getVals(),

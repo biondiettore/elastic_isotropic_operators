@@ -24,7 +24,7 @@ nonlinearPropElasticShotsGpu::nonlinearPropElasticShotsGpu(std::shared_ptr<SEP::
   	_info = par->getInt("info", 0);
   	_deviceNumberInfo = par->getInt("deviceNumberInfo", 0);
   	if( not getGpuInfo(_gpuList, _info, _deviceNumberInfo)){
-			throw std::runtime_error("");
+			throw std::runtime_error("Error in getGpuInfo");
 		}; // Get info on GPU cluster and check that there are enough available GPUs
   	_saveWavefield = _par->getInt("saveWavefield", 0);
   	_wavefieldShotNumber = _par->getInt("wavefieldShotNumber", 0);
@@ -40,7 +40,6 @@ nonlinearPropElasticShotsGpu::nonlinearPropElasticShotsGpu(std::shared_ptr<SEP::
     _receiversVectorXZGrid = receiversVectorXZGrid;
 
     _fdParamElastic = std::make_shared<fdParamElastic>(_elasticParam, _par);
-
   }
 
 void nonlinearPropElasticShotsGpu::createGpuIdList(){
@@ -474,7 +473,6 @@ void nonlinearPropElasticShotsGpu::adjointWavefield(const bool add, std::shared_
   		std::shared_ptr<SEP::float3DReg> dataSlices(new SEP::float3DReg(hyperDataSlices));
   		dataSlicesVector.push_back(dataSlices);
     }
-    std::cerr << "BEGIN PROP" << '\n';
 
     // Launch nonlinear adjoint
 
@@ -485,14 +483,16 @@ void nonlinearPropElasticShotsGpu::adjointWavefield(const bool add, std::shared_
       int iGpu = omp_get_thread_num();
 			int iGpuId = _gpuList[iGpu];
 
-      // Change the saveWavefield flag
-      if (iExp == _wavefieldShotNumber) { propObjectVector[iGpu]->setAllWavefields(1);}
-      std::cerr << "RESET WAVEFIELD" << '\n';
+			// Change the wavefield flag
+			if (iExp == _wavefieldShotNumber && _saveWavefield !=0 ) {
+				propObjectVector[iGpu]->setAllWavefields(1);
+			} else {
+				propObjectVector[iGpu]->setAllWavefields(0);
+			}
 
       // Copy data slice
       memcpy(dataSlicesVector[iGpu]->getVals(), &(data->getVals()[iExp*hyperDataSlices->getAxis(1).n*hyperDataSlices->getAxis(2).n*hyperDataSlices->getAxis(3).n]), sizeof(float)*hyperDataSlices->getAxis(1).n*hyperDataSlices->getAxis(2).n*hyperDataSlices->getAxis(3).n);
 
-      std::cerr << "COPIED DATA" << '\n';
 
       // Set acquisition geometry
       if (constantRecGeom == 1) {
@@ -506,7 +506,6 @@ void nonlinearPropElasticShotsGpu::adjointWavefield(const bool add, std::shared_
           _receiversVectorCenterGrid[iExp], _receiversVectorXGrid[iExp], _receiversVectorZGrid[iExp], _receiversVectorXZGrid[iExp],
           modelSlicesVector[iGpu], dataSlicesVector[iGpu]);
       }
-        std::cerr << "SET ACQ GEOM" << '\n';
 
       // Set GPU number for propagator object
       propObjectVector[iGpu]->setGpuNumber(iGpu,iGpuId);
@@ -528,7 +527,7 @@ void nonlinearPropElasticShotsGpu::adjointWavefield(const bool add, std::shared_
           }
         }
       }
-      std::cerr << "PROPED" << '\n';
+
       //std::cerr << "modelSlicesVector[" << iGpu << "]->norm()= " << modelSlicesVector[iGpu]->norm() << std::endl;
       // Get the wavefield
       if (iExp == _wavefieldShotNumber) {
@@ -550,7 +549,6 @@ void nonlinearPropElasticShotsGpu::adjointWavefield(const bool add, std::shared_
       		}
       	}
       }
-      std::cerr << "COPIED WFLD" << '\n';
 
     }
     // Deallocate memory on device

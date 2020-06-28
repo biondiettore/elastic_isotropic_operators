@@ -47,7 +47,7 @@ void propShotsElasticFwdGpuWavefield(double *modelRegDtw_vx,
 									 int *receiversPositionRegZGrid, int nReceiversRegZGrid,
 									 int *receiversPositionRegXZGrid, int nReceiversRegXZGrid,
 									 double* wavefield,
-									 int iGpu, int iGpuId);
+									 int iGpu, int iGpuId, int surfaceCondition);
 void propShotsElasticFwdGpuWavefieldStreams(double *modelRegDtw_vx,
 											double *modelRegDtw_vz,
 											double *modelRegDtw_sigmaxx,
