@@ -44,8 +44,8 @@ target_link_libraries(pyElastic_iso_double_we PRIVATE ELASTIC_ISO_DOUBLE_WE ELAS
 pybind11_add_module(pyStaggerDouble MODULE pyStaggerDouble.cpp)
 target_link_libraries(pyStaggerDouble PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
 
-pybind11_add_module(pySpaceInterpMultiDouble MODULE pySpaceInterpMultiDouble.cpp)
-target_link_libraries(pySpaceInterpMultiDouble PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
+# pybind11_add_module(pySpaceInterpMultiDouble MODULE pySpaceInterpMultiDouble.cpp)
+# target_link_libraries(pySpaceInterpMultiDouble PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
 
 pybind11_add_module(pyPadTruncateSourceDouble MODULE pyPadTruncateSourceDouble.cpp)
 target_link_libraries(pyPadTruncateSourceDouble PRIVATE ELASTIC_ISO_DOUBLE_WE ELASTIC_ISO_DOUBLE_NL ${LIBS})
@@ -62,8 +62,8 @@ install( FILES Elastic_iso_double_we.py DESTINATION ${PYTHON_DIR})
 install( TARGETS pyStaggerDouble  DESTINATION ${PYTHON_DIR})
 install( FILES StaggerDouble.py DESTINATION ${PYTHON_DIR})
 
-install( TARGETS pySpaceInterpMultiDouble  DESTINATION ${PYTHON_DIR})
-install( FILES SpaceInterpMultiDouble.py DESTINATION ${PYTHON_DIR})
+# install( TARGETS pySpaceInterpMultiDouble  DESTINATION ${PYTHON_DIR})
+# install( FILES SpaceInterpMultiDouble.py DESTINATION ${PYTHON_DIR})
 
 install( TARGETS pyPadTruncateSourceDouble  DESTINATION ${PYTHON_DIR})
 install( FILES PadTruncateSourceDouble.py DESTINATION ${PYTHON_DIR})
