@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+
+#include <curand.h> //DEBUG
+
 /****************************************************************************************/
 /******************************* Set GPU propagation parameters *************************/
 /****************************************************************************************/
@@ -648,6 +651,10 @@ void propShotsElasticFwdGpuWavefield(double *modelRegDtw_vx, double *modelRegDtw
 		int nblockDataXGrid = (nReceiversRegXGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
 		int nblockDataZGrid = (nReceiversRegZGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
 		int nblockDataXZGrid = (nReceiversRegXZGrid+BLOCK_SIZE_DATA-1) / BLOCK_SIZE_DATA;
+
+		curandGenerator_t gen;
+		curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT); //DEBUG
+		curandGenerateUniformDouble(gen, dev_wavefieldDts_all, 5*host_nz*host_nx*host_nts);//
 
 		// Start propagation
 		for (int its = 0; its < host_nts-1; its++){
