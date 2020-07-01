@@ -67,7 +67,7 @@ void propShotsElasticFwdGpuWavefieldStreams(double *modelRegDtw_vx,
 											int *receiversPositionRegZGrid, int nReceiversRegZGrid,
 											int *receiversPositionRegXZGrid, int nReceiversRegXZGrid,
 											double* wavefield,
-											int iGpu, int iGpuId);
+											int iGpu, int iGpuId, int surfaceCondition);
 
 /*********************************** Nonlinear ADJ **************************************/
 void propShotsElasticAdjGpu(double *modelRegDtw_vx,

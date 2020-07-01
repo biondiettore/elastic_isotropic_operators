@@ -286,28 +286,15 @@ bool fdParamElastic::checkFdDispersion(double dispersionRatioMin){
 }
 
 bool fdParamElastic::checkModelSize(){
-	if(_surfaceCondition==0){
-		if ( (_nz-2*_fat) % _blockSize != 0) {
-			std::cerr << "**** ERROR: nz-2*_fat not a multiple of block size ****" << std::endl;
-			return false;
-		}
-		if ((_nx-2*_fat) % _blockSize != 0) {
-			std::cerr << "**** ERROR: nx-2*_fat not a multiple of block size ****" << std::endl;
-			return false;
-		}
-		return true;
+	if ( (_nz-2*_fat) % _blockSize != 0) {
+		std::cerr << "**** ERROR: nz-2*_fat not a multiple of block size ****" << std::endl;
+		return false;
 	}
-	else if(_surfaceCondition==1){
-		if ( (_nz-5-_fat) % _blockSize != 0) {
-			std::cerr << "**** ERROR: nz-5-_fat not a multiple of block size (required for selected free surface condition) ****" << std::endl;
-			return false;
-		}
-		if ((_nx-2*_fat) % _blockSize != 0) {
-			std::cerr << "**** ERROR: nx-2*_fat not a multiple of block size ****" << std::endl;
-			return false;
-		}
-		return true;
+	if ((_nx-2*_fat) % _blockSize != 0) {
+		std::cerr << "**** ERROR: nx-2*_fat not a multiple of block size ****" << std::endl;
+		return false;
 	}
+	return true;
 }
 
 bool fdParamElastic::checkParfileConsistencyTime(const std::shared_ptr<double3DReg> seismicTraces, int timeAxisIndex) const {

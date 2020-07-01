@@ -151,7 +151,7 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<doub
 													_receiversPositionRegXGrid, _nReceiversRegXGrid,
 													_receiversPositionRegZGrid, _nReceiversRegZGrid,
 													_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
-													 _iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
+													_iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
 	} else {
 			//Saving wavefield with or w/o streams
 			if(_useStreams == 0){
@@ -174,7 +174,7 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<doub
 															_receiversPositionRegZGrid, _nReceiversRegZGrid,
 															_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
 															_wavefield->getVals(),
-															 _iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
+															_iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
 			} else {
 				propShotsElasticFwdGpuWavefieldStreams(modelRegDtw_vx->getVals(),
 															modelRegDtw_vz->getVals(),
@@ -195,7 +195,7 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<doub
 															_receiversPositionRegZGrid, _nReceiversRegZGrid,
 															_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
 															_wavefield->getVals(),
-															 _iGpu, _iGpuId);
+															_iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
 			}
 	}
 

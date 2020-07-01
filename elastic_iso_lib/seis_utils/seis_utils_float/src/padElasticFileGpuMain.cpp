@@ -53,15 +53,14 @@ int main(int argc, char **argv) {
 		nzNewTotal = nzNew + 2*fat;
 	}
 	else if(surfaceCondition==1){
-		nzTotal = zPad + nz;
+		nzTotal = zPad + nz + fat;
 		ratioz = float(nzTotal) / float(blockSize);
 		ratioz = ceilf(ratioz);
 		nbBlockz = ratioz;
-		zPad=4;
-		zPadPlus = nbBlockz * blockSize - nz + 1;
-		//zPadPlus = zPad;
+		zPad=fat;
+		zPadPlus = nbBlockz * blockSize - nz - zPad;
 		nzNew = zPad + zPadPlus + nz;
-		nzNewTotal = nzNew + fat;
+		nzNewTotal = nzNew + 2*fat;
 	}
 	else{
 		std::cerr << "ERROR UNKNOWN SURFACE CONDITION PARAMETER" << '\n';
@@ -80,13 +79,7 @@ int main(int argc, char **argv) {
 
 	// Compute parameters
 	float dz = modelHyper->getAxis(1).d;
-	float oz;
-	if(surfaceCondition==0){
-		oz = modelHyper->getAxis(1).o - (fat + zPad) * dz;
-	}
-	else if(surfaceCondition==1){
-		oz = modelHyper->getAxis(1).o - (zPad) * dz;
-	}
+	float oz = modelHyper->getAxis(1).o - (fat + zPad) * dz;
 	float dx = modelHyper->getAxis(2).d;
 	float ox = modelHyper->getAxis(2).o - (fat + xPad) * dx;
 
@@ -106,12 +99,7 @@ int main(int argc, char **argv) {
 		// Copy central part
 		for (long long ix=0; ix<nx; ix++){
 			for (long long iz=0; iz<nz; iz++){
-				if(surfaceCondition==0){
 					(*data->_mat)[iPar][ix+fat+xPad][iz+fat+zPad] = (*model->_mat)[iPar][ix][iz];
-				}
-				else if(surfaceCondition==1){
-					(*data->_mat)[iPar][ix+fat+xPad][iz+zPad] = (*model->_mat)[iPar][ix][iz];
-				}
 			}
 		}
 
