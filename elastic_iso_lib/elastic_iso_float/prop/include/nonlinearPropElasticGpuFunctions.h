@@ -47,7 +47,7 @@ void propShotsElasticFwdGpuWavefield(float *modelRegDtw_vx,
 									 int *receiversPositionRegZGrid, int nReceiversRegZGrid,
 									 int *receiversPositionRegXZGrid, int nReceiversRegXZGrid,
 									 float* wavefield,
-									 int iGpu, int iGpuId);
+									 int iGpu, int iGpuId, int surfaceCondition);
 void propShotsElasticFwdGpuWavefieldStreams(float *modelRegDtw_vx,
 											float *modelRegDtw_vz,
 											float *modelRegDtw_sigmaxx,
@@ -67,7 +67,7 @@ void propShotsElasticFwdGpuWavefieldStreams(float *modelRegDtw_vx,
 											int *receiversPositionRegZGrid, int nReceiversRegZGrid,
 											int *receiversPositionRegXZGrid, int nReceiversRegXZGrid,
 											float* wavefield,
-											int iGpu, int iGpuId);
+											int iGpu, int iGpuId, int surfaceCondition);
 
 /*********************************** Nonlinear ADJ **************************************/
 void propShotsElasticAdjGpu(float *modelRegDtw_vx,

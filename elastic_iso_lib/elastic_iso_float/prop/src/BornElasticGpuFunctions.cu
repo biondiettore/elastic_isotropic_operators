@@ -729,13 +729,7 @@ void BornShotsFwdGpu(float *sourceRegDtw_vx, float *sourceRegDtw_vz, float *sour
   setupBornFwdGpu(sourceRegDtw_vx, sourceRegDtw_vz, sourceRegDtw_sigmaxx, sourceRegDtw_sigmazz, sourceRegDtw_sigmaxz, drhox, drhoz, dlame, dmu, dmuxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId, useStreams);
 
 	//Finite-difference grid and blocks
-	int nblockx;
-	if(surfaceCondition==1){
-		nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
-	}
-	else if(surfaceCondition==0){
-		nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
-	}
+	int nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 	int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 	dim3 dimGrid(nblockx, nblocky);
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
@@ -1114,13 +1108,7 @@ void BornShotsAdjGpu(float *sourceRegDtw_vx, float *sourceRegDtw_vz, float *sour
 	modelCopyToGpu(drhox,drhoz,dlame,dmu,dmuxz,iGpu);
 
 	//Finite-difference grid and blocks
-	int nblockx;
-	if(surfaceCondition==1){
-		nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
-	}
-	else if(surfaceCondition==0){
-		nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
-	}
+	int nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 	int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 	dim3 dimGrid(nblockx, nblocky);
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);

@@ -1,7 +1,6 @@
 #include <cstring>
 #include <iostream>
 #include "nonlinearPropElasticGpuFunctions.h"
-//#include "varDeclare.h"
 #include "kernelsGpuElastic.cu"
 #include "cudaErrors.cu"
 #include <vector>
@@ -11,6 +10,10 @@
 #include <ctime>
 #include <stdio.h>
 #include <assert.h>
+
+
+// #include <curand.h> //DEBUG
+#include <stdlib.h>  //DEBUG
 
 /****************************************************************************************/
 /******************************* Set GPU propagation parameters *************************/
@@ -434,8 +437,12 @@ void launchFwdStepKernelsStreams(dim3 dimGrid, dim3 dimBlock, int iGpu){
 }
 
 void launchFwdStepFreeSurfaceKernels(int nblocksSurface, int threadsInBlockSurface, dim3 dimGrid, dim3 dimBlock, int iGpu){
-		kernel_exec(ker_step_fwd_surface_surface<<<nblocksSurface, threadsInBlockSurface>>>(dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu], dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_rhoxDtw[iGpu], dev_rhozDtw[iGpu], dev_lamb2MuDtw[iGpu], dev_lambDtw[iGpu], dev_muxzDtw[iGpu]));
+		kernel_exec(ker_step_fwd_surface_top<<<nblocksSurface, threadsInBlockSurface>>>(dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu]));
 		kernel_exec(ker_step_fwd_surface_body<<<dimGrid, dimBlock>>>(dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu], dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_rhoxDtw[iGpu], dev_rhozDtw[iGpu], dev_lamb2MuDtw[iGpu], dev_lambDtw[iGpu], dev_muxzDtw[iGpu]));
+}
+void launchFwdStepFreeSurfaceKernelsStreams(int nblocksSurface, int threadsInBlockSurface, dim3 dimGrid, dim3 dimBlock, int iGpu){
+		kernel_stream_exec(ker_step_fwd_surface_top<<<nblocksSurface, threadsInBlockSurface, 0, compStream[iGpu]>>>(dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu]));
+		kernel_stream_exec(ker_step_fwd_surface_body<<<dimGrid, dimBlock, 0, compStream[iGpu]>>>(dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu], dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_rhoxDtw[iGpu], dev_rhozDtw[iGpu], dev_lamb2MuDtw[iGpu], dev_lambDtw[iGpu], dev_muxzDtw[iGpu]));
 }
 void launchFwdInjectSourceKernels(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int itw, int iGpu){
 		kernel_exec(ker_inject_source_centerGrid<<<1, nSourcesRegCenterGrid>>>(dev_modelRegDtw_sigmaxx[iGpu], dev_modelRegDtw_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], itw-1, dev_sourcesPositionRegCenterGrid[iGpu]));
@@ -459,9 +466,11 @@ void launchDampCosineEdgeKernels(dim3 dimGrid, dim3 dimBlock, int iGpu){
 void launchDampCosineEdgeKernelsStreams(dim3 dimGrid, dim3 dimBlock, int iGpu){
 		kernel_stream_exec(dampCosineEdge<<<dimGrid, dimBlock, 0, compStream[iGpu]>>>(dev_p0_vx[iGpu], dev_p1_vx[iGpu], dev_p0_vz[iGpu],  dev_p1_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p1_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p1_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_sigmaxz[iGpu]));
 }
-void launchDampCosineEdgeFreeSurfaceKernels(int nblocksSurface, int threadsInBlockSurface, dim3 dimGrid, dim3 dimBlock, int iGpu){
-	kernel_exec(dampCosineEdge_surface_surface<<<nblocksSurface, threadsInBlockSurface>>>(dev_p0_vx[iGpu], dev_p1_vx[iGpu], dev_p0_vz[iGpu],  dev_p1_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p1_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p1_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_sigmaxz[iGpu]));
-	kernel_exec(dampCosineEdge_surface_body<<<dimGrid, dimBlock>>>(dev_p0_vx[iGpu], dev_p1_vx[iGpu], dev_p0_vz[iGpu],  dev_p1_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p1_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p1_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_sigmaxz[iGpu]));
+void launchDampCosineEdgeFreeSurfaceKernels(dim3 dimGrid, dim3 dimBlock, int iGpu){
+	kernel_exec(dampCosineEdge_freesurface<<<dimGrid, dimBlock>>>(dev_p0_vx[iGpu], dev_p1_vx[iGpu], dev_p0_vz[iGpu],  dev_p1_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p1_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p1_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_sigmaxz[iGpu]));
+}
+void launchDampCosineEdgeFreeSurfaceKernelsStreams(dim3 dimGrid, dim3 dimBlock, int iGpu){
+	kernel_stream_exec(dampCosineEdge_freesurface<<<dimGrid, dimBlock, 0, compStream[iGpu]>>>(dev_p0_vx[iGpu], dev_p1_vx[iGpu], dev_p0_vz[iGpu],  dev_p1_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p1_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p1_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_sigmaxz[iGpu]));
 }
 void launchFwdRecordInterpDataKernels(int nblockDataCenterGrid, int nblockDataXGrid, int nblockDataZGrid, int nblockDataXZGrid, int its, int it2, int iGpu){
 		kernel_exec(ker_record_interp_data_centerGrid<<<nblockDataCenterGrid, BLOCK_SIZE_DATA>>>( dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_dataRegDts_sigmaxx[iGpu], dev_dataRegDts_sigmazz[iGpu], its, it2, dev_receiversPositionRegCenterGrid[iGpu]));
@@ -535,13 +544,7 @@ void propShotsElasticFwdGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 		setupFwdGpu(modelRegDtw_vx, modelRegDtw_vz, modelRegDtw_sigmaxx, modelRegDtw_sigmazz, modelRegDtw_sigmaxz, dataRegDts_vx, dataRegDts_vz, dataRegDts_sigmaxx, dataRegDts_sigmazz, dataRegDts_sigmaxz, sourcesPositionRegCenterGrid, nSourcesRegCenterGrid, sourcesPositionRegXGrid, nSourcesRegXGrid, sourcesPositionRegZGrid, nSourcesRegZGrid, sourcesPositionRegXZGrid, nSourcesRegXZGrid, receiversPositionRegCenterGrid, nReceiversRegCenterGrid, receiversPositionRegXGrid, nReceiversRegXGrid, receiversPositionRegZGrid, nReceiversRegZGrid, receiversPositionRegXZGrid, nReceiversRegXZGrid, iGpu, iGpuId);
 
 		//Finite-difference grid and blocks
-		int nblockx;
-		if(surfaceCondition==1){
-			nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
-		}
-		else if(surfaceCondition==0){
-			nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
-		}
+		int nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 		int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 		dim3 dimGrid(nblockx, nblocky);
 		dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
@@ -573,13 +576,13 @@ void propShotsElasticFwdGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 						else if(surfaceCondition==1){
 							// free surface fwd step kernels
 							launchFwdStepFreeSurfaceKernels(nblocky, BLOCK_SIZE, dimGrid, dimBlock, iGpu);
-							// Inject source (same as surfaceCondition==0?)
+							// Inject source
 							launchFwdInjectSourceKernels(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
 							// free surface damp wfld kernels
-							launchDampCosineEdgeFreeSurfaceKernels(nblocky, BLOCK_SIZE, dimGrid, dimBlock, iGpu);
-							// Extract and interpolate data (same as surfaceCondition==0?)
+							launchDampCosineEdgeFreeSurfaceKernels(dimGrid, dimBlock, iGpu);
+							// Extract and interpolate data
 							launchFwdRecordInterpDataKernels(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
-							// Switch pointers (same as surfaceCondition==0?)
+							// Switch pointers
 							switchPointers(iGpu);
 						}
 
@@ -616,7 +619,7 @@ void propShotsElasticFwdGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 		cuda_call(cudaFree(dev_receiversPositionRegXZGrid[iGpu]));
 
 }
-void propShotsElasticFwdGpuWavefield(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRegDtw_sigmaxx, float *modelRegDtw_sigmazz, float *modelRegDtw_sigmaxz, float *dataRegDts_vx, float *dataRegDts_vz, float *dataRegDts_sigmaxx, float *dataRegDts_sigmazz, float *dataRegDts_sigmaxz, int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid, int *sourcesPositionRegXGrid, int nSourcesRegXGrid, int *sourcesPositionRegZGrid, int nSourcesRegZGrid, int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid, int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid, int *receiversPositionRegXGrid, int nReceiversRegXGrid, int *receiversPositionRegZGrid, int nReceiversRegZGrid, int *receiversPositionRegXZGrid, int nReceiversRegXZGrid, float* wavefieldDts, int iGpu, int iGpuId){
+void propShotsElasticFwdGpuWavefield(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRegDtw_sigmaxx, float *modelRegDtw_sigmazz, float *modelRegDtw_sigmaxz, float *dataRegDts_vx, float *dataRegDts_vz, float *dataRegDts_sigmaxx, float *dataRegDts_sigmazz, float *dataRegDts_sigmaxz, int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid, int *sourcesPositionRegXGrid, int nSourcesRegXGrid, int *sourcesPositionRegZGrid, int nSourcesRegZGrid, int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid, int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid, int *receiversPositionRegXGrid, int nReceiversRegXGrid, int *receiversPositionRegZGrid, int nReceiversRegZGrid, int *receiversPositionRegXZGrid, int nReceiversRegXZGrid, float* wavefieldDts, int iGpu, int iGpuId, int surfaceCondition){
 
 
 		//setup:                a) src and receiver positions allocation and copying to device
@@ -632,7 +635,7 @@ void propShotsElasticFwdGpuWavefield(float *modelRegDtw_vx, float *modelRegDtw_v
 		cuda_call(cudaMalloc((void**) &dev_wavefieldDts_all, 5*host_nz*host_nx*host_nts*sizeof(float))); // Allocate on device
 		cuda_call(cudaMemset(dev_wavefieldDts_all, 0, 5*host_nz*host_nx*host_nts*sizeof(float))); // Initialize wavefield on device
 
-		// Finite-difference grid and blocks
+		//Finite-difference grid and blocks
 		int nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 		int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 		dim3 dimGrid(nblockx, nblocky);
@@ -650,22 +653,39 @@ void propShotsElasticFwdGpuWavefield(float *modelRegDtw_vx, float *modelRegDtw_v
 						// Compute fine time-step index
 						int itw = its * host_sub + it2;
 
-						// Step forward
-						launchFwdStepKernels(dimGrid, dimBlock, iGpu);
-						// Inject source
-						launchFwdInjectSourceKernels(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
+						if(surfaceCondition==0){
+							// Step forward
+							launchFwdStepKernels(dimGrid, dimBlock, iGpu);
+							// Inject source
+							launchFwdInjectSourceKernels(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
 
-						// Damp wavefields
-						launchDampCosineEdgeKernels(dimGrid, dimBlock, iGpu);
+							// Damp wavefields
+							launchDampCosineEdgeKernels(dimGrid, dimBlock, iGpu);
 
-						// Extract wavefield
-						kernel_exec(interpWavefield<<<dimGrid, dimBlock>>>(dev_wavefieldDts_all, dev_p0_vx[iGpu],dev_p0_vz[iGpu],dev_p0_sigmaxx[iGpu],dev_p0_sigmazz[iGpu],dev_p0_sigmaxz[iGpu], its, it2));
+							// Extract wavefield
+							kernel_exec(interpWavefield<<<dimGrid, dimBlock>>>(dev_wavefieldDts_all, dev_p0_vx[iGpu],dev_p0_vz[iGpu],dev_p0_sigmaxx[iGpu],dev_p0_sigmazz[iGpu],dev_p0_sigmaxz[iGpu], its, it2));
 
-						// Extract and interpolate data
-						launchFwdRecordInterpDataKernels(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
+							// Extract and interpolate data
+							launchFwdRecordInterpDataKernels(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
 
-						// Switch pointers
-						switchPointers(iGpu);
+							// Switch pointers
+							switchPointers(iGpu);
+						} else {
+
+							// free surface fwd step kernels
+							launchFwdStepFreeSurfaceKernels(nblocky, BLOCK_SIZE, dimGrid, dimBlock, iGpu);
+							// Inject source
+							launchFwdInjectSourceKernels(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
+							// free surface damp wfld kernels
+							launchDampCosineEdgeFreeSurfaceKernels(dimGrid, dimBlock, iGpu);
+
+							// Extract wavefield
+							kernel_exec(interpWavefield<<<dimGrid, dimBlock>>>(dev_wavefieldDts_all, dev_p0_vx[iGpu],dev_p0_vz[iGpu],dev_p0_sigmaxx[iGpu],dev_p0_sigmazz[iGpu],dev_p0_sigmaxz[iGpu], its, it2));
+
+							// Extract and interpolate data
+							launchFwdRecordInterpDataKernels(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
+							switchPointers(iGpu);
+						}
 				}
 		}
 
@@ -709,7 +729,7 @@ void propShotsElasticFwdGpuWavefield(float *modelRegDtw_vx, float *modelRegDtw_v
 /********************************************/
 /*******Saving wavefield using streams*******/
 /********************************************/
-void propShotsElasticFwdGpuWavefieldStreams(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRegDtw_sigmaxx, float *modelRegDtw_sigmazz, float *modelRegDtw_sigmaxz, float *dataRegDts_vx, float *dataRegDts_vz, float *dataRegDts_sigmaxx, float *dataRegDts_sigmazz, float *dataRegDts_sigmaxz, int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid, int *sourcesPositionRegXGrid, int nSourcesRegXGrid, int *sourcesPositionRegZGrid, int nSourcesRegZGrid, int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid, int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid, int *receiversPositionRegXGrid, int nReceiversRegXGrid, int *receiversPositionRegZGrid, int nReceiversRegZGrid, int *receiversPositionRegXZGrid, int nReceiversRegXZGrid, float* wavefieldDts, int iGpu, int iGpuId){
+void propShotsElasticFwdGpuWavefieldStreams(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRegDtw_sigmaxx, float *modelRegDtw_sigmazz, float *modelRegDtw_sigmaxz, float *dataRegDts_vx, float *dataRegDts_vz, float *dataRegDts_sigmaxx, float *dataRegDts_sigmazz, float *dataRegDts_sigmaxz, int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid, int *sourcesPositionRegXGrid, int nSourcesRegXGrid, int *sourcesPositionRegZGrid, int nSourcesRegZGrid, int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid, int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid, int *receiversPositionRegXGrid, int nReceiversRegXGrid, int *receiversPositionRegZGrid, int nReceiversRegZGrid, int *receiversPositionRegXZGrid, int nReceiversRegXZGrid, float* wavefieldDts, int iGpu, int iGpuId, int surfaceCondition){
 
 
 		//setup:                a) src and receiver positions allocation and copying to device
@@ -756,22 +776,41 @@ void propShotsElasticFwdGpuWavefieldStreams(float *modelRegDtw_vx, float *modelR
 						// Compute fine time-step index
 						int itw = its * host_sub + it2;
 
-						// Step forward
-						launchFwdStepKernelsStreams(dimGrid, dimBlock, iGpu);
+						if(surfaceCondition==0){
+
+							// Step forward
+							launchFwdStepKernelsStreams(dimGrid, dimBlock, iGpu);
+							// Inject source
+							launchFwdInjectSourceKernelsStreams(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
+
+							// Damp wavefields
+							launchDampCosineEdgeKernelsStreams(dimGrid, dimBlock, iGpu);
+
+							// Extract wavefield
+							kernel_stream_exec(interpWavefieldStreams<<<dimGrid, dimBlock, 0, compStream[iGpu]>>>(dev_wavefieldDts_left[iGpu],dev_wavefieldDts_right[iGpu],dev_p0_vx[iGpu],dev_p0_vz[iGpu],dev_p0_sigmaxx[iGpu],dev_p0_sigmazz[iGpu],dev_p0_sigmaxz[iGpu], its, it2));
+
+							// Extract and interpolate data
+							launchFwdRecordInterpDataKernelsStreams(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
+
+							// Switch pointers
+							switchPointers(iGpu);
+					} else {
+
+						// free surface fwd step kernels
+						launchFwdStepFreeSurfaceKernelsStreams(nblocky, BLOCK_SIZE, dimGrid, dimBlock, iGpu);
 						// Inject source
 						launchFwdInjectSourceKernelsStreams(nSourcesRegCenterGrid,nSourcesRegXGrid,nSourcesRegZGrid,nSourcesRegXZGrid, itw, iGpu);
-
-						// Damp wavefields
-						launchDampCosineEdgeKernelsStreams(dimGrid, dimBlock, iGpu);
+						// free surface damp wfld kernels
+						launchDampCosineEdgeFreeSurfaceKernelsStreams(dimGrid, dimBlock, iGpu);
 
 						// Extract wavefield
 						kernel_stream_exec(interpWavefieldStreams<<<dimGrid, dimBlock, 0, compStream[iGpu]>>>(dev_wavefieldDts_left[iGpu],dev_wavefieldDts_right[iGpu],dev_p0_vx[iGpu],dev_p0_vz[iGpu],dev_p0_sigmaxx[iGpu],dev_p0_sigmazz[iGpu],dev_p0_sigmaxz[iGpu], its, it2));
 
 						// Extract and interpolate data
 						launchFwdRecordInterpDataKernelsStreams(nblockDataCenterGrid, nblockDataXGrid, nblockDataZGrid, nblockDataXZGrid, its, it2, iGpu);
-
-						// Switch pointers
 						switchPointers(iGpu);
+
+					}
 				}
 
 				/* Note: At that point pLeft [its] is ready to be transfered back to host */
@@ -869,13 +908,7 @@ void propShotsElasticAdjGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 
 
 		// Grid and block dimensions for stepper
-		int nblockx;
-		if(surfaceCondition==1){
-			nblockx = (host_nz-5-FAT) / BLOCK_SIZE;
-		}
-		else if(surfaceCondition==0){
-			nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
-		}
+		int nblockx = (host_nz-2*FAT) / BLOCK_SIZE;
 		int nblocky = (host_nx-2*FAT) / BLOCK_SIZE;
 		dim3 dimGrid(nblockx, nblocky);
 		dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);

@@ -482,7 +482,7 @@ __global__ void ker_step_adj(double* dev_o_vx, double* dev_o_vz, double* dev_o_s
 /****************************************************************************************/
 /*********************************** Free Surface  ***********************************/
 /****************************************************************************************/
-/* kernel to compute forward time step for free surface condition. Only steps at surface.
+/* kernel to compute forward time step for free surface condition.
 one thread for all x inside fat.
 1. set new sigmazz at z=0 to zero
 2. make current sigmazz, sigmaxz odd about z=0 by changing values above z=0
@@ -490,10 +490,7 @@ one thread for all x inside fat.
 4. do not update sigmaxz at or above z=0
 5. set new sigmaxx at z=0
 6. set current vx and vz =0 above free surface*/
-__global__ void ker_step_fwd_surface_top(double* dev_o_vx, double* dev_o_vz, double* dev_o_sigmaxx, double* dev_o_sigmazz, double* dev_o_sigmaxz,
-     double* dev_c_vx, double* dev_c_vz, double* dev_c_sigmaxx, double* dev_c_sigmazz, double* dev_c_sigmaxz,
-     double* dev_n_vx, double* dev_n_vz, double* dev_n_sigmaxx, double* dev_n_sigmazz, double* dev_n_sigmaxz,
-     double* dev_rhoxDtw, double* dev_rhozDtw, double* dev_lamb2MuDtw, double* dev_lambDtw, double* dev_muxzDtw){
+__global__ void ker_step_fwd_surface_top(double* dev_c_vx, double* dev_c_vz, double* dev_c_sigmaxx, double* dev_c_sigmazz, double* dev_c_sigmaxz){
 
     // calculate global and local x/z coordinates
     int ixGlobal =  FAT + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global x-coordinate
@@ -507,15 +504,15 @@ __global__ void ker_step_fwd_surface_top(double* dev_o_vx, double* dev_o_vz, dou
     dev_c_sigmazz[iGlobal_surf] = 0;
 
     // 2. make current sigmazz, sigmaxz odd about z=0 by changing values above z=0
-    dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+1];
-    dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+2];
-    dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+3];
-    dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+4];
-
-    dev_c_sigmaxz[iGlobal_1] = -dev_c_sigmaxz[iGlobal_surf+4];
-    dev_c_sigmaxz[iGlobal_2] = -dev_c_sigmaxz[iGlobal_surf+3];
-    dev_c_sigmaxz[iGlobal_3] = -dev_c_sigmaxz[iGlobal_surf+2];
-    dev_c_sigmaxz[iGlobal_surf] = -dev_c_sigmaxz[iGlobal_surf+1];
+    // dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+1];
+    // dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+2];
+    // dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+3];
+    // dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+4];
+		//
+    // dev_c_sigmaxz[iGlobal_1] = -dev_c_sigmaxz[iGlobal_surf+4];
+    // dev_c_sigmaxz[iGlobal_2] = -dev_c_sigmaxz[iGlobal_surf+3];
+    // dev_c_sigmaxz[iGlobal_3] = -dev_c_sigmaxz[iGlobal_surf+2];
+    // dev_c_sigmaxz[iGlobal_surf] = -dev_c_sigmaxz[iGlobal_surf+1];
 
 
     // 3. set new vx at z=0 (DONE IN THE BODY KERNEL)
@@ -525,20 +522,20 @@ __global__ void ker_step_fwd_surface_top(double* dev_o_vx, double* dev_o_vz, dou
     // 5. set new sigmaxx at z=0 (DONE IN THE BODY KERNEL)
 
     // 6. set current vx and vz to 0.0 above free surface*/
-    dev_c_vx[iGlobal_0] = 0.0;
-    dev_c_vx[iGlobal_1] = 0.0;
-    dev_c_vx[iGlobal_2] = 0.0;
-    dev_c_vx[iGlobal_3] = 0.0;
-
-    dev_c_vz[iGlobal_0] = 0.0;
-    dev_c_vz[iGlobal_1] = 0.0;
-    dev_c_vz[iGlobal_2] = 0.0;
-    dev_c_vz[iGlobal_3] = 0.0;
-		dev_c_vz[iGlobal_surf] = 0.0;
+    // dev_c_vx[iGlobal_0] = 0.0;
+    // dev_c_vx[iGlobal_1] = 0.0;
+    // dev_c_vx[iGlobal_2] = 0.0;
+    // dev_c_vx[iGlobal_3] = 0.0;
+		//
+    // dev_c_vz[iGlobal_0] = 0.0;
+    // dev_c_vz[iGlobal_1] = 0.0;
+    // dev_c_vz[iGlobal_2] = 0.0;
+    // dev_c_vz[iGlobal_3] = 0.0;
+		// dev_c_vz[iGlobal_surf] = 0.0;
 
 }
 
-/* kernel to compute forward time step for free surface condition. Steps everywhere but surface.*/
+/* kernel to compute forward time step for free surface condition.*/
 __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, double* dev_o_sigmaxx, double* dev_o_sigmazz, double* dev_o_sigmaxz,
      double* dev_c_vx, double* dev_c_vz, double* dev_c_sigmaxx, double* dev_c_sigmazz, double* dev_c_sigmaxz,
      double* dev_n_vx, double* dev_n_vz, double* dev_n_sigmaxx, double* dev_n_sigmazz, double* dev_n_sigmaxz,
@@ -603,15 +600,30 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
      }
      __syncthreads(); // Synchronise all threads within each block -- look new sync options
 
-     //new vx
-		 if (izGlobal >= 2*FAT){
+		 //new vx
+		 if (izGlobal == 2*FAT){
+			 dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
+				 dev_rhoxDtw[iGlobal] * (																																				//DEBUG
+				 //first derivative in negative x direction of current sigmaxx   																//DEBUG
+					dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+      //DEBUG
+					dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+    //DEBUG
+					dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+    //DEBUG
+					dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal])+  //DEBUG
+			 	//first derivative in positive z direction of current sigmaxz
+				// dev_zCoeff[0]*(-shared_c_sigmaxz[ixLocal][izLocal])
+				  dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  //+ //DEBUG
+				  // dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+ //DEBUG
+				  // dev_zCoeff[2]*(shared_c_sigmaxz[ixLocal][izLocal+3]-shared_c_sigmaxz[ixLocal][izLocal-2])+ //DEBUG
+				  // dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])  //DEBUG
+				 );//DEBUG
+		 } else if (izGlobal > 2*FAT){ //DEBUG
 			 dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
 	       dev_rhoxDtw[iGlobal] * (
 	       //first derivative in negative x direction of current sigmaxx
 	        dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+
 	        dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+
 	        dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+
-	        dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal]) +
+	        dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal])+
 	       //first derivative in positive z direction of current sigmaxz
 	        dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  +
 	        dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+
@@ -619,6 +631,23 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
 	        dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])
 	       );
 		 }
+
+     //new vx
+		 // if (izGlobal >= 2*FAT){
+			//  dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
+	   //     dev_rhoxDtw[iGlobal] * (
+	   //     //first derivative in negative x direction of current sigmaxx
+	   //      dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+
+	   //      dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+
+	   //      dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+
+	   //      dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal]) +
+	   //     //first derivative in positive z direction of current sigmaxz
+	   //      dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  +
+	   //      dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+
+	   //      dev_zCoeff[2]*(shared_c_sigmaxz[ixLocal][izLocal+3]-shared_c_sigmaxz[ixLocal][izLocal-2])+
+	   //      dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])
+	   //     );
+		 // }
 		 if (izGlobal > 2*FAT){
 			 //new vz
        dev_n_vz[iGlobal] = dev_o_vz[iGlobal] +
@@ -635,6 +664,7 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
 	        dev_xCoeff[3]*(shared_c_sigmaxz[ixLocal+4][izLocal]-shared_c_sigmaxz[ixLocal-3][izLocal])
 	       );
 		 }
+
      //new sigmaxx
 		 if (izGlobal == 2*FAT){
 			 dev_n_sigmaxx[iGlobal] = dev_o_sigmaxx[iGlobal] +
@@ -652,17 +682,16 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
 		     dev_xCoeff[0]*(shared_c_vx[ixLocal+1][izLocal]-shared_c_vx[ixLocal][izLocal])  +
 		     dev_xCoeff[1]*(shared_c_vx[ixLocal+2][izLocal]-shared_c_vx[ixLocal-1][izLocal])+
 		     dev_xCoeff[2]*(shared_c_vx[ixLocal+3][izLocal]-shared_c_vx[ixLocal-2][izLocal])+
-		     dev_xCoeff[3]*(shared_c_vx[ixLocal+4][izLocal]-shared_c_vx[ixLocal-3][izLocal])
-		      ) +
+		     dev_xCoeff[3]*(shared_c_vx[ixLocal+4][izLocal]-shared_c_vx[ixLocal-3][izLocal]))+
 	      //first deriv in positive z direction of current vz
 	      dev_lambDtw[iGlobal] * (
 		     dev_zCoeff[0]*(shared_c_vz[ixLocal][izLocal+1]-shared_c_vz[ixLocal][izLocal])  +
 		     dev_zCoeff[1]*(shared_c_vz[ixLocal][izLocal+2]-shared_c_vz[ixLocal][izLocal-1])+
 		     dev_zCoeff[2]*(shared_c_vz[ixLocal][izLocal+3]-shared_c_vz[ixLocal][izLocal-2])+
-		     dev_zCoeff[3]*(shared_c_vz[ixLocal][izLocal+4]-shared_c_vz[ixLocal][izLocal-3])
-	      );
+		     dev_zCoeff[3]*(shared_c_vz[ixLocal][izLocal+4]-shared_c_vz[ixLocal][izLocal-3]));
 		 }
-     //new sigmazz (Not updating at z=0)
+		//
+    //  //new sigmazz (Not updating at z=0)
 		 if (izGlobal > 2*FAT){
 	     dev_n_sigmazz[iGlobal] = //old sigmazz
 	      dev_o_sigmazz[iGlobal] +
@@ -678,20 +707,434 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
 		     dev_zCoeff[1]*(shared_c_vz[ixLocal][izLocal+2]-shared_c_vz[ixLocal][izLocal-1])+
 		     dev_zCoeff[2]*(shared_c_vz[ixLocal][izLocal+3]-shared_c_vz[ixLocal][izLocal-2])+
 		     dev_zCoeff[3]*(shared_c_vz[ixLocal][izLocal+4]-shared_c_vz[ixLocal][izLocal-3]));
-		 //new sigmaxz
-     dev_n_sigmaxz[iGlobal] = dev_o_sigmaxz[iGlobal] +
-      dev_muxzDtw[iGlobal] * (
-	      //first deriv in negative z direction of current vx
-	     dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1])  +
-	     dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
-	     dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
-	     dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
-	      //first deriv in negative x direction of current vz
-	     dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
-	     dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
-	     dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
-	     dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal]));
+		 	 //new sigmaxz
+     	dev_n_sigmaxz[iGlobal] = dev_o_sigmaxz[iGlobal] +
+	      dev_muxzDtw[iGlobal] * (
+		      //first deriv in negative z direction of current vx
+		     dev_zCoeff[0]*(shared_c_vx[ixLocal][izLocal]-shared_c_vx[ixLocal][izLocal-1])  +
+		     dev_zCoeff[1]*(shared_c_vx[ixLocal][izLocal+1]-shared_c_vx[ixLocal][izLocal-2])+
+		     dev_zCoeff[2]*(shared_c_vx[ixLocal][izLocal+2]-shared_c_vx[ixLocal][izLocal-3])+
+		     dev_zCoeff[3]*(shared_c_vx[ixLocal][izLocal+3]-shared_c_vx[ixLocal][izLocal-4])+
+		      //first deriv in negative x direction of current vz
+		     dev_xCoeff[0]*(shared_c_vz[ixLocal][izLocal]-shared_c_vz[ixLocal-1][izLocal])  +
+		     dev_xCoeff[1]*(shared_c_vz[ixLocal+1][izLocal]-shared_c_vz[ixLocal-2][izLocal])+
+		     dev_xCoeff[2]*(shared_c_vz[ixLocal+2][izLocal]-shared_c_vz[ixLocal-3][izLocal])+
+		     dev_xCoeff[3]*(shared_c_vz[ixLocal+3][izLocal]-shared_c_vz[ixLocal-4][izLocal])
+			 );
 		}
+}
+
+// Kernel to compute the top block so that the free-surface boundary condition is enforced
+__global__ void ker_step_adj_surface_top(double* dev_o_vx, double* dev_o_vz, double* dev_o_sigmaxx, double* dev_o_sigmazz, double* dev_o_sigmaxz,
+     double* dev_c_vx, double* dev_c_vz, double* dev_c_sigmaxx, double* dev_c_sigmazz, double* dev_c_sigmaxz,
+     double* dev_n_vx, double* dev_n_vz, double* dev_n_sigmaxx, double* dev_n_sigmazz, double* dev_n_sigmaxz,
+     double* dev_rhoxDtw, double* dev_rhozDtw, double* dev_lamb2MuDtw, double* dev_lambDtw, double* dev_muxzDtw){
+
+			 // Allocate shared memory for each SCALED wavefield component
+	     __shared__ double shared_c_vx_rhodtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // vx*dtw/rhox
+	     __shared__ double shared_c_vz_rhodtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // vz*dtw/rhoz
+	     __shared__ double shared_c_sigmaxx_lamb2MuDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmaxx*dtw*(lamb+2Mu)
+	     __shared__ double shared_c_sigmaxx_lambDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmaxx*dtw*(lamb)
+	     __shared__ double shared_c_sigmazz_lamb2MuDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmazz*dtw*(lamb+2Mu)
+	     __shared__ double shared_c_sigmazz_lambDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmazz*dtw*(lamb)
+	     __shared__ double shared_c_sigmaxz_muxzDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmaxz*dtw*muxz
+			 __shared__ double shared_c_sigmaxx_FreeSurfDtw[BLOCK_SIZE+2*FAT]; // sigmaxx*dtw*(lamb+2Mu + (lamb*lamb/(lamb+2Mu)))
+
+	     // calculate global and local x/z coordinates
+	     int izGlobal = FAT + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate //Shifting by block_size along the z axis
+	     int ixGlobal = FAT + blockIdx.y * BLOCK_SIZE + threadIdx.y; // Global x-coordinate
+	     int izLocal = FAT + threadIdx.x; // z-coordinate on the shared grid
+	     int ixLocal = FAT + threadIdx.y; // x-coordinate on the shared grid
+	     int iGlobal = dev_nz * ixGlobal + izGlobal; // 1D array index for the model on the global memory
+
+	     // Copy current slice from global to shared memory ans scale appropriately for each wavefield component -- center
+	     shared_c_vx_rhodtw[ixLocal][izLocal]          = dev_rhoxDtw[iGlobal]*dev_c_vx[iGlobal]; // vx*dtw/rhox
+	     shared_c_vz_rhodtw[ixLocal][izLocal]          = dev_rhozDtw[iGlobal]*dev_c_vz[iGlobal]; // vz*dtw/rhoz
+			 shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal] = dev_lamb2MuDtw[iGlobal]*dev_c_sigmaxx[iGlobal]; // sigmaxx*dtw*(lamb+2Mu)
+	     shared_c_sigmaxx_lambDtw[ixLocal][izLocal]    = dev_lambDtw[iGlobal]*dev_c_sigmaxx[iGlobal]; // sigmaxx*dtw*(lamb)
+	     shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal] = dev_lamb2MuDtw[iGlobal]*dev_c_sigmazz[iGlobal]; // sigmazz*dtw*(lamb+2Mu)
+	     shared_c_sigmazz_lambDtw[ixLocal][izLocal]    = dev_lambDtw[iGlobal]*dev_c_sigmazz[iGlobal]; // sigmazz*dtw*(lamb)
+	     shared_c_sigmaxz_muxzDtw[ixLocal][izLocal]    = dev_muxzDtw[iGlobal]*dev_c_sigmaxz[iGlobal]; // sigmaxz*dtw*muxz
+			 if (izGlobal == 2*FAT){
+				 shared_c_sigmaxx_FreeSurfDtw[ixLocal]    = (dev_lamb2MuDtw[iGlobal] - (dev_lambDtw[iGlobal]*dev_lambDtw[iGlobal]/dev_lamb2MuDtw[iGlobal]))*dev_c_sigmaxx[iGlobal];
+			 }
+
+	     // Copy current slice from global to shared memory for each wavefield component -- edges
+	     if (threadIdx.y < FAT) {
+	 	    // vx*rho*dtw
+	 	    shared_c_vx_rhodtw[ixLocal-FAT][izLocal]        = dev_rhoxDtw[iGlobal-dev_nz*FAT]*dev_c_vx[iGlobal-dev_nz*FAT]; // Left side
+	 	    shared_c_vx_rhodtw[ixLocal+BLOCK_SIZE][izLocal] = dev_rhoxDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vx[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	 	    // vz*rho*dtw
+	 	    shared_c_vz_rhodtw[ixLocal-FAT][izLocal]         = dev_rhozDtw[iGlobal-dev_nz*FAT]*dev_c_vz[iGlobal-dev_nz*FAT]; // Left side
+	 	    shared_c_vz_rhodtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_rhozDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	 	    // sigmaxx*dtw*(lamb+2Mu)
+	 	    shared_c_sigmaxx_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+	 	    shared_c_sigmaxx_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	 	    // sigmaxx*dtw*(lamb)
+	 	    shared_c_sigmaxx_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+	 	    shared_c_sigmaxx_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	 	    // sigmazz*dtw*(lamb+2Mu)
+	 	    shared_c_sigmazz_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
+	 	    shared_c_sigmazz_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	 	    // sigmazz*dtw*(lamb)
+	 	    shared_c_sigmazz_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
+	 	    shared_c_sigmazz_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	 	    // sigmaxz
+	 	    shared_c_sigmaxz_muxzDtw[ixLocal-FAT][izLocal]        = dev_muxzDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxz[iGlobal-dev_nz*FAT]; // Left side
+	 	    shared_c_sigmaxz_muxzDtw[ixLocal+BLOCK_SIZE][izLocal] = dev_muxzDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+				if (izGlobal == 2*FAT){
+					shared_c_sigmaxx_FreeSurfDtw[ixLocal-FAT]        = (dev_lamb2MuDtw[iGlobal-dev_nz*FAT] - (dev_lambDtw[iGlobal-dev_nz*FAT]*dev_lambDtw[iGlobal-dev_nz*FAT]/dev_lamb2MuDtw[iGlobal-dev_nz*FAT]))*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+		 	    shared_c_sigmaxx_FreeSurfDtw[ixLocal+BLOCK_SIZE] = (dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE] - (dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE+dev_nz*BLOCK_SIZE]*dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]/dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]))*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+				}
+	     }
+	     if (threadIdx.x < FAT) {
+	 	    // vx*rho*dtw
+	 	    shared_c_vx_rhodtw[ixLocal][izLocal-FAT]        = dev_rhoxDtw[iGlobal-FAT]*dev_c_vx[iGlobal-FAT]; // Up
+	 	    shared_c_vx_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhoxDtw[iGlobal+BLOCK_SIZE]*dev_c_vx[iGlobal+BLOCK_SIZE]; // Down
+	 	    // vz*rho*dtw
+	 	    shared_c_vz_rhodtw[ixLocal][izLocal-FAT]        = dev_rhozDtw[iGlobal-FAT]*dev_c_vz[iGlobal-FAT]; // Up
+	 	    shared_c_vz_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhozDtw[iGlobal+BLOCK_SIZE]*dev_c_vz[iGlobal+BLOCK_SIZE]; // Down
+	 	    // sigmaxx*dtw*(lamb+2Mu)
+	 	    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
+	 	    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
+	 	    // sigmaxx*dtw*(lamb)
+	 	    shared_c_sigmaxx_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
+	 	    shared_c_sigmaxx_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
+	 	    // sigmazz*dtw*(lamb+2Mu)
+	 	    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
+	 	    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
+	 	    // sigmaxx*dtw*(lamb)
+	 	    shared_c_sigmazz_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
+	 	    shared_c_sigmazz_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
+	 	    // sigmaxz
+	 	    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-FAT]        = dev_muxzDtw[iGlobal-FAT]*dev_c_sigmaxz[iGlobal-FAT]; // Up
+	 	    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+BLOCK_SIZE] = dev_muxzDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+BLOCK_SIZE]; // Down
+	     }
+	     __syncthreads(); // Synchronise all threads within each block -- look new sync options
+
+			 if (izGlobal == 2*FAT){ //Free-surface z sample
+				 dev_o_vx[iGlobal] = //new vx
+		     	dev_n_vx[iGlobal] -
+		 		    // first derivative in negative x direction of current sigmaxx scaled by dtw*(lamb+2Mu)
+		 		    (dev_xCoeff[0]*(shared_c_sigmaxx_FreeSurfDtw[ixLocal]-shared_c_sigmaxx_FreeSurfDtw[ixLocal-1])  +
+		 		    dev_xCoeff[1]*(shared_c_sigmaxx_FreeSurfDtw[ixLocal+1]-shared_c_sigmaxx_FreeSurfDtw[ixLocal-2])+
+		 		    dev_xCoeff[2]*(shared_c_sigmaxx_FreeSurfDtw[ixLocal+2]-shared_c_sigmaxx_FreeSurfDtw[ixLocal-3])+
+		 		    dev_xCoeff[3]*(shared_c_sigmaxx_FreeSurfDtw[ixLocal+3]-shared_c_sigmaxx_FreeSurfDtw[ixLocal-4]));
+		     //old sigmaxx
+		     dev_o_sigmaxx[iGlobal] = //new sigmaxx
+		      dev_n_sigmaxx[iGlobal] -
+		      // first deriv in positive x direction of current vx scaled by dtw/rhox
+		      (dev_xCoeff[0]*(shared_c_vx_rhodtw[ixLocal+1][izLocal]-shared_c_vx_rhodtw[ixLocal][izLocal])  +
+		      dev_xCoeff[1]*(shared_c_vx_rhodtw[ixLocal+2][izLocal]-shared_c_vx_rhodtw[ixLocal-1][izLocal])+
+		      dev_xCoeff[2]*(shared_c_vx_rhodtw[ixLocal+3][izLocal]-shared_c_vx_rhodtw[ixLocal-2][izLocal])+
+		      dev_xCoeff[3]*(shared_c_vx_rhodtw[ixLocal+4][izLocal]-shared_c_vx_rhodtw[ixLocal-3][izLocal]));
+
+					// Boundary condition on vx and sigmaxz
+					dev_o_sigmaxz[iGlobal-2] = //new sigmaxz
+ 		      dev_n_sigmaxz[iGlobal-2] - dev_zCoeff[3]*shared_c_vx_rhodtw[ixLocal][izLocal+1];
+					dev_o_sigmaxz[iGlobal-1] = //new sigmaxz
+ 		      dev_n_sigmaxz[iGlobal-1] - dev_zCoeff[2]*shared_c_vx_rhodtw[ixLocal][izLocal+1] - dev_zCoeff[3]*shared_c_vx_rhodtw[ixLocal][izLocal+2];
+					dev_o_sigmaxz[iGlobal] = //new sigmaxz
+ 		      dev_n_sigmaxz[iGlobal] - dev_zCoeff[0]*shared_c_vx_rhodtw[ixLocal][izLocal] - dev_zCoeff[1]*shared_c_vx_rhodtw[ixLocal][izLocal+1] - dev_zCoeff[2]*shared_c_vx_rhodtw[ixLocal][izLocal+2] - dev_zCoeff[3]*shared_c_vx_rhodtw[ixLocal][izLocal+3];
+
+			 }
+				 if(izGlobal == 2*FAT+1){
+					 dev_o_vx[iGlobal] = //new vx
+			     	dev_n_vx[iGlobal] -
+			 		    //first derivative in negative x direction of current sigmaxx scaled by dtw*(lamb+2Mu)
+			 		    (dev_xCoeff[0]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+1][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+2][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+3][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-4][izLocal])) -
+			 		    //first derivative in negative x direction of current sigmazz scaled by dtw*(lamb)
+			 		    (dev_xCoeff[0]*(shared_c_sigmazz_lambDtw[ixLocal][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmazz_lambDtw[ixLocal+1][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmazz_lambDtw[ixLocal+2][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmazz_lambDtw[ixLocal+3][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-4][izLocal])) -
+			 		    //first derivative in positive z direction of current sigmaxz scaled by dtw*(muxz)
+							(dev_zCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+1]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+			 		    dev_zCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+2])+
+			 		    dev_zCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+3])+
+			 		    dev_zCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+4]));
+				 }
+				 if(izGlobal == 2*FAT+2){
+					 dev_o_vx[iGlobal] = //new vx
+			     	dev_n_vx[iGlobal] -
+			 		    //first derivative in negative x direction of current sigmaxx scaled by dtw*(lamb+2Mu)
+			 		    (dev_xCoeff[0]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+1][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+2][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+3][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-4][izLocal])) -
+			 		    //first derivative in negative x direction of current sigmazz scaled by dtw*(lamb)
+			 		    (dev_xCoeff[0]*(shared_c_sigmazz_lambDtw[ixLocal][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmazz_lambDtw[ixLocal+1][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmazz_lambDtw[ixLocal+2][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmazz_lambDtw[ixLocal+3][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-4][izLocal])) -
+			 		    //first derivative in positive z direction of current sigmaxz scaled by dtw*(muxz)
+							(dev_zCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+1]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+			 		    dev_zCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+2])+
+			 		    dev_zCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+3])+
+			 		    dev_zCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+4]));
+				 }
+				 if(izGlobal == 2*FAT+3){
+					 dev_o_vx[iGlobal] = //new vx
+			     	dev_n_vx[iGlobal] -
+			 		    //first derivative in negative x direction of current sigmaxx scaled by dtw*(lamb+2Mu)
+			 		    (dev_xCoeff[0]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+1][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+2][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+3][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-4][izLocal])) -
+			 		    //first derivative in negative x direction of current sigmazz scaled by dtw*(lamb)
+			 		    (dev_xCoeff[0]*(shared_c_sigmazz_lambDtw[ixLocal][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmazz_lambDtw[ixLocal+1][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmazz_lambDtw[ixLocal+2][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmazz_lambDtw[ixLocal+3][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-4][izLocal])) -
+			 		    //first derivative in positive z direction of current sigmaxz scaled by dtw*(muxz)
+			 		    (dev_zCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+1]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+			 		    dev_zCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+2]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-1])+
+			 		    dev_zCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+3])+
+			 		    dev_zCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+4]));
+				 }
+				 if(izGlobal == 2*FAT+4){
+					 dev_o_vx[iGlobal] = //new vx
+			     	dev_n_vx[iGlobal] -
+			 		    //first derivative in negative x direction of current sigmaxx scaled by dtw*(lamb+2Mu)
+			 		    (dev_xCoeff[0]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+1][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+2][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+3][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-4][izLocal])) -
+			 		    //first derivative in negative x direction of current sigmazz scaled by dtw*(lamb)
+			 		    (dev_xCoeff[0]*(shared_c_sigmazz_lambDtw[ixLocal][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-1][izLocal])  +
+			 		    dev_xCoeff[1]*(shared_c_sigmazz_lambDtw[ixLocal+1][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-2][izLocal])+
+			 		    dev_xCoeff[2]*(shared_c_sigmazz_lambDtw[ixLocal+2][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-3][izLocal])+
+			 		    dev_xCoeff[3]*(shared_c_sigmazz_lambDtw[ixLocal+3][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-4][izLocal]))-
+			 		    //first derivative in positive z direction of current sigmaxz scaled by dtw*(muxz)
+							(dev_zCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+1]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+  		 		    dev_zCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+2]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-1])+
+  		 		    dev_zCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+3]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-2])+
+  		 		    dev_zCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+4]));
+				 }
+				 if (izGlobal > 2*FAT+4){
+				 dev_o_vx[iGlobal] = //new vx
+		     	dev_n_vx[iGlobal] -
+		 		    //first derivative in negative x direction of current sigmaxx scaled by dtw*(lamb+2Mu)
+		 		    (dev_xCoeff[0]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-1][izLocal])  +
+		 		    dev_xCoeff[1]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+1][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-2][izLocal])+
+		 		    dev_xCoeff[2]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+2][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-3][izLocal])+
+		 		    dev_xCoeff[3]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+3][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-4][izLocal])) -
+		 		    //first derivative in negative x direction of current sigmazz scaled by dtw*(lamb)
+		 		    (dev_xCoeff[0]*(shared_c_sigmazz_lambDtw[ixLocal][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-1][izLocal])  +
+		 		    dev_xCoeff[1]*(shared_c_sigmazz_lambDtw[ixLocal+1][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-2][izLocal])+
+		 		    dev_xCoeff[2]*(shared_c_sigmazz_lambDtw[ixLocal+2][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-3][izLocal])+
+		 		    dev_xCoeff[3]*(shared_c_sigmazz_lambDtw[ixLocal+3][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-4][izLocal])) -
+		 		    //first derivative in positive z direction of current sigmaxz scaled by dtw*(muxz)
+		 		    (dev_zCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+1]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+		 		    dev_zCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+2]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-1])+
+		 		    dev_zCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+3]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-2])+
+		 		    dev_zCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+4]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-3]));
+					}
+
+					if (izGlobal > 2*FAT){ //DEBUG
+		     //old vz
+		     dev_o_vz[iGlobal] = //new vz
+		 	    dev_n_vz[iGlobal] -
+		 	    //first derivative in negative z direction of current sigmaxx scaled by dtw*(lamb)
+		 	    (dev_zCoeff[0]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-1])  +
+		 	    dev_zCoeff[1]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal+1]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-2])+
+		 	    dev_zCoeff[2]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal+2]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-3])+
+		 	    dev_zCoeff[3]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal+3]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-4])) -
+		 	    //first derivative in negative z direction of current sigmazz scaled by dtw*(lamb+2Mu)
+		 	    (dev_zCoeff[0]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-1])  +
+		 	    dev_zCoeff[1]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+1]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-2])+
+		 	    dev_zCoeff[2]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+2]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-3])+
+		 	    dev_zCoeff[3]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+3]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-4])) -
+		 	    //first derivative in positive x direction of current sigmaxz scaled by dtw*(muxz)
+		 	    (dev_xCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal+1][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+		 	    dev_xCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal+2][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal-1][izLocal])+
+		 	    dev_xCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal+3][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal-2][izLocal])+
+		 	    dev_xCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal+4][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal-3][izLocal]));
+		     //old sigmaxx
+		     dev_o_sigmaxx[iGlobal] = //new sigmaxx
+		      dev_n_sigmaxx[iGlobal] -
+		      //first deriv in positive x direction of current vx scaled by dtw/rhox
+		      (dev_xCoeff[0]*(shared_c_vx_rhodtw[ixLocal+1][izLocal]-shared_c_vx_rhodtw[ixLocal][izLocal])  +
+		      dev_xCoeff[1]*(shared_c_vx_rhodtw[ixLocal+2][izLocal]-shared_c_vx_rhodtw[ixLocal-1][izLocal])+
+		      dev_xCoeff[2]*(shared_c_vx_rhodtw[ixLocal+3][izLocal]-shared_c_vx_rhodtw[ixLocal-2][izLocal])+
+		      dev_xCoeff[3]*(shared_c_vx_rhodtw[ixLocal+4][izLocal]-shared_c_vx_rhodtw[ixLocal-3][izLocal]));
+		     //old sigmazz
+		 		dev_o_sigmazz[iGlobal] = //new sigmazz
+		      dev_n_sigmazz[iGlobal] -
+		      //first deriv in positive z direction of current vz scaled by dtw/rhoz
+		      (dev_zCoeff[0]*(shared_c_vz_rhodtw[ixLocal][izLocal+1]-shared_c_vz_rhodtw[ixLocal][izLocal])  +
+		      dev_zCoeff[1]*(shared_c_vz_rhodtw[ixLocal][izLocal+2]-shared_c_vz_rhodtw[ixLocal][izLocal-1])+
+		      dev_zCoeff[2]*(shared_c_vz_rhodtw[ixLocal][izLocal+3]-shared_c_vz_rhodtw[ixLocal][izLocal-2])+
+		      dev_zCoeff[3]*(shared_c_vz_rhodtw[ixLocal][izLocal+4]-shared_c_vz_rhodtw[ixLocal][izLocal-3]));
+
+		     //old sigmaxz
+		     dev_o_sigmaxz[iGlobal] = //new sigmaxz
+		      dev_n_sigmaxz[iGlobal] -
+		      //first deriv in negative z direction of current vx scaled by dtw/rhox
+		      (dev_zCoeff[0]*(shared_c_vx_rhodtw[ixLocal][izLocal]-shared_c_vx_rhodtw[ixLocal][izLocal-1])  +
+		      	  dev_zCoeff[1]*(shared_c_vx_rhodtw[ixLocal][izLocal+1]-shared_c_vx_rhodtw[ixLocal][izLocal-2])+
+		      	  dev_zCoeff[2]*(shared_c_vx_rhodtw[ixLocal][izLocal+2]-shared_c_vx_rhodtw[ixLocal][izLocal-3])+
+		      	  dev_zCoeff[3]*(shared_c_vx_rhodtw[ixLocal][izLocal+3]-shared_c_vx_rhodtw[ixLocal][izLocal-4])) -
+		      //first deriv in negative x direction of current vz scaled by dtw/rhoz
+		      (dev_xCoeff[0]*(shared_c_vz_rhodtw[ixLocal][izLocal]-shared_c_vz_rhodtw[ixLocal-1][izLocal])  +
+		      	  dev_xCoeff[1]*(shared_c_vz_rhodtw[ixLocal+1][izLocal]-shared_c_vz_rhodtw[ixLocal-2][izLocal])+
+		      	  dev_xCoeff[2]*(shared_c_vz_rhodtw[ixLocal+2][izLocal]-shared_c_vz_rhodtw[ixLocal-3][izLocal])+
+		      	  dev_xCoeff[3]*(shared_c_vz_rhodtw[ixLocal+3][izLocal]-shared_c_vz_rhodtw[ixLocal-4][izLocal]));
+
+			 }
+
+}
+
+// This kernel computes all the block beneath the top one in which the free-surface boundary condition is enforced
+__global__ void ker_step_adj_surface_body(double* dev_o_vx, double* dev_o_vz, double* dev_o_sigmaxx, double* dev_o_sigmazz, double* dev_o_sigmaxz,
+     double* dev_c_vx, double* dev_c_vz, double* dev_c_sigmaxx, double* dev_c_sigmazz, double* dev_c_sigmaxz,
+     double* dev_n_vx, double* dev_n_vz, double* dev_n_sigmaxx, double* dev_n_sigmazz, double* dev_n_sigmaxz,
+     double* dev_rhoxDtw, double* dev_rhozDtw, double* dev_lamb2MuDtw, double* dev_lambDtw, double* dev_muxzDtw){
+
+    // Allocate shared memory for each SCALED wavefield component
+    __shared__ double shared_c_vx_rhodtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // vx*dtw/rhox
+    __shared__ double shared_c_vz_rhodtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // vz*dtw/rhoz
+    __shared__ double shared_c_sigmaxx_lamb2MuDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmaxx*dtw*(lamb+2Mu)
+    __shared__ double shared_c_sigmaxx_lambDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmaxx*dtw*(lamb)
+    __shared__ double shared_c_sigmazz_lamb2MuDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmazz*dtw*(lamb+2Mu)
+    __shared__ double shared_c_sigmazz_lambDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmazz*dtw*(lamb)
+    __shared__ double shared_c_sigmaxz_muxzDtw[BLOCK_SIZE+2*FAT][BLOCK_SIZE+2*FAT]; // sigmaxz*dtw*muxz
+
+    // calculate global and local x/z coordinates
+    int izGlobal = FAT + BLOCK_SIZE + blockIdx.x * BLOCK_SIZE + threadIdx.x; // Global z-coordinate //Shifting by block_size along the z axis
+    int ixGlobal = FAT + blockIdx.y * BLOCK_SIZE + threadIdx.y; // Global x-coordinate
+    int izLocal = FAT + threadIdx.x; // z-coordinate on the shared grid
+    int ixLocal = FAT + threadIdx.y; // x-coordinate on the shared grid
+    int iGlobal = dev_nz * ixGlobal + izGlobal; // 1D array index for the model on the global memory
+
+    // Copy current slice from global to shared memory ans scale appropriately for each wavefield component -- center
+    shared_c_vx_rhodtw[ixLocal][izLocal]          = dev_rhoxDtw[iGlobal]*dev_c_vx[iGlobal]; // vx*dtw/rhox
+    shared_c_vz_rhodtw[ixLocal][izLocal]          = dev_rhozDtw[iGlobal]*dev_c_vz[iGlobal]; // vz*dtw/rhoz
+    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal] = dev_lamb2MuDtw[iGlobal]*dev_c_sigmaxx[iGlobal]; // sigmaxx*dtw*(lamb+2Mu)
+    shared_c_sigmaxx_lambDtw[ixLocal][izLocal]    = dev_lambDtw[iGlobal]*dev_c_sigmaxx[iGlobal]; // sigmaxx*dtw*(lamb)
+    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal] = dev_lamb2MuDtw[iGlobal]*dev_c_sigmazz[iGlobal]; // sigmazz*dtw*(lamb+2Mu)
+    shared_c_sigmazz_lambDtw[ixLocal][izLocal]    = dev_lambDtw[iGlobal]*dev_c_sigmazz[iGlobal]; // sigmazz*dtw*(lamb)
+    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal]    = dev_muxzDtw[iGlobal]*dev_c_sigmaxz[iGlobal]; // sigmaxz*dtw*muxz
+
+    // Copy current slice from global to shared memory for each wavefield component -- edges
+    if (threadIdx.y < FAT) {
+	    // vx*rho*dtw
+	    shared_c_vx_rhodtw[ixLocal-FAT][izLocal]        = dev_rhoxDtw[iGlobal-dev_nz*FAT]*dev_c_vx[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_vx_rhodtw[ixLocal+BLOCK_SIZE][izLocal] = dev_rhoxDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vx[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	    // vz*rho*dtw
+	    shared_c_vz_rhodtw[ixLocal-FAT][izLocal]         = dev_rhozDtw[iGlobal-dev_nz*FAT]*dev_c_vz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_vz_rhodtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_rhozDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_vz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	    // sigmaxx*dtw*(lamb+2Mu)
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	    // sigmaxx*dtw*(lamb)
+	    shared_c_sigmaxx_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxx[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmaxx_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	    // sigmazz*dtw*(lamb+2Mu)
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal-FAT][izLocal]         = dev_lamb2MuDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lamb2MuDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	    // sigmazz*dtw*(lamb)
+	    shared_c_sigmazz_lambDtw[ixLocal-FAT][izLocal]         = dev_lambDtw[iGlobal-dev_nz*FAT]*dev_c_sigmazz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmazz_lambDtw[ixLocal+BLOCK_SIZE][izLocal]  = dev_lambDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmazz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+	    // sigmaxz
+	    shared_c_sigmaxz_muxzDtw[ixLocal-FAT][izLocal]        = dev_muxzDtw[iGlobal-dev_nz*FAT]*dev_c_sigmaxz[iGlobal-dev_nz*FAT]; // Left side
+	    shared_c_sigmaxz_muxzDtw[ixLocal+BLOCK_SIZE][izLocal] = dev_muxzDtw[iGlobal+dev_nz*BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+dev_nz*BLOCK_SIZE]; // Right side
+    }
+    if (threadIdx.x < FAT) {
+	    // vx*rho*dtw
+	    shared_c_vx_rhodtw[ixLocal][izLocal-FAT]        = dev_rhoxDtw[iGlobal-FAT]*dev_c_vx[iGlobal-FAT]; // Up
+	    shared_c_vx_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhoxDtw[iGlobal+BLOCK_SIZE]*dev_c_vx[iGlobal+BLOCK_SIZE]; // Down
+	    // vz*rho*dtw
+	    shared_c_vz_rhodtw[ixLocal][izLocal-FAT]        = dev_rhozDtw[iGlobal-FAT]*dev_c_vz[iGlobal-FAT]; // Up
+	    shared_c_vz_rhodtw[ixLocal][izLocal+BLOCK_SIZE] = dev_rhozDtw[iGlobal+BLOCK_SIZE]*dev_c_vz[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxx*dtw*(lamb+2Mu)
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
+	    shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxx*dtw*(lamb)
+	    shared_c_sigmaxx_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmaxx[iGlobal-FAT]; // Up
+	    shared_c_sigmaxx_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxx[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmazz*dtw*(lamb+2Mu)
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-FAT]         = dev_lamb2MuDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
+	    shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lamb2MuDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxx*dtw*(lamb)
+	    shared_c_sigmazz_lambDtw[ixLocal][izLocal-FAT]         = dev_lambDtw[iGlobal-FAT]*dev_c_sigmazz[iGlobal-FAT]; // Up
+	    shared_c_sigmazz_lambDtw[ixLocal][izLocal+BLOCK_SIZE]  = dev_lambDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmazz[iGlobal+BLOCK_SIZE]; // Down
+	    // sigmaxz
+	    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-FAT]        = dev_muxzDtw[iGlobal-FAT]*dev_c_sigmaxz[iGlobal-FAT]; // Up
+	    shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+BLOCK_SIZE] = dev_muxzDtw[iGlobal+BLOCK_SIZE]*dev_c_sigmaxz[iGlobal+BLOCK_SIZE]; // Down
+    }
+    __syncthreads(); // Synchronise all threads within each block -- look new sync options
+
+
+    // old vx
+    dev_o_vx[iGlobal] = //new vx
+    	dev_n_vx[iGlobal] -
+		    //first derivative in negative x direction of current sigmaxx scaled by dtw*(lamb+2Mu)
+		    (dev_xCoeff[0]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-1][izLocal])  +
+		    dev_xCoeff[1]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+1][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-2][izLocal])+
+		    dev_xCoeff[2]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+2][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-3][izLocal])+
+		    dev_xCoeff[3]*(shared_c_sigmaxx_lamb2MuDtw[ixLocal+3][izLocal]-shared_c_sigmaxx_lamb2MuDtw[ixLocal-4][izLocal])) -
+		    //first derivative in negative x direction of current sigmazz scaled by dtw*(lamb)
+		    (dev_xCoeff[0]*(shared_c_sigmazz_lambDtw[ixLocal][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-1][izLocal])  +
+		    dev_xCoeff[1]*(shared_c_sigmazz_lambDtw[ixLocal+1][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-2][izLocal])+
+		    dev_xCoeff[2]*(shared_c_sigmazz_lambDtw[ixLocal+2][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-3][izLocal])+
+		    dev_xCoeff[3]*(shared_c_sigmazz_lambDtw[ixLocal+3][izLocal]-shared_c_sigmazz_lambDtw[ixLocal-4][izLocal])) -
+		    //first derivative in positive z direction of current sigmaxz scaled by dtw*(muxz)
+		    (dev_zCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+1]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+		    dev_zCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+2]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-1])+
+		    dev_zCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+3]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-2])+
+		    dev_zCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal][izLocal+4]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal-3]));
+    //old vz
+    dev_o_vz[iGlobal] = //new vz
+	    dev_n_vz[iGlobal] -
+	    //first derivative in negative z direction of current sigmaxx scaled by dtw*(lamb)
+	    (dev_zCoeff[0]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-1])  +
+	    dev_zCoeff[1]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal+1]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-2])+
+	    dev_zCoeff[2]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal+2]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-3])+
+	    dev_zCoeff[3]*(shared_c_sigmaxx_lambDtw[ixLocal][izLocal+3]-shared_c_sigmaxx_lambDtw[ixLocal][izLocal-4])) -
+	    //first derivative in negative z direction of current sigmazz scaled by dtw*(lamb+2Mu)
+	    (dev_zCoeff[0]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-1])  +
+	    dev_zCoeff[1]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+1]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-2])+
+	    dev_zCoeff[2]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+2]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-3])+
+	    dev_zCoeff[3]*(shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal+3]-shared_c_sigmazz_lamb2MuDtw[ixLocal][izLocal-4])) -
+	    //first derivative in positive x direction of current sigmaxz scaled by dtw*(muxz)
+	    (dev_xCoeff[0]*(shared_c_sigmaxz_muxzDtw[ixLocal+1][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal][izLocal])  +
+	    dev_xCoeff[1]*(shared_c_sigmaxz_muxzDtw[ixLocal+2][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal-1][izLocal])+
+	    dev_xCoeff[2]*(shared_c_sigmaxz_muxzDtw[ixLocal+3][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal-2][izLocal])+
+	    dev_xCoeff[3]*(shared_c_sigmaxz_muxzDtw[ixLocal+4][izLocal]-shared_c_sigmaxz_muxzDtw[ixLocal-3][izLocal]));
+    //old sigmaxx
+    dev_o_sigmaxx[iGlobal] = //new sigmaxx
+     dev_n_sigmaxx[iGlobal] -
+     //first deriv in positive x direction of current vx scaled by dtw/rhox
+     (dev_xCoeff[0]*(shared_c_vx_rhodtw[ixLocal+1][izLocal]-shared_c_vx_rhodtw[ixLocal][izLocal])  +
+     dev_xCoeff[1]*(shared_c_vx_rhodtw[ixLocal+2][izLocal]-shared_c_vx_rhodtw[ixLocal-1][izLocal])+
+     dev_xCoeff[2]*(shared_c_vx_rhodtw[ixLocal+3][izLocal]-shared_c_vx_rhodtw[ixLocal-2][izLocal])+
+     dev_xCoeff[3]*(shared_c_vx_rhodtw[ixLocal+4][izLocal]-shared_c_vx_rhodtw[ixLocal-3][izLocal]));
+    //old sigmazz
+		dev_o_sigmazz[iGlobal] = //new sigmazz
+     dev_n_sigmazz[iGlobal] -
+     //first deriv in positive z direction of current vz scaled by dtw/rhoz
+     (dev_zCoeff[0]*(shared_c_vz_rhodtw[ixLocal][izLocal+1]-shared_c_vz_rhodtw[ixLocal][izLocal])  +
+     dev_zCoeff[1]*(shared_c_vz_rhodtw[ixLocal][izLocal+2]-shared_c_vz_rhodtw[ixLocal][izLocal-1])+
+     dev_zCoeff[2]*(shared_c_vz_rhodtw[ixLocal][izLocal+3]-shared_c_vz_rhodtw[ixLocal][izLocal-2])+
+     dev_zCoeff[3]*(shared_c_vz_rhodtw[ixLocal][izLocal+4]-shared_c_vz_rhodtw[ixLocal][izLocal-3]));
+
+    // //old sigmaxz
+    dev_o_sigmaxz[iGlobal] = //new sigmaxz
+     dev_n_sigmaxz[iGlobal] -
+     //first deriv in negative z direction of current vx scaled by dtw/rhox
+     (dev_zCoeff[0]*(shared_c_vx_rhodtw[ixLocal][izLocal]-shared_c_vx_rhodtw[ixLocal][izLocal-1])  +
+     	  dev_zCoeff[1]*(shared_c_vx_rhodtw[ixLocal][izLocal+1]-shared_c_vx_rhodtw[ixLocal][izLocal-2])+
+     	  dev_zCoeff[2]*(shared_c_vx_rhodtw[ixLocal][izLocal+2]-shared_c_vx_rhodtw[ixLocal][izLocal-3])+
+     	  dev_zCoeff[3]*(shared_c_vx_rhodtw[ixLocal][izLocal+3]-shared_c_vx_rhodtw[ixLocal][izLocal-4])) -
+     //first deriv in negative x direction of current vz scaled by dtw/rhoz
+     (dev_xCoeff[0]*(shared_c_vz_rhodtw[ixLocal][izLocal]-shared_c_vz_rhodtw[ixLocal-1][izLocal])  +
+     	  dev_xCoeff[1]*(shared_c_vz_rhodtw[ixLocal+1][izLocal]-shared_c_vz_rhodtw[ixLocal-2][izLocal])+
+     	  dev_xCoeff[2]*(shared_c_vz_rhodtw[ixLocal+2][izLocal]-shared_c_vz_rhodtw[ixLocal-3][izLocal])+
+     	  dev_xCoeff[3]*(shared_c_vz_rhodtw[ixLocal+3][izLocal]-shared_c_vz_rhodtw[ixLocal-4][izLocal]));
 }
 /****************************************************************************************/
 /************************************** Damping *****************************************/

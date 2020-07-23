@@ -15,6 +15,8 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../elastic_isotropic_operators"
 
 find_package(PythonLibs)
 include_directories(${PYTHON_INCLUDE_PATH})
+find_package(Boost 1.40 COMPONENTS program_options unit_test_framework REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${GENERIC_EXPORT_INC_DIRS})
@@ -28,6 +30,7 @@ link_directories(${Generic-cpp_BINARY_DIR}
 			 ${sepVector-lib_BINARY_DIR}
 			 ${SEPlib_LIBDIR}
 )
+
 
 set(LIBS genericCpp sepVector sep3d sep buffers jsonCpp hypercube  ${OpenMP_EXE_LINKER_FLAGS} ${TBB_LIBRARIES} ${GENERIC_EXPORT_LIBS})
 

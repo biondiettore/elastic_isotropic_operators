@@ -105,29 +105,13 @@ int main(int argc, char **argv) {
 
 		for (long long ix=0; ix<nx; ix++){
 			// Top central part
-			if(surfaceCondition==0){
-				for (long long iz=0; iz<zPad+fat; iz++){
-					(*data->_mat)[iPar][ix+fat+xPad][iz] = (*model->_mat)[iPar][ix][0];
-				}
-			}
-			else if(surfaceCondition==1){
-				for (long long iz=0; iz<zPad; iz++){
-					(*data->_mat)[iPar][ix+fat+xPad][iz] = (*model->_mat)[iPar][ix][0];
-				}
+			for (long long iz=0; iz<zPad+fat; iz++){
+				(*data->_mat)[iPar][ix+fat+xPad][iz] = (*model->_mat)[iPar][ix][0];
 			}
 
-			// Bottom central part
-			if(surfaceCondition==0){
-				for (long long iz=0; iz<zPadPlus+fat; iz++){
-					(*data->_mat)[iPar][ix+fat+xPad][iz+fat+zPad+nz] = (*model->_mat)[iPar][ix][nz-1];
-				}
+			for (long long iz=0; iz<zPadPlus+fat; iz++){
+				(*data->_mat)[iPar][ix+fat+xPad][iz+fat+zPad+nz] = (*model->_mat)[iPar][ix][nz-1];
 			}
-			else if(surfaceCondition==1){
-				for (long long iz=0; iz<zPadPlus+fat; iz++){
-					(*data->_mat)[iPar][ix+fat+xPad][iz+zPad+nz] = (*model->_mat)[iPar][ix][nz-1];
-				}
-			}
-
 		}
 
 		// Left part
