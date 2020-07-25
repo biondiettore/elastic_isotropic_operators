@@ -286,7 +286,7 @@ bool fdParamElastic::checkFdDispersion(float dispersionRatioMin){
 }
 
 bool fdParamElastic::checkModelSize(){
-	if ( (_nz-2*_fat) % _blockSize != 0) {
+	if ((_nz-2*_fat) % _blockSize != 0) {
 		std::cerr << "**** ERROR: nz-2*_fat not a multiple of block size ****" << std::endl;
 		return false;
 	}

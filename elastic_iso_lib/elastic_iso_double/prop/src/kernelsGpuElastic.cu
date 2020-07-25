@@ -13,11 +13,10 @@ __global__ void ker_record_interp_data_centerGrid(
 
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
     if (iThread < dev_nReceiversRegCenterGrid) {
-    // printf("dev_receiversPositionReg[iThread] = %d \n", dev_receiversPositionReg[iThread]);
-    dev_signalOut_sigmaxx[dev_nts*iThread+its]   += dev_newTimeSlice_sigmaxx[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[it2];
-    dev_signalOut_sigmaxx[dev_nts*iThread+its+1] += dev_newTimeSlice_sigmaxx[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
-    dev_signalOut_sigmazz[dev_nts*iThread+its]   += dev_newTimeSlice_sigmazz[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[it2];
-    dev_signalOut_sigmazz[dev_nts*iThread+its+1] += dev_newTimeSlice_sigmazz[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
+	    dev_signalOut_sigmaxx[dev_nts*iThread+its]   += dev_newTimeSlice_sigmaxx[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[it2];
+	    dev_signalOut_sigmaxx[dev_nts*iThread+its+1] += dev_newTimeSlice_sigmaxx[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
+	    dev_signalOut_sigmazz[dev_nts*iThread+its]   += dev_newTimeSlice_sigmazz[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[it2];
+	    dev_signalOut_sigmazz[dev_nts*iThread+its+1] += dev_newTimeSlice_sigmazz[dev_receiversPositionRegCenterGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
     }
 }
 
@@ -29,10 +28,8 @@ __global__ void ker_record_interp_data_xGrid(
 
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
     if (iThread < dev_nReceiversRegXGrid) {
-    // printf("dev_receiversPositionReg[iThread] = %d \n", dev_receiversPositionReg[iThread]);
-    dev_signalOut_vx[dev_nts*iThread+its]   += dev_newTimeSlice_vx[dev_receiversPositionRegXGrid[iThread]] * dev_interpFilter[it2];
-    dev_signalOut_vx[dev_nts*iThread+its+1] += dev_newTimeSlice_vx[dev_receiversPositionRegXGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
-
+	    dev_signalOut_vx[dev_nts*iThread+its]   += dev_newTimeSlice_vx[dev_receiversPositionRegXGrid[iThread]] * dev_interpFilter[it2];
+	    dev_signalOut_vx[dev_nts*iThread+its+1] += dev_newTimeSlice_vx[dev_receiversPositionRegXGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
     }
 }
 
@@ -44,10 +41,8 @@ __global__ void ker_record_interp_data_zGrid(
 
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
     if (iThread < dev_nReceiversRegZGrid) {
-    // printf("dev_receiversPositionReg[iThread] = %d \n", dev_receiversPositionReg[iThread]);
-    dev_signalOut_vz[dev_nts*iThread+its]   += dev_newTimeSlice_vz[dev_receiversPositionRegZGrid[iThread]] * dev_interpFilter[it2];
-    dev_signalOut_vz[dev_nts*iThread+its+1] += dev_newTimeSlice_vz[dev_receiversPositionRegZGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
-
+	    dev_signalOut_vz[dev_nts*iThread+its]   += dev_newTimeSlice_vz[dev_receiversPositionRegZGrid[iThread]] * dev_interpFilter[it2];
+	    dev_signalOut_vz[dev_nts*iThread+its+1] += dev_newTimeSlice_vz[dev_receiversPositionRegZGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
     }
 }
 
@@ -59,40 +54,46 @@ __global__ void ker_record_interp_data_xzGrid(
 
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
     if (iThread < dev_nReceiversRegXZGrid) {
-    // printf("dev_receiversPositionReg[iThread] = %d \n", dev_receiversPositionReg[iThread]);
-    dev_signalOut_sigmaxz[dev_nts*iThread+its]   += dev_newTimeSlice_sigmaxz[dev_receiversPositionRegXZGrid[iThread]] * dev_interpFilter[it2];
-    dev_signalOut_sigmaxz[dev_nts*iThread+its+1] += dev_newTimeSlice_sigmaxz[dev_receiversPositionRegXZGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
-
+	    dev_signalOut_sigmaxz[dev_nts*iThread+its]   += dev_newTimeSlice_sigmaxz[dev_receiversPositionRegXZGrid[iThread]] * dev_interpFilter[it2];
+	    dev_signalOut_sigmaxz[dev_nts*iThread+its+1] += dev_newTimeSlice_sigmaxz[dev_receiversPositionRegXZGrid[iThread]] * dev_interpFilter[dev_hInterpFilter+it2];
     }
 }
 /*extract source thar are on center grid */
 __global__ void ker_record_source_centerGrid(double *dev_newTimeSlice_sigmaxx, double *dev_newTimeSlice_sigmazz,
-     double *dev_signalOut_sigmaxx, double *dev_signalOut_sigmazz,
-     int itw, int *dev_sourcesPositionRegCenterGrid) {
+    double *dev_signalOut_sigmaxx, double *dev_signalOut_sigmazz,
+    int itw, int *dev_sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid) {
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_signalOut_sigmaxx[dev_ntw*iThread + itw] += dev_newTimeSlice_sigmaxx[dev_sourcesPositionRegCenterGrid[iThread]];
-    dev_signalOut_sigmazz[dev_ntw*iThread + itw] += dev_newTimeSlice_sigmazz[dev_sourcesPositionRegCenterGrid[iThread]];
+		if (iThread < nSourcesRegCenterGrid){
+			dev_signalOut_sigmaxx[dev_ntw*iThread + itw] += dev_newTimeSlice_sigmaxx[dev_sourcesPositionRegCenterGrid[iThread]];
+	    dev_signalOut_sigmazz[dev_ntw*iThread + itw] += dev_newTimeSlice_sigmazz[dev_sourcesPositionRegCenterGrid[iThread]];
+		}
 }
 /*extract source thar are on x grid */
 __global__ void ker_record_source_XGrid(double *dev_newTimeSlice_vx,
-     double *dev_signalOut_vx,
-     int itw, int *dev_sourcesPositionRegXGrid) {
+    double *dev_signalOut_vx,
+    int itw, int *dev_sourcesPositionRegXGrid, int nSourcesRegXGrid) {
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_signalOut_vx[dev_ntw*iThread + itw] += dev_newTimeSlice_vx[dev_sourcesPositionRegXGrid[iThread]];
+		if (iThread < nSourcesRegXGrid){
+				dev_signalOut_vx[dev_ntw*iThread + itw] += dev_newTimeSlice_vx[dev_sourcesPositionRegXGrid[iThread]];
+		}
 }
 /*extract source thar are on z grid */
 __global__ void ker_record_source_ZGrid(double *dev_newTimeSlice_vz,
-     double *dev_signalOut_vz,
-     int itw, int *dev_sourcesPositionRegZGrid) {
+    double *dev_signalOut_vz,
+    int itw, int *dev_sourcesPositionRegZGrid, int nSourcesRegXGrid) {
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_signalOut_vz[dev_ntw*iThread + itw] += dev_newTimeSlice_vz[dev_sourcesPositionRegZGrid[iThread]];
+		if (iThread < nSourcesRegXGrid) {
+				dev_signalOut_vz[dev_ntw*iThread + itw] += dev_newTimeSlice_vz[dev_sourcesPositionRegZGrid[iThread]];
+		}
 }
 /*extract source thar are on xz grid */
 __global__ void ker_record_source_XZGrid(double *dev_newTimeSlice_sigmaxz,
      double *dev_signalOut_sigmaxz,
-     int itw, int *dev_sourcesPositionRegXZGrid) {
+     int itw, int *dev_sourcesPositionRegXZGrid, int nSourcesRegXZGrid) {
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_signalOut_sigmaxz[dev_ntw*iThread + itw] += dev_newTimeSlice_sigmaxz[dev_sourcesPositionRegXZGrid[iThread]];
+		if (iThread < nSourcesRegXZGrid){
+				dev_signalOut_sigmaxz[dev_ntw*iThread + itw] += dev_newTimeSlice_sigmaxz[dev_sourcesPositionRegXZGrid[iThread]];
+		}
 }
 /****************************************************************************************/
 /***************************************** Injection ************************************/
@@ -102,40 +103,49 @@ __global__ void ker_inject_source_centerGrid(double *dev_signalIn_sigmaxx,
      double *dev_signalIn_sigmazz,
      double *dev_timeSlice_sigmaxx,
      double *dev_timeSlice_sigmazz,
-     int itw, int *dev_sourcesPositionRegCenterGrid){
+     int itw, int *dev_sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid){
 
     //thread per source device
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_timeSlice_sigmaxx[dev_sourcesPositionRegCenterGrid[iThread]] += dev_signalIn_sigmaxx[iThread * dev_ntw + itw];
-    dev_timeSlice_sigmazz[dev_sourcesPositionRegCenterGrid[iThread]] += dev_signalIn_sigmazz[iThread * dev_ntw + itw];
+		if (iThread < nSourcesRegCenterGrid) {
+			dev_timeSlice_sigmaxx[dev_sourcesPositionRegCenterGrid[iThread]] += dev_signalIn_sigmaxx[iThread * dev_ntw + itw];
+			dev_timeSlice_sigmazz[dev_sourcesPositionRegCenterGrid[iThread]] += dev_signalIn_sigmazz[iThread * dev_ntw + itw];
+		}
 }
+
 
 /* Inject source on x shifted grid: no need for a "if" statement because the number of threads = nb devices */
 __global__ void ker_inject_source_xGrid(double *dev_signalIn_vx,
     double *dev_timeSlice_vx,
-    int itw, int *dev_sourcesPositionRegXGrid){
+    int itw, int *dev_sourcesPositionRegXGrid, int nSourcesRegXGrid){
 
     //thread per source device
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_timeSlice_vx[dev_sourcesPositionRegXGrid[iThread]] += dev_signalIn_vx[iThread * dev_ntw + itw]; // Time is the fast axis
+		if (iThread < nSourcesRegXGrid) {
+				dev_timeSlice_vx[dev_sourcesPositionRegXGrid[iThread]] += dev_signalIn_vx[iThread * dev_ntw + itw]; // Time is the fast axis
+		}
 }
 /* Inject source on z shifted grid: no need for a "if" statement because the number of threads = nb devices */
 __global__ void ker_inject_source_zGrid(double *dev_signalIn_vz,
     double *dev_timeSlice_vz,
-    int itw, int *dev_sourcesPositionRegZGrid){
+    int itw, int *dev_sourcesPositionRegZGrid, int nSourcesRegZGrid){
 
     //thread per source device
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_timeSlice_vz[dev_sourcesPositionRegZGrid[iThread]] += dev_signalIn_vz[iThread * dev_ntw + itw]; // Time is the fast axis
+		if (iThread < nSourcesRegZGrid){
+				dev_timeSlice_vz[dev_sourcesPositionRegZGrid[iThread]] += dev_signalIn_vz[iThread * dev_ntw + itw]; // Time is the fast axis
+		}
 }
 /* Inject source on xz shifted grid: no need for a "if" statement because the number of threads = nb devices */
 __global__ void ker_inject_source_xzGrid(double *dev_signalIn_sigmaxz,
      double *dev_timeSlice_sigmaxz,
-     int itw, int *dev_sourcesPositionRegXZGrid){
+     int itw, int *dev_sourcesPositionRegXZGrid, int nSourcesRegXZGrid){
 
     //thread per source device
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
-    dev_timeSlice_sigmaxz[dev_sourcesPositionRegXZGrid[iThread]] += dev_signalIn_sigmaxz[iThread * dev_ntw + itw]; // Time is the fast axis
+		if (iThread < nSourcesRegXZGrid) {
+			dev_timeSlice_sigmaxz[dev_sourcesPositionRegXZGrid[iThread]] += dev_signalIn_sigmaxz[iThread * dev_ntw + itw]; // Time is the fast axis
+		}
 }
 
 __global__ void ker_interp_inject_data_centerGrid(double *dev_signalIn_sigmaxx,
@@ -146,8 +156,8 @@ __global__ void ker_interp_inject_data_centerGrid(double *dev_signalIn_sigmaxx,
 
     int iThread = blockIdx.x * blockDim.x + threadIdx.x;
     if (iThread < dev_nReceiversRegCenterGrid) {
-    dev_timeSlice_sigmaxx[dev_receiversPositionRegCenterGrid[iThread]] += dev_signalIn_sigmaxx[dev_nts*iThread+its] * dev_interpFilter[it2+1] + dev_signalIn_sigmaxx[dev_nts*iThread+its+1] * dev_interpFilter[dev_hInterpFilter+it2+1];
-    dev_timeSlice_sigmazz[dev_receiversPositionRegCenterGrid[iThread]] += dev_signalIn_sigmazz[dev_nts*iThread+its] * dev_interpFilter[it2+1] + dev_signalIn_sigmazz[dev_nts*iThread+its+1] * dev_interpFilter[dev_hInterpFilter+it2+1];
+	    dev_timeSlice_sigmaxx[dev_receiversPositionRegCenterGrid[iThread]] += dev_signalIn_sigmaxx[dev_nts*iThread+its] * dev_interpFilter[it2+1] + dev_signalIn_sigmaxx[dev_nts*iThread+its+1] * dev_interpFilter[dev_hInterpFilter+it2+1];
+	    dev_timeSlice_sigmazz[dev_receiversPositionRegCenterGrid[iThread]] += dev_signalIn_sigmazz[dev_nts*iThread+its] * dev_interpFilter[it2+1] + dev_signalIn_sigmazz[dev_nts*iThread+its+1] * dev_interpFilter[dev_hInterpFilter+it2+1];
     }
 }
 __global__ void ker_interp_inject_data_xGrid(double *dev_signalIn_vx,
