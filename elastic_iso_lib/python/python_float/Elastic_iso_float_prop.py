@@ -168,27 +168,6 @@ def chunkData(dataVecLocal,dataSpaceRemote):
 	return dataVecRemote
 
 ############################ Acquisition geometry ##############################
-# Reads source or receiver x,y,z locations from parFile
-def parsePosParFile(PosParFile):
-	nDevices = None
-	devCoords = []
-	with open(PosParFile,"r") as fid:
-		for line in fid:
-			if("#" != line[0]):
-				lineCur = line.split()
-				if(len(lineCur)==1):
-					nDevices=float(lineCur[0])
-				elif(len(lineCur)==3):
-					lineCur[0] = float(lineCur[0])
-					lineCur[1] = float(lineCur[1])
-					lineCur[2] = float(lineCur[2])
-					devCoords.append(lineCur)
-				else:
-					raise ValueError("Error: Incorrectly formatted line, %s, in %s"%(lineCur,PosParFile))
-	if(nDevices != None):
-		if (len(devCoords) != nDevices): raise ValueError("ERROR: number of devices in parfile (%d) not the same as specified nDevices (%d)"%(len(a),nDevices))
-	devCoordsNdArray = np.asarray(devCoords)
-	return devCoordsNdArray[:,0],devCoordsNdArray[:,2]
 
 # Build sources geometry
 def buildSourceGeometry(parObject,elasticParam):
@@ -238,8 +217,6 @@ def buildSourceGeometry(parObject,elasticParam):
 	sourceGeomFile = parObject.getString("sourceGeomFile","None")
 
 	if sourceGeomFile != "None":
-		# Set the flag to irregular
-		# regSourceGeom = 0
 
 		# Read geometry file
 		# 3 axes:
@@ -439,9 +416,20 @@ def buildReceiversGeometry(parObject,elasticParam):
 	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
 
 	# receiver _zCoord and _xCoord
-	recParFile = parObject.getString("recParFile","none")
-	if(recParFile != "none"):
-		xCoord,zCoord = parsePosParFile(recParFile)
+	recGeomFile = parObject.getString("recGeomFile","none")
+	if(recGeomFile != "none"):
+		# Read geometry file
+		# 3 axes:
+		# First (fastest) axis: experiment index [for now fixed for every source]
+		# Second (slower) axis: receiver points
+		# Third (slowest) axis: spatial coordinates [x,y,z]
+		recGeomVectorNd = genericIO.defaultIO.getVector(recGeomFile,ndims=3).getNdArray()
+		xCoord = recGeomVectorNd[0,:,0]
+		zCoord = recGeomVectorNd[2,:,0]
+		# Check if number of receivers is consistent with parameter file
+		nRec = parObject.getInt("nReceiver")
+		if nRec != len(xCoord):
+			raise ValueError("ERROR [buildReceiversGeometry]: Number of receiver coordinates (%s) not consistent with parameter file (nReceiver=%d)"%(len(xCoord),nRec))
 
 		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
@@ -520,9 +508,20 @@ def buildReceiversGeometryDask(parObject,elasticParamHyper,client):
 	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
 
 	# receiver _zCoord and _xCoord
-	recParFile = parObject.getString("recParFile","none")
-	if(recParFile != "none"):
-		xCoord,zCoord = parsePosParFile(recParFile)
+	recGeomFile = parObject.getString("recGeomFile","none")
+	if(recGeomFile != "none"):
+		# Read geometry file
+		# 3 axes:
+		# First (fastest) axis: experiment index [for now fixed for every source]
+		# Second (slower) axis: receiver points
+		# Third (slowest) axis: spatial coordinates [x,y,z]
+		recGeomVectorNd = genericIO.defaultIO.getVector(recGeomFile,ndims=3).getNdArray()
+		xCoord = recGeomVectorNd[0,:,0]
+		zCoord = recGeomVectorNd[2,:,0]
+		# Check if number of receivers is consistent with parameter file
+		nRec = parObject.getInt("nReceiver")
+		if nRec != len(xCoord):
+			raise ValueError("ERROR [buildReceiversGeometry]: Number of receiver coordinates (%s) not consistent with parameter file (nReceiver=%d)"%(len(xCoord),nRec))
 		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
 		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
