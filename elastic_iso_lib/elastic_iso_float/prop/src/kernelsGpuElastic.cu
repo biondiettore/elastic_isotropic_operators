@@ -98,7 +98,7 @@ __global__ void ker_record_source_XZGrid(float *dev_newTimeSlice_sigmaxz,
 /****************************************************************************************/
 /***************************************** Injection ************************************/
 /****************************************************************************************/
-/* Inject source on center grid: no need for a "if" statement because the number of threads = nb devices */
+/* Inject source on center grid */
 __global__ void ker_inject_source_centerGrid(float *dev_signalIn_sigmaxx,
      float *dev_signalIn_sigmazz,
      float *dev_timeSlice_sigmaxx,
@@ -114,7 +114,7 @@ __global__ void ker_inject_source_centerGrid(float *dev_signalIn_sigmaxx,
 }
 
 
-/* Inject source on x shifted grid: no need for a "if" statement because the number of threads = nb devices */
+/* Inject source on x shifted grid */
 __global__ void ker_inject_source_xGrid(float *dev_signalIn_vx,
     float *dev_timeSlice_vx,
     int itw, int *dev_sourcesPositionRegXGrid, int nSourcesRegXGrid){
@@ -125,7 +125,7 @@ __global__ void ker_inject_source_xGrid(float *dev_signalIn_vx,
 				dev_timeSlice_vx[dev_sourcesPositionRegXGrid[iThread]] += dev_signalIn_vx[iThread * dev_ntw + itw]; // Time is the fast axis
 		}
 }
-/* Inject source on z shifted grid: no need for a "if" statement because the number of threads = nb devices */
+/* Inject source on z shifted grid */
 __global__ void ker_inject_source_zGrid(float *dev_signalIn_vz,
     float *dev_timeSlice_vz,
     int itw, int *dev_sourcesPositionRegZGrid, int nSourcesRegZGrid){
@@ -136,7 +136,7 @@ __global__ void ker_inject_source_zGrid(float *dev_signalIn_vz,
 				dev_timeSlice_vz[dev_sourcesPositionRegZGrid[iThread]] += dev_signalIn_vz[iThread * dev_ntw + itw]; // Time is the fast axis
 		}
 }
-/* Inject source on xz shifted grid: no need for a "if" statement because the number of threads = nb devices */
+/* Inject source on xz shifted grid */
 __global__ void ker_inject_source_xzGrid(float *dev_signalIn_sigmaxz,
      float *dev_timeSlice_sigmaxz,
      int itw, int *dev_sourcesPositionRegXZGrid, int nSourcesRegXZGrid){

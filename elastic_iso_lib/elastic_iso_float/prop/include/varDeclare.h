@@ -6,7 +6,7 @@
 #define BLOCK_SIZE_DATA 128
 #define BLOCK_SIZE_EXT 8
 #define FAT 4
-#define COEFF_SIZE 4 // Laplacian coefficient array for 10th order
+#define COEFF_SIZE 4 // Derivative coefficient array for 8th order
 #define PI_CUDA M_PI // Import the number "Pi" from the math library
 #define PAD_MAX 500 // Maximum number of points for padding (on one side)
 #define SUB_MAX 100 // Maximum subsampling value

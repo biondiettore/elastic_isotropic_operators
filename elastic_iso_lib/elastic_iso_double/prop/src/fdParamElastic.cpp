@@ -57,7 +57,7 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<double3DReg> elasticParam, 
 	_xAxis = axis(_nx, _ox, _dx);
 
 	if (_mod_par == 2){
-		// Scaling spacial samplings if km were provided
+		// Scaling spatial samplings if km were provided
 		_dz *= 1000.;
 		_ox *= 1000.;
 		_dx *= 1000.;
@@ -112,11 +112,6 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<double3DReg> elasticParam, 
 	};
 
 	/***** Scaling for propagation *****/
-	_rhoxDtw = new double[_nz * _nx * sizeof(double)]; // Precomputed scaling dtw / rho_x
-	_rhozDtw = new double[_nz * _nx * sizeof(double)]; // Precomputed scaling dtw / rho_z
-	_lamb2MuDtw = new double[_nz * _nx * sizeof(double)]; // Precomputed scaling (lambda + 2*mu) * dtw
-	_lambDtw = new double[_nz * _nx * sizeof(double)]; // Precomputed scaling lambda * dtw
-	_muxzDtw = new double[_nz * _nx * sizeof(double)]; // Precomputed scaling mu_xz * dtw
 
 	//initialize 2d slices
 	_rhoxDtwReg = std::make_shared<double2DReg>(_elasticParam->getHyper()->getAxis(1), _elasticParam->getHyper()->getAxis(2));
