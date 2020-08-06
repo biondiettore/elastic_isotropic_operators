@@ -265,6 +265,20 @@ if __name__ == '__main__':
 		if(not dataFloat.checkSame(data)):
 			raise ValueError("ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file")
 
+	########################### Data Masking Op ################################
+
+	dataMaskFile = parObject.getString("dataMask","noDataMask")
+
+	if dataMaskFile != "noDataMask":
+		dataMask=genericIO.defaultIO.getVector(dataMaskFile,ndims=4)
+		if client:
+			dataMask = Elastic_iso_float_prop.chunkData(dataMask,data)
+		if not dataMask.checkSame(data):
+			raise ValueError("ERROR! Data mask file inconsistent with observed data vector")
+		dataMask = pyOp.DiagonalOp(dataMask)
+		#modeling operator = M*F
+		invOp=pyOp.ChainOperator(invOp,dataMask)
+
 	########################### Source components ##############################
 
 	compSou = parObject.getString("compSou")
