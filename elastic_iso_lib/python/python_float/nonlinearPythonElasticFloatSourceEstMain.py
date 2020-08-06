@@ -178,16 +178,16 @@ class ElasticSouComp(pyOp.Operator):
 			idx = self.comp_list.index("fz")
 			modelNd[:,idx,:,:] += dataNd[:,1,:,:]
 		#Checking if Mxx (normal stress) was requested to be sampled
-		if("Mxx" in self.comp_list):
-			idx = self.comp_list.index("Mxx")
+		if("mxx" in self.comp_list):
+			idx = self.comp_list.index("mxx")
 			modelNd[:,idx,:,:] += dataNd[:,2,:,:]
 		#Checking if Mzz (normal stress) was requested to be sampled
-		if("Mzz" in self.comp_list):
-			idx = self.comp_list.index("Mzz")
+		if("mzz" in self.comp_list):
+			idx = self.comp_list.index("mzz")
 			modelNd[:,idx,:,:] += dataNd[:,3,:,:]
 		#Checking if Mzz (normal stress) was requested to be sampled
-		if("Mxz" in self.comp_list):
-			idx = self.comp_list.index("Mxz")
+		if("mxz" in self.comp_list):
+			idx = self.comp_list.index("mxz")
 			modelNd[:,idx,:,:] += dataNd[:,4,:,:]
 		return
 
