@@ -125,8 +125,8 @@ class ElasticSouComp(pyOp.Operator):
 		self.setDomainRange(domain,range)
 		#Making the list lower case
 		self.comp_list = [elem.lower() for elem in self.comp_list]
-		if not any(["fx" in self.comp_list,"fz" in self.comp_list,"Mxx" in self.comp_list,"Mzz" in self.comp_list,"Mzz" in self.comp_list]):
-			raise ValueError("ERROR! Provided unknown data components: %s"%(components))
+		if not any(["fx" in self.comp_list,"fz" in self.comp_list,"mxx" in self.comp_list,"mzz" in self.comp_list,"mxz" in self.comp_list]):
+			raise ValueError("ERROR! Provided unknown source components: %s"%(components))
 
 		return
 
@@ -148,16 +148,16 @@ class ElasticSouComp(pyOp.Operator):
 			idx = self.comp_list.index("fz")
 			dataNd[:,1,:,:] += modelNd[:,idx,:,:]
 		#Checking if Mxx (normal stress) was requested to be sampled
-		if("Mxx" in self.comp_list):
-			idx = self.comp_list.index("Mxx")
+		if("mxx" in self.comp_list):
+			idx = self.comp_list.index("mxx")
 			dataNd[:,2,:,:] += modelNd[:,idx,:,:]
 		#Checking if Mzz (normal stress) was requested to be sampled
-		if("Mzz" in self.comp_list):
-			idx = self.comp_list.index("Mzz")
+		if("mzz" in self.comp_list):
+			idx = self.comp_list.index("mzz")
 			dataNd[:,3,:,:] += modelNd[:,idx,:,:]
 		#Checking if Mzz (normal stress) was requested to be sampled
-		if("Mxz" in self.comp_list):
-			idx = self.comp_list.index("Mxz")
+		if("mxz" in self.comp_list):
+			idx = self.comp_list.index("mxz")
 			dataNd[:,4,:,:] += modelNd[:,idx,:,:]
 		return
 
@@ -270,7 +270,12 @@ if __name__ == '__main__':
 	dataMaskFile = parObject.getString("dataMask","noDataMask")
 
 	if dataMaskFile != "noDataMask":
+		print("----- Provided data mask -----")
 		dataMask=genericIO.defaultIO.getVector(dataMaskFile,ndims=4)
+		#Necessary to Fix strange checkSame error in pyVector
+		dataTmp = data.clone()
+		dataTmp.getNdArray()[:] = dataMask.getNdArray()
+		dataMask = dataTmp
 		if client:
 			dataMask = Elastic_iso_float_prop.chunkData(dataMask,data)
 		if not dataMask.checkSame(data):
