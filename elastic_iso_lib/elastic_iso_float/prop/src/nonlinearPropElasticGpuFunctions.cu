@@ -330,6 +330,7 @@ void modelAllocateGpu(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSour
 		cuda_call(cudaMalloc((void**) &dev_modelRegDtw_sigmazz[iGpu], nSourcesRegCenterGrid*host_ntw*sizeof(float))); // Allocate input on device
 		cuda_call(cudaMalloc((void**) &dev_modelRegDtw_sigmaxz[iGpu], nSourcesRegXZGrid*host_ntw*sizeof(float))); // Allocate input on device
 }
+
 //copy model from host to device
 void modelCopyToGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRegDtw_sigmaxx, float *modelRegDtw_sigmazz, float *modelRegDtw_sigmaxz, int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int iGpu){
 		cuda_call(cudaMemcpy(dev_modelRegDtw_vx[iGpu], modelRegDtw_vx, nSourcesRegXGrid*host_ntw*sizeof(float), cudaMemcpyHostToDevice)); // Copy input signals on device
@@ -338,7 +339,7 @@ void modelCopyToGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRe
 		cuda_call(cudaMemcpy(dev_modelRegDtw_sigmazz[iGpu], modelRegDtw_sigmazz, nSourcesRegCenterGrid*host_ntw*sizeof(float), cudaMemcpyHostToDevice)); // Copy input signals on device
 		cuda_call(cudaMemcpy(dev_modelRegDtw_sigmaxz[iGpu], modelRegDtw_sigmaxz, nSourcesRegXZGrid*host_ntw*sizeof(float), cudaMemcpyHostToDevice)); // Copy input signals on device
 }
-//initialize model valeus to
+//initialize model values to
 void modelInitializeOnGpu(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int iGpu){
 		cuda_call(cudaMemset(dev_modelRegDtw_vx[iGpu], 0, nSourcesRegXGrid*host_ntw*sizeof(float))); // Copy input signals on device
 		cuda_call(cudaMemset(dev_modelRegDtw_vz[iGpu], 0, nSourcesRegZGrid*host_ntw*sizeof(float))); // Copy input signals on device
@@ -449,15 +450,15 @@ void launchFwdInjectSourceKernels(int nblockSouCenterGrid, int nblockSouXGrid, i
 		kernel_exec(ker_inject_source_centerGrid<<<nblockSouCenterGrid, BLOCK_SIZE_DATA>>>(dev_modelRegDtw_sigmaxx[iGpu], dev_modelRegDtw_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], itw-1, dev_sourcesPositionRegCenterGrid[iGpu], nSourcesRegCenterGrid));
 		kernel_exec(ker_inject_source_xGrid<<<nblockSouXGrid, BLOCK_SIZE_DATA>>>(dev_modelRegDtw_vx[iGpu], dev_p0_vx[iGpu], itw-1, dev_sourcesPositionRegXGrid[iGpu], nSourcesRegXGrid));
 		kernel_exec(ker_inject_source_zGrid<<<nblockSouZGrid, BLOCK_SIZE_DATA>>>(dev_modelRegDtw_vz[iGpu], dev_p0_vz[iGpu], itw-1, dev_sourcesPositionRegZGrid[iGpu], nSourcesRegZGrid));
-		kernel_exec(ker_inject_source_xzGrid<<<nSourcesRegXZGrid, BLOCK_SIZE_DATA>>>(dev_modelRegDtw_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], itw-1, dev_sourcesPositionRegXZGrid[iGpu], nSourcesRegXZGrid));
+		kernel_exec(ker_inject_source_xzGrid<<<nblockSouXZGrid, BLOCK_SIZE_DATA>>>(dev_modelRegDtw_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], itw-1, dev_sourcesPositionRegXZGrid[iGpu], nSourcesRegXZGrid));
 
 }
 void launchFwdInjectSourceKernelsStreams(int nblockSouCenterGrid, int nblockSouXGrid, int nblockSouZGrid, int nblockSouXZGrid, int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int itw, int iGpu){
 
 		kernel_stream_exec(ker_inject_source_centerGrid<<<nblockSouCenterGrid, BLOCK_SIZE_DATA, 0, compStream[iGpu]>>>(dev_modelRegDtw_sigmaxx[iGpu], dev_modelRegDtw_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], itw-1, dev_sourcesPositionRegCenterGrid[iGpu], nSourcesRegCenterGrid));
 		kernel_stream_exec(ker_inject_source_xGrid<<<nblockSouXGrid, BLOCK_SIZE_DATA, 0, compStream[iGpu]>>>(dev_modelRegDtw_vx[iGpu], dev_p0_vx[iGpu], itw-1, dev_sourcesPositionRegXGrid[iGpu], nSourcesRegXGrid));
-		kernel_stream_exec(ker_inject_source_zGrid<<<nSourcesRegZGrid, BLOCK_SIZE_DATA, 0, compStream[iGpu]>>>(dev_modelRegDtw_vz[iGpu], dev_p0_vz[iGpu], itw-1, dev_sourcesPositionRegZGrid[iGpu], nSourcesRegZGrid));
-		kernel_stream_exec(ker_inject_source_xzGrid<<<nSourcesRegXZGrid, BLOCK_SIZE_DATA, 0, compStream[iGpu]>>>(dev_modelRegDtw_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], itw-1, dev_sourcesPositionRegXZGrid[iGpu], nSourcesRegXZGrid));
+		kernel_stream_exec(ker_inject_source_zGrid<<<nblockSouZGrid, BLOCK_SIZE_DATA, 0, compStream[iGpu]>>>(dev_modelRegDtw_vz[iGpu], dev_p0_vz[iGpu], itw-1, dev_sourcesPositionRegZGrid[iGpu], nSourcesRegZGrid));
+		kernel_stream_exec(ker_inject_source_xzGrid<<<nblockSouXZGrid, BLOCK_SIZE_DATA, 0, compStream[iGpu]>>>(dev_modelRegDtw_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], itw-1, dev_sourcesPositionRegXZGrid[iGpu], nSourcesRegXZGrid));
 
 }
 void launchDampCosineEdgeKernels(dim3 dimGrid, dim3 dimBlock, int iGpu){
