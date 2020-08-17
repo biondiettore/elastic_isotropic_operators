@@ -104,7 +104,7 @@ if __name__ == '__main__':
 			genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
 		else:
 			#run Nonlinear forward without wavefield saving
-			nonlinearElasticOp.forward(False,modelDouble,dataDouble)
+			nonlinearElasticOp.adjoint(False,modelDouble,dataDouble)
 		#write data to disk
 		modelFloat=SepVector.getSepVector(modelDouble.getHyper(),storage="dataFloat")
 		modelFloatNp=modelFloat.getNdArray()
