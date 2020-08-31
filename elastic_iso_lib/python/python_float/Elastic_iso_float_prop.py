@@ -382,15 +382,6 @@ def buildReceiversGeometry(parObject,elasticParam):
 	dz=elasticParam.getHyper().axes[0].d
 	oz=elasticParam.getHyper().axes[0].o
 
-	nzReceiver=1
-	ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
-	dzReceiver=0
-	nxReceiver=parObject.getInt("nReceiver")
-	oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
-	dxReceiver=parObject.getInt("dReceiver")
-	receiverAxis=Hypercube.axis(n=nxReceiver,o=ox+oxReceiver*dx,d=dxReceiver*dx)
-	nRecGeom=1; # Constant receivers' geometry
-
 	##need a hypercube for centerGrid, x shifted, z shifted, and xz shifted grid
 	zAxis=Hypercube.axis(n=elasticParam.getHyper().axes[0].n,o=elasticParam.getHyper().axes[0].o,d=elasticParam.getHyper().axes[0].d)
 	zAxisShifted=Hypercube.axis(n=elasticParam.getHyper().axes[0].n,o=elasticParam.getHyper().axes[0].o-0.5*elasticParam.getHyper().axes[0].d,d=elasticParam.getHyper().axes[0].d)
@@ -443,6 +434,16 @@ def buildReceiversGeometry(parObject,elasticParam):
 		xCoordFloatNd[:] = xCoord
 
 	else:
+
+		nzReceiver=1
+		ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+		dzReceiver=0
+		nxReceiver=parObject.getInt("nReceiver")
+		oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
+		dxReceiver=parObject.getInt("dReceiver")
+		receiverAxis=Hypercube.axis(n=nxReceiver,o=ox+oxReceiver*dx,d=dxReceiver*dx)
+		nRecGeom=1; # Constant receivers' geometry
+
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
 		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
@@ -486,14 +487,6 @@ def buildReceiversGeometryDask(parObject,elasticParamHyper,client):
 	dz=elasticParamHyper.axes[0].d
 	oz=elasticParamHyper.axes[0].o
 
-	nzReceiver=1
-	ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
-	dzReceiver=0
-	nxReceiver=parObject.getInt("nReceiver")
-	oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
-	dxReceiver=parObject.getInt("dReceiver")
-	nRecGeom=1; # Constant receivers' geometry
-
 	##need a hypercube for centerGrid, x shifted, z shifted, and xz shifted grid
 	zAxis=Hypercube.axis(n=elasticParamHyper.axes[0].n,o=elasticParamHyper.axes[0].o,d=elasticParamHyper.axes[0].d)
 	zAxisShifted=Hypercube.axis(n=elasticParamHyper.axes[0].n,o=elasticParamHyper.axes[0].o-0.5*elasticParamHyper.axes[0].d,d=elasticParamHyper.axes[0].d)
@@ -534,6 +527,15 @@ def buildReceiversGeometryDask(parObject,elasticParamHyper,client):
 		xCoordFloatNd[:] = xCoord
 
 	else:
+
+		nzReceiver=1
+		ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+		dzReceiver=0
+		nxReceiver=parObject.getInt("nReceiver")
+		oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
+		dxReceiver=parObject.getInt("dReceiver")
+		nRecGeom=1; # Constant receivers' geometry
+
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
 		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
