@@ -406,6 +406,8 @@ def buildReceiversGeometry(parObject,elasticParam):
 	recInterpMethod = parObject.getString("recInterpMethod","linear")
 	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
 
+	nRecGeom=1; # Constant receivers' geometry
+
 	# receiver _zCoord and _xCoord
 	recGeomFile = parObject.getString("recGeomFile","none")
 	if(recGeomFile != "none"):
@@ -421,6 +423,7 @@ def buildReceiversGeometry(parObject,elasticParam):
 		nRec = parObject.getInt("nReceiver")
 		if nRec != len(xCoord):
 			raise ValueError("ERROR [buildReceiversGeometry]: Number of receiver coordinates (%s) not consistent with parameter file (nReceiver=%d)"%(len(xCoord),nRec))
+		receiverAxis=Hypercube.axis(n=nRec,o=1.0,d=1.0)
 
 		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
@@ -442,7 +445,6 @@ def buildReceiversGeometry(parObject,elasticParam):
 		oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
 		dxReceiver=parObject.getInt("dReceiver")
 		receiverAxis=Hypercube.axis(n=nxReceiver,o=ox+oxReceiver*dx,d=dxReceiver*dx)
-		nRecGeom=1; # Constant receivers' geometry
 
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
@@ -500,6 +502,8 @@ def buildReceiversGeometryDask(parObject,elasticParamHyper,client):
 	recInterpMethod = parObject.getString("recInterpMethod","linear")
 	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
 
+	nRecGeom=1; # Constant receivers' geometry
+
 	# receiver _zCoord and _xCoord
 	recGeomFile = parObject.getString("recGeomFile","none")
 	if(recGeomFile != "none"):
@@ -511,10 +515,13 @@ def buildReceiversGeometryDask(parObject,elasticParamHyper,client):
 		recGeomVectorNd = genericIO.defaultIO.getVector(recGeomFile,ndims=3).getNdArray()
 		xCoord = recGeomVectorNd[0,:,0]
 		zCoord = recGeomVectorNd[2,:,0]
+
 		# Check if number of receivers is consistent with parameter file
 		nRec = parObject.getInt("nReceiver")
 		if nRec != len(xCoord):
 			raise ValueError("ERROR [buildReceiversGeometry]: Number of receiver coordinates (%s) not consistent with parameter file (nReceiver=%d)"%(len(xCoord),nRec))
+		receiverAxis=Hypercube.axis(n=nRec,o=1.0,d=1.0)
+
 		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
 		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataFloat")
@@ -534,7 +541,6 @@ def buildReceiversGeometryDask(parObject,elasticParamHyper,client):
 		nxReceiver=parObject.getInt("nReceiver")
 		oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
 		dxReceiver=parObject.getInt("dReceiver")
-		nRecGeom=1; # Constant receivers' geometry
 
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
