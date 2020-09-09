@@ -543,24 +543,6 @@ void launchFwdStepKernelsStreams(dim3 dimGrid, dim3 dimBlock, int iGpu){
 		kernel_stream_exec(ker_step_fwd<<<dimGrid, dimBlock, 0, compStream[iGpu]>>>(dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_p1_vx[iGpu], dev_p1_vz[iGpu], dev_p1_sigmaxx[iGpu], dev_p1_sigmazz[iGpu], dev_p1_sigmaxz[iGpu], dev_p0_vx[iGpu], dev_p0_vz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], dev_p0_sigmaxz[iGpu], dev_rhoxDtw[iGpu], dev_rhozDtw[iGpu], dev_lamb2MuDtw[iGpu], dev_lambDtw[iGpu], dev_muxzDtw[iGpu]));
 }
 
-// void launchFwdInjectSourceKernels(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int itw, int iGpu){
-//
-// 		kernel_exec(ker_inject_source_centerGrid<<<1, nSourcesRegCenterGrid>>>(dev_sourceRegDtw_sigmaxx[iGpu], dev_sourceRegDtw_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], itw-1, dev_sourcesPositionRegCenterGrid[iGpu]));
-// 		kernel_exec(ker_inject_source_xGrid<<<1, nSourcesRegXGrid>>>(dev_sourceRegDtw_vx[iGpu], dev_p0_vx[iGpu], itw-1, dev_sourcesPositionRegXGrid[iGpu]));
-// 		kernel_exec(ker_inject_source_zGrid<<<1, nSourcesRegZGrid>>>(dev_sourceRegDtw_vz[iGpu], dev_p0_vz[iGpu], itw-1, dev_sourcesPositionRegZGrid[iGpu]));
-// 		kernel_exec(ker_inject_source_xzGrid<<<1, nSourcesRegXZGrid>>>(dev_sourceRegDtw_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], itw-1, dev_sourcesPositionRegXZGrid[iGpu]));
-//
-// }
-// void launchFwdInjectSourceKernelsStreams(int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int itw, int iGpu){
-//
-// 		kernel_stream_exec(ker_inject_source_centerGrid<<<1, nSourcesRegCenterGrid, 0, compStream[iGpu]>>>(dev_sourceRegDtw_sigmaxx[iGpu], dev_sourceRegDtw_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], itw-1, dev_sourcesPositionRegCenterGrid[iGpu]));
-//
-// 		kernel_stream_exec(ker_inject_source_xGrid<<<1, nSourcesRegXGrid, 0, compStream[iGpu]>>>(dev_sourceRegDtw_vx[iGpu], dev_p0_vx[iGpu], itw-1, dev_sourcesPositionRegXGrid[iGpu]));
-// 		kernel_stream_exec(ker_inject_source_zGrid<<<1, nSourcesRegZGrid, 0, compStream[iGpu]>>>(dev_sourceRegDtw_vz[iGpu], dev_p0_vz[iGpu], itw-1, dev_sourcesPositionRegZGrid[iGpu]));
-//
-// 		kernel_stream_exec(ker_inject_source_xzGrid<<<1, nSourcesRegXZGrid, 0, compStream[iGpu]>>>(dev_sourceRegDtw_sigmaxz[iGpu], dev_p0_sigmaxz[iGpu], itw-1, dev_sourcesPositionRegXZGrid[iGpu]));
-// }
-
 void launchFwdInjectSourceKernels(int nblockSouCenterGrid, int nblockSouXGrid, int nblockSouZGrid, int nblockSouXZGrid, int nSourcesRegCenterGrid, int nSourcesRegXGrid, int nSourcesRegZGrid, int nSourcesRegXZGrid, int itw, int iGpu){
 
 		kernel_exec(ker_inject_source_centerGrid<<<nblockSouCenterGrid, BLOCK_SIZE_DATA>>>(dev_sourceRegDtw_sigmaxx[iGpu], dev_sourceRegDtw_sigmazz[iGpu], dev_p0_sigmaxx[iGpu], dev_p0_sigmazz[iGpu], itw-1, dev_sourcesPositionRegCenterGrid[iGpu], nSourcesRegCenterGrid));
@@ -1395,7 +1377,6 @@ void BornShotsAdjGpu(float *sourceRegDtw_vx, float *sourceRegDtw_vz, float *sour
 				cuda_call(cudaStreamSynchronize(transferStream[iGpu]));
 
 				if (its < host_nts-2){
-					cuda_call(cudaStreamSynchronize(compStream[iGpu])); //DEBUG
 					// Streams related pointers
 					//Vx temporary slices
 					dev_temp1[iGpu] = dev_wavefieldVx_right[iGpu];

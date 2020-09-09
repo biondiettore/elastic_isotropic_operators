@@ -1377,7 +1377,6 @@ void BornShotsAdjGpu(double *sourceRegDtw_vx, double *sourceRegDtw_vz, double *s
 				cuda_call(cudaStreamSynchronize(transferStream[iGpu]));
 
 				if (its < host_nts-2){
-					cuda_call(cudaStreamSynchronize(compStream[iGpu])); //DEBUG
 					// Streams related pointers
 					//Vx temporary slices
 					dev_temp1[iGpu] = dev_wavefieldVx_right[iGpu];
