@@ -40,6 +40,13 @@ def parsePosParFile(PosParFile):
 # Build sources geometry
 def buildSourceGeometry(parObject,elasticParam):
 
+	#Dipole parameters
+	dipole = parObject.getInt("dipole",0)
+	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
+	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
+	nts = parObject.getInt("nts")
+	nExp = parObject.getInt("nExp")
+
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
 	dx=elasticParam.getHyper().axes[1].d
@@ -49,16 +56,6 @@ def buildSourceGeometry(parObject,elasticParam):
 	nz=elasticParam.getHyper().axes[0].n
 	dz=elasticParam.getHyper().axes[0].d
 	oz=elasticParam.getHyper().axes[0].o
-
-	# Sources geometry
-	nzSource=1
-	ozSource=parObject.getInt("zSource")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
-	dzSource=1
-	nxSource=1
-	oxSource=parObject.getInt("xSource")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
-	dxSource=1
-	spacingShots=parObject.getInt("spacingShots")
-	sourceAxis=Hypercube.axis(n=parObject.getInt("nExp"),o=ox+oxSource*dx,d=spacingShots*dx)
 
 	##need a hypercube for centerGrid, x shifted, z shifted, and xz shifted grid
 	zAxis=Hypercube.axis(n=elasticParam.getHyper().axes[0].n,o=elasticParam.getHyper().axes[0].o,d=elasticParam.getHyper().axes[0].d)
@@ -84,30 +81,78 @@ def buildSourceGeometry(parObject,elasticParam):
 	sourceInterpMethod = parObject.getString("sourceInterpMethod","linear")
 	sourceInterpNumFilters = parObject.getInt("sourceInterpNumFilters",4)
 
-	for ishot in range(parObject.getInt("nExp")):
-		# sources _zCoord and _xCoord
-		sourceAxisVertical=Hypercube.axis(n=nzSource,o=0.0,d=1.0)
-		zCoordHyper=Hypercube.hypercube(axes=[sourceAxisVertical])
-		zCoordDouble=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
-		sourceAxisHorizontal=Hypercube.axis(n=nxSource,o=0.0,d=1.0)
-		xCoordHyper=Hypercube.hypercube(axes=[sourceAxisHorizontal])
-		xCoordDouble=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+	sourceGeomFile = parObject.getString("sourceGeomFile","None")
 
-		#Setting z and x position of the source for the given experiment
-		zCoordDouble.set(oz+ozSource*dz)
-		xCoordDouble.set(ox+oxSource*dx)
+	if sourceGeomFile != "None":
 
-		sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
-		sourcesVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
-		sourcesVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
-		sourcesVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),sourceInterpMethod,sourceInterpNumFilters,0,0.0,0.0))
+		# Read geometry file
+		# 3 axes:
+		# First (fastest) axis: experiment index
+		# Second (slower) axis: simultaneous source points
+		# Third (slowest) axis: spatial coordinates
+		sourceGeomVectorNd = genericIO.defaultIO.getVector(sourceGeomFile,ndims=3).getNdArray()
+		nExpFile = sourceGeomVectorNd.shape[2]
+		nSimSou = sourceGeomVectorNd.shape[1]
 
-		oxSource=oxSource+spacingShots # Shift source
+		if nExp != nExpFile:
+			raise ValueError("ERROR! nExp (%d) not consistent with number of shots provided within sourceGeomFile (%d)"%(nExp,nExpFile))
+
+		sourceAxis=Hypercube.axis(n=parObject.getInt("nExp"),o=0.0,d=1.0)
+
+		for iExp in range(nExp):
+			zCoordFloat=SepVector.getSepVector(ns=[nSimSou],storage="dataDouble")
+			xCoordFloat=SepVector.getSepVector(ns=[nSimSou],storage="dataDouble")
+
+			#Setting z and x positions of the source for the given experiment
+			zCoordFloat.getNdArray()[:] = sourceGeomVectorNd[2,:,iExp]
+			xCoordFloat.getNdArray()[:] = sourceGeomVectorNd[0,:,iExp]
+
+			sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+			sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+			sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+			sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+
+	else:
+		# Sources geometry
+		nzSource=1
+		ozSource=parObject.getInt("zSource")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+		dzSource=1
+		nxSource=1
+		oxSource=parObject.getInt("xSource")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
+		dxSource=1
+		spacingShots=parObject.getInt("spacingShots")
+		sourceAxis=Hypercube.axis(n=parObject.getInt("nExp"),o=ox+oxSource*dx,d=spacingShots*dx)
+
+		for iExp in range(nExp):
+			# sources _zCoord and _xCoord
+			sourceAxisVertical=Hypercube.axis(n=nzSource,o=0.0,d=1.0)
+			zCoordHyper=Hypercube.hypercube(axes=[sourceAxisVertical])
+			zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
+			sourceAxisHorizontal=Hypercube.axis(n=nxSource,o=0.0,d=1.0)
+			xCoordHyper=Hypercube.hypercube(axes=[sourceAxisHorizontal])
+			xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+
+			#Setting z and x position of the source for the given experiment
+			zCoordFloat.set(oz+ozSource*dz)
+			xCoordFloat.set(ox+oxSource*dx)
+
+			sourcesVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+			sourcesVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+			sourcesVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+			sourcesVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),nts,sourceInterpMethod,sourceInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+
+			oxSource=oxSource+spacingShots # Shift source
 
 	return sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,sourceAxis
 
 # Build receivers geometry
 def buildReceiversGeometry(parObject,elasticParam):
+
+	#Dipole parameters
+	dipole = parObject.getInt("dipole",0)
+	zDipoleShift = parObject.getFloat("zDipoleShift",0.0)
+	xDipoleShift = parObject.getFloat("xDipoleShift",0.0)
+	nts = parObject.getInt("nts")
 
 	# Horizontal axis
 	nx=elasticParam.getHyper().axes[1].n
@@ -118,15 +163,6 @@ def buildReceiversGeometry(parObject,elasticParam):
 	nz=elasticParam.getHyper().axes[0].n
 	dz=elasticParam.getHyper().axes[0].d
 	oz=elasticParam.getHyper().axes[0].o
-
-	nzReceiver=1
-	ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
-	dzReceiver=0
-	nxReceiver=parObject.getInt("nReceiver")
-	oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
-	dxReceiver=parObject.getInt("dReceiver")
-	receiverAxis=Hypercube.axis(n=nxReceiver,o=ox+oxReceiver*dx,d=dxReceiver*dx)
-	nRecGeom=1; # Constant receivers' geometry
 
 	##need a hypercube for centerGrid, x shifted, z shifted, and xz shifted grid
 	zAxis=Hypercube.axis(n=elasticParam.getHyper().axes[0].n,o=elasticParam.getHyper().axes[0].o,d=elasticParam.getHyper().axes[0].d)
@@ -152,40 +188,63 @@ def buildReceiversGeometry(parObject,elasticParam):
 	recInterpMethod = parObject.getString("recInterpMethod","linear")
 	recInterpNumFilters = parObject.getInt("recInterpNumFilters",4)
 
+	nRecGeom=1; # Constant receivers' geometry
+
 	# receiver _zCoord and _xCoord
-	recParFile = parObject.getString("recParFile","none")
-	if(recParFile != "none"):
-		xCoordFloatNd,zCoordFloatNd = parsePosParFile(recParFile)
+	recGeomFile = parObject.getString("recGeomFile","none")
+	if(recGeomFile != "none"):
+		# Read geometry file
+		# 3 axes:
+		# First (fastest) axis: experiment index [for now fixed for every source]
+		# Second (slower) axis: receiver points
+		# Third (slowest) axis: spatial coordinates [x,y,z]
+		recGeomVectorNd = genericIO.defaultIO.getVector(recGeomFile,ndims=3).getNdArray()
+		xCoord = recGeomVectorNd[0,:,0]
+		zCoord = recGeomVectorNd[2,:,0]
+		# Check if number of receivers is consistent with parameter file
+		nRec = parObject.getInt("nReceiver")
+		if nRec != len(xCoord):
+			raise ValueError("ERROR [buildReceiversGeometry]: Number of receiver coordinates (%s) not consistent with parameter file (nReceiver=%d)"%(len(xCoord),nRec))
+		receiverAxis=Hypercube.axis(n=nRec,o=1.0,d=1.0)
 
 		recAxisVertical=Hypercube.axis(n=len(zCoord),o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
 		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
 		zCoordFloatNd = zCoordFloat.getNdArray()
-		zCoordFloatNd = zCoord
+		zCoordFloatNd[:] = zCoord
 		recAxisHorizontal=Hypercube.axis(n=len(xCoord),o=0.0,d=1.0)
 		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
 		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
 		xCoordFloatNd = xCoordFloat.getNdArray()
-		xCoordFloatNd = xCoord
+		xCoordFloatNd[:] = xCoord
 
 	else:
+
+		nzReceiver=1
+		ozReceiver=parObject.getInt("depthReceiver")-1+parObject.getInt("zPadMinus")+parObject.getInt("fat",4)
+		dzReceiver=0
+		nxReceiver=parObject.getInt("nReceiver")
+		oxReceiver=parObject.getInt("oReceiver")-1+parObject.getInt("xPadMinus")+parObject.getInt("fat",4)
+		dxReceiver=parObject.getInt("dReceiver")
+		receiverAxis=Hypercube.axis(n=nxReceiver,o=ox+oxReceiver*dx,d=dxReceiver*dx)
+
 		recAxisVertical=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		zCoordHyper=Hypercube.hypercube(axes=[recAxisVertical])
-		zCoordDouble=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
-		zCoordDoubleNd = zCoordDouble.getNdArray()
+		zCoordFloat=SepVector.getSepVector(zCoordHyper,storage="dataDouble")
+		zCoordFloatNd = zCoordFloat.getNdArray()
 		recAxisHorizontal=Hypercube.axis(n=nxReceiver,o=0.0,d=1.0)
 		xCoordHyper=Hypercube.hypercube(axes=[recAxisHorizontal])
-		xCoordDouble=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
-		xCoordDoubleNd = xCoordDouble.getNdArray()
+		xCoordFloat=SepVector.getSepVector(xCoordHyper,storage="dataDouble")
+		xCoordFloatNd = xCoordFloat.getNdArray()
 		for irec in range(nxReceiver):
-			zCoordDoubleNd[irec] = oz + ozReceiver*dz + dzReceiver*dz*irec
-			xCoordDoubleNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
+			zCoordFloatNd[irec] = oz + ozReceiver*dz + dzReceiver*dz*irec
+			xCoordFloatNd[irec] = ox + oxReceiver*dx + dxReceiver*dx*irec
 
 	for iRec in range(nRecGeom):
-		recVectorCenterGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),centerGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
-		recVectorXGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
-		recVectorZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),zGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
-		recVectorXZGrid.append(spaceInterpGpu(zCoordDouble.getCpp(),xCoordDouble.getCpp(),xzGridHyper.getCpp(),parObject.getInt("nts"),recInterpMethod,recInterpNumFilters,0,0.0,0.0))
+		recVectorCenterGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),centerGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),zGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
+		recVectorXZGrid.append(spaceInterpGpu(zCoordFloat.getCpp(),xCoordFloat.getCpp(),xzGridHyper.getCpp(),nts,recInterpMethod,recInterpNumFilters,dipole,zDipoleShift,xDipoleShift))
 
 	return recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,receiverAxis
 
@@ -229,11 +288,20 @@ def nonlinearOpInitDouble(args):
 	ots=parObject.getFloat("ots",0.0)
 	dts=parObject.getFloat("dts",-1.0)
 	timeAxis=Hypercube.axis(n=nts,o=ots,d=dts)
-
 	# Allocate model
 	dummyAxis=Hypercube.axis(n=1)
 	wavefieldAxis=Hypercube.axis(n=5)
-	modelHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
+	sourceGeomFile = parObject.getString("sourceGeomFile","None")
+
+	# Allocate model
+	if sourceGeomFile != "None":
+		sourceGeomVector = genericIO.defaultIO.getVector(sourceGeomFile,ndims=3)
+		sourceSimAxis = sourceGeomVector.getHyper().getAxis(2)
+		modelHyper=Hypercube.hypercube(axes=[timeAxis,sourceSimAxis,wavefieldAxis,dummyAxis])
+	else:
+		modelHyper=Hypercube.hypercube(axes=[timeAxis,dummyAxis,wavefieldAxis,dummyAxis])
+
+	# Allocate model
 	modelDouble=SepVector.getSepVector(modelHyper,storage="dataDouble")
 
 	# Allocate data

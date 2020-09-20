@@ -168,10 +168,10 @@ class elasticStep(Op.Operator):
    								   self.xCoeff3*(sigmaxz_mu[ix+4][iz]-sigmaxz_mu[ix-3][iz])
 				)
 				# updating sigma-xx
-				m_arr[2,ix,iz] -= (self.zCoeff0*(vx_rho[ix+1][iz]-vx_rho[ix][iz])+\
-								   self.zCoeff1*(vx_rho[ix+2][iz]-vx_rho[ix-1][iz])+\
-								   self.zCoeff2*(vx_rho[ix+3][iz]-vx_rho[ix-2][iz])+\
-								   self.zCoeff3*(vx_rho[ix+4][iz]-vx_rho[ix-3][iz])\
+				m_arr[2,ix,iz] -= (self.xCoeff0*(vx_rho[ix+1][iz]-vx_rho[ix][iz])+\
+								   self.xCoeff1*(vx_rho[ix+2][iz]-vx_rho[ix-1][iz])+\
+								   self.xCoeff2*(vx_rho[ix+3][iz]-vx_rho[ix-2][iz])+\
+								   self.xCoeff3*(vx_rho[ix+4][iz]-vx_rho[ix-3][iz])\
 				)
 				# updating sigma-zz
 				m_arr[3,ix,iz] -= (self.zCoeff0*(vz_rho[ix][iz+1]-vz_rho[ix][iz])+\

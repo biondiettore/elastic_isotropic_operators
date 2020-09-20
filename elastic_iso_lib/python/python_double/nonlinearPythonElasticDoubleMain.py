@@ -33,11 +33,16 @@ if __name__ == '__main__':
 		dataFile=parObject.getString("data","noDataFile")
 		if (dataFile == "noDataFile"):
 			raise IOError("**** ERROR: User did not provide data file name ****\n")
-		#modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
-		modelFloat=genericIO.defaultIO.getVector(modelFile)
-		modelDMat=modelDouble.getNdArray()
-		modelSMat=modelFloat.getNdArray()
-		modelDMat[0,:,0,:]=modelSMat
+
+		sourceGeomFile = parObject.getString("sourceGeomFile","None")
+		if sourceGeomFile != "None":
+			modelTemp=genericIO.defaultIO.getVector(modelFile)
+			modelDouble.getNdArray()[0,:,:,:]=modelTemp.getNdArray()
+		else:
+			modelFloat=genericIO.defaultIO.getVector(modelFile)
+			modelDMat=modelDouble.getNdArray()
+			modelSMat=modelFloat.getNdArray()
+			modelDMat[0,:,0,:]=modelSMat
 
 		#check if we want to save wavefield
 		if (parObject.getInt("saveWavefield",0) == 1):

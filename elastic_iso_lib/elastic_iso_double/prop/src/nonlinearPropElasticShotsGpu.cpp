@@ -77,9 +77,7 @@ void nonlinearPropElasticShotsGpu::createGpuIdList(){
 }
 
 // Forward
-void nonlinearPropElasticShotsGpu::forward(const bool add,
-                                            const std::shared_ptr<double4DReg> model,
-                                            std::shared_ptr<double4DReg> data) const{
+void nonlinearPropElasticShotsGpu::forward(const bool add, const std::shared_ptr<double4DReg> model, std::shared_ptr<double4DReg> data) const{
 
     if (!add) data->scale(0.0);
 
@@ -140,9 +138,13 @@ void nonlinearPropElasticShotsGpu::forward(const bool add,
 
     // Copy model slice
     if(constantSrcSignal == 1) {
-      memcpy(modelSlicesVector[iGpu]->getVals(), &(model->getVals()[0]), sizeof(double)*hyperModelSlices->getAxis(1).n*hyperModelSlices->getAxis(2).n*hyperModelSlices->getAxis(3).n);
+			long long modelsize = hyperModelSlices->getAxis(1).n*hyperModelSlices->getAxis(2).n;
+			modelsize *= hyperModelSlices->getAxis(3).n;
+      memcpy(modelSlicesVector[iGpu]->getVals(), model->getVals(), modelsize*sizeof(double));
     } else {
-      memcpy(modelSlicesVector[iGpu]->getVals(), &(model->getVals()[iExp*hyperModelSlices->getAxis(1).n*hyperModelSlices->getAxis(2).n*hyperModelSlices->getAxis(3).n]), sizeof(double)*hyperModelSlices->getAxis(1).n*hyperModelSlices->getAxis(2).n*hyperModelSlices->getAxis(3).n);
+			long long modelsize = hyperModelSlices->getAxis(1).n*hyperModelSlices->getAxis(2).n;
+			modelsize *= hyperModelSlices->getAxis(3).n;
+      memcpy(modelSlicesVector[iGpu]->getVals(), &(model->getVals()[iExp*modelsize]), sizeof(double)*modelsize);
     }
     // Set acquisition geometry
     if (constantRecGeom == 1) {
@@ -180,9 +182,7 @@ void nonlinearPropElasticShotsGpu::forward(const bool add,
     deallocateNonlinearElasticGpu(iGpu,_gpuList[iGpu]);
   }
 }
-void nonlinearPropElasticShotsGpu::forwardWavefield(const bool add,
-                                            const std::shared_ptr<double4DReg> model,
-                                            std::shared_ptr<double4DReg> data){
+void nonlinearPropElasticShotsGpu::forwardWavefield(const bool add, const std::shared_ptr<double4DReg> model, std::shared_ptr<double4DReg> data){
 
     if (!add) data->scale(0.0);
 
@@ -302,9 +302,7 @@ void nonlinearPropElasticShotsGpu::forwardWavefield(const bool add,
 }
 
 // Adjoint
-void nonlinearPropElasticShotsGpu::adjoint(const bool add,
-                std::shared_ptr<SEP::double4DReg> model,
-                const std::shared_ptr<SEP::double4DReg> data) const{
+void nonlinearPropElasticShotsGpu::adjoint(const bool add, std::shared_ptr<SEP::double4DReg> model, const std::shared_ptr<SEP::double4DReg> data) const{
 
   	if (!add) model->scale(0.0);
 

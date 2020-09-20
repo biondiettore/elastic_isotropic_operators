@@ -1016,6 +1016,7 @@ void propShotsElasticAdjGpu(float *modelRegDtw_vx, float *modelRegDtw_vz, float 
 		cuda_call(cudaFree(dev_receiversPositionRegXGrid[iGpu]));
 		cuda_call(cudaFree(dev_receiversPositionRegZGrid[iGpu]));
 		cuda_call(cudaFree(dev_receiversPositionRegXZGrid[iGpu]));
+
 }
 void propShotsElasticAdjGpuWavefield(float *modelRegDtw_vx, float *modelRegDtw_vz, float *modelRegDtw_sigmaxx, float *modelRegDtw_sigmazz, float *modelRegDtw_sigmaxz, float *dataRegDts_vx, float *dataRegDts_vz, float *dataRegDts_sigmaxx, float *dataRegDts_sigmazz, float *dataRegDts_sigmaxz, int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid, int *sourcesPositionRegXGrid, int nSourcesRegXGrid, int *sourcesPositionRegZGrid, int nSourcesRegZGrid, int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid, int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid, int *receiversPositionRegXGrid, int nReceiversRegXGrid, int *receiversPositionRegZGrid, int nReceiversRegZGrid, int *receiversPositionRegXZGrid, int nReceiversRegXZGrid, float* wavefieldDts, int iGpu, int iGpuId){
 

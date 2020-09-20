@@ -78,20 +78,40 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
 	  data->scale(0.0);
   } else {
 	  /* Copy the data to the temporary array */
-	  std::memcpy(dataTemp_vx->getVals(),data->getVals(), _nReceiversIrregXGrid*_fdParamElastic->_nts*sizeof(float) );
-	  std::memcpy(dataTemp_vz->getVals(), data->getVals()+_nReceiversIrregXGrid*_fdParamElastic->_nts, _nReceiversIrregZGrid*_fdParamElastic->_nts*sizeof(float) );
-	  std::memcpy(dataTemp_sigmaxx->getVals(), data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid)*_fdParamElastic->_nts, _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-	  std::memcpy(dataTemp_sigmazz->getVals(), data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-	  std::memcpy(dataTemp_sigmaxz->getVals(), data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+2*_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, _nReceiversIrregXZGrid*_fdParamElastic->_nts*sizeof(float) );
+		long long shift;
+		long long chunk = _nReceiversIrregXGrid*_fdParamElastic->_nts;
+	  std::memcpy(dataTemp_vx->getVals(),data->getVals(), chunk*sizeof(float) );
+		shift = chunk;
+		chunk = _nReceiversIrregZGrid*_fdParamElastic->_nts;
+	  std::memcpy(dataTemp_vz->getVals(), data->getVals()+shift, chunk*sizeof(float) );
+		shift += chunk;
+		chunk = _nReceiversIrregCenterGrid*_fdParamElastic->_nts;
+	  std::memcpy(dataTemp_sigmaxx->getVals(), data->getVals()+shift, chunk*sizeof(float) );
+		shift += chunk;
+		chunk = _nReceiversIrregCenterGrid*_fdParamElastic->_nts;
+	  std::memcpy(dataTemp_sigmazz->getVals(), data->getVals()+shift, chunk*sizeof(float) );
+		shift += chunk;
+		chunk = _nReceiversIrregXZGrid*_fdParamElastic->_nts;
+	  std::memcpy(dataTemp_sigmaxz->getVals(), data->getVals()+shift, chunk*sizeof(float) );
 
   }
 
   /* Copy from 3d model to respective 2d model components */
-  std::memcpy( modelTemp_vx->getVals(), model->getVals(), _nSourcesIrregXGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy( modelTemp_vz->getVals(), model->getVals()+_nSourcesIrregXGrid*_fdParamElastic->_nts, _nSourcesIrregZGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy( modelTemp_sigmaxx->getVals(), model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid)*_fdParamElastic->_nts, _nSourcesIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy( modelTemp_sigmazz->getVals(), model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid+_nSourcesIrregCenterGrid)*_fdParamElastic->_nts, _nSourcesIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy( modelTemp_sigmaxz->getVals(), model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid+2*_nSourcesIrregCenterGrid)*_fdParamElastic->_nts, _nSourcesIrregXZGrid*_fdParamElastic->_nts*sizeof(float) );
+	long long shift;
+	long long chunk = _nSourcesIrregXGrid*_fdParamElastic->_nts;
+  std::memcpy(modelTemp_vx->getVals(), model->getVals(), chunk*sizeof(float));
+	shift = chunk;
+	chunk = _nSourcesIrregZGrid*_fdParamElastic->_nts;
+  std::memcpy(modelTemp_vz->getVals(), model->getVals()+shift, chunk*sizeof(float));
+	shift += chunk;
+	chunk = _nSourcesIrregCenterGrid*_fdParamElastic->_nts;
+  std::memcpy(modelTemp_sigmaxx->getVals(), model->getVals()+shift, chunk*sizeof(float));
+	shift += chunk;
+	chunk = _nSourcesIrregCenterGrid*_fdParamElastic->_nts;
+  std::memcpy(modelTemp_sigmazz->getVals(), model->getVals()+shift, chunk*sizeof(float));
+	shift += chunk;
+	chunk = _nSourcesIrregXZGrid*_fdParamElastic->_nts;
+  std::memcpy(modelTemp_sigmaxz->getVals(), model->getVals()+shift, chunk*sizeof(float));
 
   /* Interpolate model (seismic source) to regular grid */
   _sourcesXGrid->adjoint(false, modelRegDts_vx, modelTemp_vx);
@@ -208,11 +228,22 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
   _receiversXZGrid->forward(true, dataRegDts_sigmaxz, dataTemp_sigmaxz);
 
   /* Copy each component data into one cube */
-  std::memcpy(data->getVals(), dataTemp_vx->getVals(), _nReceiversIrregXGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy(data->getVals()+_nReceiversIrregXGrid*_fdParamElastic->_nts, dataTemp_vz->getVals(), _nReceiversIrregZGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy(data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid)*_fdParamElastic->_nts, dataTemp_sigmaxx->getVals(), _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy(data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, dataTemp_sigmazz->getVals(), _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-  std::memcpy(data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+2*_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, dataTemp_sigmaxz->getVals(), _nReceiversIrregXZGrid*_fdParamElastic->_nts*sizeof(float) );
+	shift = 0;
+	chunk = _nReceiversIrregXGrid*_fdParamElastic->_nts;
+  std::memcpy(data->getVals(), dataTemp_vx->getVals(), chunk*sizeof(float));
+	shift += chunk;
+	chunk = _nReceiversIrregZGrid*_fdParamElastic->_nts;
+  std::memcpy(data->getVals()+shift, dataTemp_vz->getVals(), chunk*sizeof(float));
+	shift += chunk;
+	chunk = _nReceiversIrregCenterGrid*_fdParamElastic->_nts;
+  std::memcpy(data->getVals()+shift, dataTemp_sigmaxx->getVals(), chunk*sizeof(float));
+	shift += chunk;
+	chunk = _nReceiversIrregCenterGrid*_fdParamElastic->_nts;
+  std::memcpy(data->getVals()+shift, dataTemp_sigmazz->getVals(), chunk*sizeof(float));
+	shift += chunk;
+	chunk = _nReceiversIrregXZGrid*_fdParamElastic->_nts;
+  std::memcpy(data->getVals()+shift, dataTemp_sigmaxz->getVals(), chunk*sizeof(float));
+
 }
 
 void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg> model, const std::shared_ptr<float3DReg> data) const {
@@ -256,19 +287,39 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 		modelTemp_sigmaxz -> scale(0.0);
 	} else {
 		/* Copy each source into one cube */
-		std::memcpy(modelTemp_vx->getVals(), model->getVals(), _nSourcesIrregXGrid*_fdParamElastic->_nts*sizeof(float) );
-		std::memcpy(modelTemp_vz->getVals(), model->getVals()+_nSourcesIrregXGrid*_fdParamElastic->_nts, _nSourcesIrregZGrid*_fdParamElastic->_nts*sizeof(float) );
-		std::memcpy(modelTemp_sigmaxx->getVals(), model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid)*_fdParamElastic->_nts, _nSourcesIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-		std::memcpy(modelTemp_sigmazz->getVals(), model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid+_nSourcesIrregCenterGrid)*_fdParamElastic->_nts, _nSourcesIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-		std::memcpy(modelTemp_sigmaxz->getVals(), model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid+2*_nSourcesIrregCenterGrid)*_fdParamElastic->_nts, _nSourcesIrregXZGrid*_fdParamElastic->_nts*sizeof(float) );
+		long long shift;
+		long long chunk = _nSourcesIrregXGrid*_fdParamElastic->_nts;
+		std::memcpy(modelTemp_vx->getVals(), model->getVals(), chunk*sizeof(float));
+		shift = chunk;
+		chunk = chunk = _nSourcesIrregZGrid*_fdParamElastic->_nts;
+		std::memcpy(modelTemp_vz->getVals(), model->getVals()+shift, chunk*sizeof(float));
+		shift += chunk;
+		chunk = chunk = _nSourcesIrregCenterGrid*_fdParamElastic->_nts;
+		std::memcpy(modelTemp_sigmaxx->getVals(), model->getVals()+shift, chunk*sizeof(float));
+		shift += chunk;
+		chunk = chunk = _nSourcesIrregCenterGrid*_fdParamElastic->_nts;
+		std::memcpy(modelTemp_sigmazz->getVals(), model->getVals()+shift, chunk*sizeof(float));
+		shift += chunk;
+		chunk = chunk = _nSourcesIrregXZGrid*_fdParamElastic->_nts;
+		std::memcpy(modelTemp_sigmaxz->getVals(), model->getVals()+shift, chunk*sizeof(float));
 	}
 
 	/* Copy from 3d model to respective 2d components*/
-	std::memcpy( dataTemp_vx->getVals(), data->getVals(), _nReceiversIrregXGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy( dataTemp_vz->getVals(), data->getVals()+_nReceiversIrregXGrid*_fdParamElastic->_nts, _nReceiversIrregZGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy( dataTemp_sigmaxx->getVals(), data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid)*_fdParamElastic->_nts, _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy( dataTemp_sigmazz->getVals(), data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, _nReceiversIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy( dataTemp_sigmaxz->getVals(), data->getVals()+(_nReceiversIrregXGrid+_nReceiversIrregZGrid+2*_nReceiversIrregCenterGrid)*_fdParamElastic->_nts, _nReceiversIrregXZGrid*_fdParamElastic->_nts*sizeof(float) );
+	long long shift;
+	long long chunk = _nReceiversIrregXGrid*_fdParamElastic->_nts;
+	std::memcpy(dataTemp_vx->getVals(), data->getVals(), chunk*sizeof(float));
+	shift = chunk;
+	chunk = chunk = _nReceiversIrregZGrid*_fdParamElastic->_nts;
+	std::memcpy(dataTemp_vz->getVals(), data->getVals()+shift, chunk*sizeof(float));
+	shift += chunk;
+	chunk = chunk = _nReceiversIrregCenterGrid*_fdParamElastic->_nts;
+	std::memcpy(dataTemp_sigmaxx->getVals(), data->getVals()+shift, chunk*sizeof(float));
+	shift += chunk;
+	chunk = chunk = _nReceiversIrregCenterGrid*_fdParamElastic->_nts;
+	std::memcpy(dataTemp_sigmazz->getVals(), data->getVals()+shift, chunk*sizeof(float));
+	shift += chunk;
+	chunk = chunk = _nReceiversIrregXZGrid*_fdParamElastic->_nts;
+	std::memcpy(dataTemp_sigmaxz->getVals(), data->getVals()+shift, chunk*sizeof(float));
 
 	/* Interpolate data to regular grid */
 	_receiversXGrid->adjoint(false, dataRegDts_vx, dataTemp_vx);
@@ -322,6 +373,7 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 	}
 
 	/* Interpolate to coarse time-sampling */
+
 	_timeInterp->adjoint(false, modelRegDts_vx, modelRegDtw_vx);
 	_timeInterp->adjoint(false, modelRegDts_vz, modelRegDtw_vz);
 	_timeInterp->adjoint(false, modelRegDts_sigmaxx, modelRegDtw_sigmaxx);
@@ -335,6 +387,7 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 	modelRegDts_vx->scale(area_scale);
 	modelRegDts_vz->scale(area_scale);
 	modelRegDts_sigmaxz->scale(area_scale);
+
 	/* Scale model  */
 	modelRegDts_sigmaxx->scale(2.0*_fdParamElastic->_dtw);
 	modelRegDts_sigmazz->scale(2.0*_fdParamElastic->_dtw);
@@ -344,6 +397,7 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 			(*modelRegDts_vx->_mat)[is][it] *= _fdParamElastic->_rhoxDtw[(_sourcesXGrid->getRegPosUnique())[is]];
 		}
 	}
+
 	#pragma omp parallel for collapse(2)
 	for(int is = 0; is < _nSourcesRegZGrid; is++){ //loop over number of reg sources z grid
 		for(int it = 0; it < _fdParamElastic->_nts; it++){ //loop over time steps
@@ -361,9 +415,9 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 				for(int iz=0; iz < _fdParamElastic->_zAxis.n; iz++){
 					(*_wavefield->_mat)[it][0][ix][iz]*=_fdParamElastic->_rhoxDtw[ix * _fdParamElastic->_zAxis.n + iz]*area_scale;
 					(*_wavefield->_mat)[it][1][ix][iz]*=_fdParamElastic->_rhozDtw[ix * _fdParamElastic->_zAxis.n + iz]*area_scale;
-					(*_wavefield->_mat)[it][2][ix][iz]*=_fdParamElastic->_dtw*area_scale;
-					(*_wavefield->_mat)[it][3][ix][iz]*=_fdParamElastic->_dtw*area_scale;
-					(*_wavefield->_mat)[it][4][ix][iz]*=_fdParamElastic->_dtw*area_scale;
+					(*_wavefield->_mat)[it][2][ix][iz]*= 2.0*_fdParamElastic->_dtw*area_scale;
+					(*_wavefield->_mat)[it][3][ix][iz]*= 2.0*_fdParamElastic->_dtw*area_scale;
+					(*_wavefield->_mat)[it][4][ix][iz]*= 2.0*_fdParamElastic->_dtw*area_scale;
 				}
 			}
 		}
@@ -378,9 +432,19 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 	_sourcesXZGrid->forward(true, modelRegDts_sigmaxz, modelTemp_sigmaxz);
 
 	/* Copy each source into one cube */
-	std::memcpy(model->getVals(), modelTemp_vx->getVals(), _nSourcesIrregXGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy(model->getVals()+_nSourcesIrregXGrid*_fdParamElastic->_nts, modelTemp_vz->getVals(), _nSourcesIrregZGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy(model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid)*_fdParamElastic->_nts, modelTemp_sigmaxx->getVals(), _nSourcesIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy(model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid+_nSourcesIrregCenterGrid)*_fdParamElastic->_nts, modelTemp_sigmazz->getVals(), _nSourcesIrregCenterGrid*_fdParamElastic->_nts*sizeof(float) );
-	std::memcpy(model->getVals()+(_nSourcesIrregXGrid+_nSourcesIrregZGrid+2*_nSourcesIrregCenterGrid)*_fdParamElastic->_nts, modelTemp_sigmaxz->getVals(), _nSourcesIrregXZGrid*_fdParamElastic->_nts*sizeof(float) );
+	shift = 0;
+	chunk = _nSourcesIrregXGrid*_fdParamElastic->_nts;
+	std::memcpy(model->getVals(), modelTemp_vx->getVals(), chunk*sizeof(float) );
+	shift += chunk;
+	chunk = _nSourcesIrregZGrid*_fdParamElastic->_nts;
+	std::memcpy(model->getVals()+shift, modelTemp_vz->getVals(), chunk*sizeof(float) );
+	shift += chunk;
+	chunk = _nSourcesIrregCenterGrid*_fdParamElastic->_nts;
+	std::memcpy(model->getVals()+shift, modelTemp_sigmaxx->getVals(), chunk*sizeof(float) );
+	shift += chunk;
+	chunk = _nSourcesIrregCenterGrid*_fdParamElastic->_nts;
+	std::memcpy(model->getVals()+shift, modelTemp_sigmazz->getVals(), chunk*sizeof(float) );
+	shift += chunk;
+	chunk = _nSourcesIrregXZGrid*_fdParamElastic->_nts;
+	std::memcpy(model->getVals()+shift, modelTemp_sigmaxz->getVals(), chunk*sizeof(float));
 }
