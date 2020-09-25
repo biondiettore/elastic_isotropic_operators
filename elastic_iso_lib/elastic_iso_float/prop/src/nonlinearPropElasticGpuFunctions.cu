@@ -1210,7 +1210,7 @@ void propShotsElasticAdjGpuWavefieldStreams(float *modelRegDtw_vx, float *modelR
 				// At the same time, request CPU to memcpy the pin_wavefieldSlice to wavefield [its-1] [host]
 				if (its<host_nts-2) {
 					// Copying pinned memory using standard library
-					std::memcpy(wavefieldDts+(its+1)*time_slice, pin_wavefieldSlice[iGpu], time_slice*sizeof(float));
+					std::memcpy(wavefieldDts+(its+2)*time_slice, pin_wavefieldSlice[iGpu], time_slice*sizeof(float));
 				}
 
 				// Synchronize [compute] (make sure the copy from dev_pLeft => dev_pStream is done)
