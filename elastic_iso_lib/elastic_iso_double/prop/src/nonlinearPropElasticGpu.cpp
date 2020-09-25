@@ -350,6 +350,8 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<double3DRe
 													_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
 													 _iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
 	} else {
+		//Saving wavefield with or w/o streams
+		if(_useStreams == 0){
 			propShotsElasticAdjGpuWavefield(modelRegDtw_vx->getVals(),
 														modelRegDtw_vz->getVals(),
 														modelRegDtw_sigmaxx->getVals(),
@@ -370,6 +372,28 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<double3DRe
 														_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
 														_wavefield->getVals(),
 														_iGpu, _iGpuId);
+		} else {
+				propShotsElasticAdjGpuWavefieldStreams(modelRegDtw_vx->getVals(),
+															modelRegDtw_vz->getVals(),
+															modelRegDtw_sigmaxx->getVals(),
+															modelRegDtw_sigmazz->getVals(),
+															modelRegDtw_sigmaxz->getVals(),
+															dataRegDts_vx->getVals(),
+															dataRegDts_vz->getVals(),
+															dataRegDts_sigmaxx->getVals(),
+															dataRegDts_sigmazz->getVals(),
+															dataRegDts_sigmaxz->getVals(),
+															_sourcesPositionRegCenterGrid, _nSourcesRegCenterGrid,
+															_sourcesPositionRegXGrid, _nSourcesRegXGrid,
+															_sourcesPositionRegZGrid, _nSourcesRegZGrid,
+															_sourcesPositionRegXZGrid, _nSourcesRegXZGrid,
+															_receiversPositionRegCenterGrid, _nReceiversRegCenterGrid,
+															_receiversPositionRegXGrid, _nReceiversRegXGrid,
+															_receiversPositionRegZGrid, _nReceiversRegZGrid,
+															_receiversPositionRegXZGrid, _nReceiversRegXZGrid,
+															_wavefield->getVals(),
+															_iGpu, _iGpuId);
+		}
 	}
 
 	/* Interpolate to coarse time-sampling */

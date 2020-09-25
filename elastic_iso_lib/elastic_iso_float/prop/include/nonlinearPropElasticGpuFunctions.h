@@ -109,7 +109,26 @@ void propShotsElasticAdjGpuWavefield(float *modelRegDtw_vx,
 														int *receiversPositionRegXZGrid, int nReceiversRegXZGrid,
 														float* wavefield,
 														int iGpu, int iGpuId);
-
+void propShotsElasticAdjGpuWavefieldStreams(float *modelRegDtw_vx,
+														float *modelRegDtw_vz,
+														float *modelRegDtw_sigmaxx,
+														float *modelRegDtw_sigmazz,
+														float *modelRegDtw_sigmaxz,
+														float *dataRegDts_vx,
+														float *dataRegDts_vz,
+														float *dataRegDts_sigmaxx,
+														float *dataRegDts_sigmazz,
+														float *dataRegDts_sigmaxz,
+														int *sourcesPositionRegCenterGrid, int nSourcesRegCenterGrid,
+														int *sourcesPositionRegXGrid, int nSourcesRegXGrid,
+														int *sourcesPositionRegZGrid, int nSourcesRegZGrid,
+														int *sourcesPositionRegXZGrid, int nSourcesRegXZGrid,
+														int *receiversPositionRegCenterGrid, int nReceiversRegCenterGrid,
+														int *receiversPositionRegXGrid, int nReceiversRegXGrid,
+														int *receiversPositionRegZGrid, int nReceiversRegZGrid,
+														int *receiversPositionRegXZGrid, int nReceiversRegXZGrid,
+														float* wavefield,
+														int iGpu, int iGpuId);
 
 void get_dev_zCoeff(float *hp);
 void get_dev_xCoeff(float *hp);
