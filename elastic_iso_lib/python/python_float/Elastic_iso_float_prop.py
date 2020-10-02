@@ -230,7 +230,7 @@ def buildSourceGeometry(parObject,elasticParam):
 		if nExp != nExpFile:
 			raise ValueError("ERROR! nExp (%d) not consistent with number of shots provided within sourceGeomFile (%d)"%(nExp,nExpFile))
 
-		sourceAxis=Hypercube.axis(n=parObject.getInt("nExp"),o=0.0,d=1.0)
+		sourceAxis=Hypercube.axis(n=parObject.getInt("nExp"),o=1.0,d=1.0)
 
 		for iExp in range(nExp):
 			zCoordFloat=SepVector.getSepVector(ns=[nSimSou],storage="dataFloat")
