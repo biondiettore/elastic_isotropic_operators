@@ -433,12 +433,12 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<double3DRe
 	/* Scale adjoint wavefield */
 	if (_saveWavefield == 1){
 		// scale wavefield
-		#pragma omp parallel for collapse(3)
-		for(int it=0; it < _fdParamElastic->_timeAxisCoarse.n; it++){
-			for(int ix=0; ix < _fdParamElastic->_xAxis.n; ix++){
-				for(int iz=0; iz < _fdParamElastic->_zAxis.n; iz++){
-					(*_wavefield->_mat)[it][0][ix][iz]*=_fdParamElastic->_rhoxDtw[ix * _fdParamElastic->_zAxis.n + iz]*area_scale;
-					(*_wavefield->_mat)[it][1][ix][iz]*=_fdParamElastic->_rhozDtw[ix * _fdParamElastic->_zAxis.n + iz]*area_scale;
+		for(int it=0; it < _fdParamElastic->_nts; it++){
+			#pragma omp parallel for collapse(2)
+			for(int ix=0; ix < _fdParamElastic->_nx; ix++){
+				for(int iz=0; iz < _fdParamElastic->_nz; iz++){
+					(*_wavefield->_mat)[it][0][ix][iz]*=(*_fdParamElastic->_rhoxDtwReg->_mat)[ix][iz]*area_scale;
+					(*_wavefield->_mat)[it][1][ix][iz]*=(*_fdParamElastic->_rhozDtwReg->_mat)[ix][iz]*area_scale;
 					(*_wavefield->_mat)[it][2][ix][iz]*= 2.0*_fdParamElastic->_dtw*area_scale;
 					(*_wavefield->_mat)[it][3][ix][iz]*= 2.0*_fdParamElastic->_dtw*area_scale;
 					(*_wavefield->_mat)[it][4][ix][iz]*= 2.0*_fdParamElastic->_dtw*area_scale;
