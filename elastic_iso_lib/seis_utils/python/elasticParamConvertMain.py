@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
 	if(conv_type == 1):
 		if(verbose): print("CONVERSION: VpVsRho to RhoLameMu (m/s|m/s|kg/m3 -> kg/m3|Pa|Pa)")
-	elif(conv_type == 1):
+	elif(conv_type == -1):
 		if(verbose): print("CONVERSION: RhoLameMu to VpVsRho (m/s|m/s|kg/m3 <- kg/m3|Pa|Pa)")
 	elif(conv_type == 2):
 		if(verbose): print("CONVERSION: RhoLameMu to VpVsRho (km/s|km/s|g/cm3 <- kg/m3|Pa|Pa)")
