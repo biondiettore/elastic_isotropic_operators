@@ -42,7 +42,7 @@ fdParamElastic::fdParamElastic(const std::shared_ptr<double3DReg> elasticParam, 
 	_zPadMinus = _par->getInt("zPadMinus");
 	if(_surfaceCondition==0) _zPad = std::min(_zPadMinus, _zPadPlus);
 	else if(_surfaceCondition==1) _zPad = _zPadPlus;
-	_mod_par = _par->getInt("mod_par",2);
+	_mod_par = _par->getInt("mod_par",1);
 	_dz = _par->getFloat("dz",-1.0);
 	_oz = _elasticParam->getHyper()->getAxis(1).o;
 	_zAxis = axis(_nz, _oz, _dz);
