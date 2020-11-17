@@ -6,8 +6,7 @@
 nonlinearPropElasticGpu::nonlinearPropElasticGpu(std::shared_ptr<fdParamElastic> fdParamElastic, std::shared_ptr<paramObj> par, int nGpu, int iGpu, int iGpuId, int iGpuAlloc){
 
 	_fdParamElastic = fdParamElastic;
-	//_fdParamElastic = std::make_shared<fdParamElastic>(elasticParam, par);
-	_timeInterp = std::make_shared<interpTimeLinTbb>(_fdParamElastic->_nts, _fdParamElastic->_dts, _fdParamElastic->_ots, _fdParamElastic->_sub);
+	// _timeInterp = std::make_shared<interpTimeLinTbb>(_fdParamElastic->_nts, _fdParamElastic->_dts, _fdParamElastic->_ots, _fdParamElastic->_sub);
 	//setAllWavefields(par->getInt("saveWavefield", 0));
 	_iGpu = iGpu;
 	_nGpu = nGpu;
@@ -56,11 +55,11 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
   std::shared_ptr<float2DReg> modelRegDts_sigmazz(new float2DReg(_fdParamElastic->_nts, _nSourcesRegCenterGrid));
   std::shared_ptr<float2DReg> modelRegDts_sigmaxz(new float2DReg(_fdParamElastic->_nts, _nSourcesRegXZGrid));
 
-  std::shared_ptr<float2DReg> modelRegDtw_vx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXGrid));
-  std::shared_ptr<float2DReg> modelRegDtw_vz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegZGrid));
-  std::shared_ptr<float2DReg> modelRegDtw_sigmaxx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
-  std::shared_ptr<float2DReg> modelRegDtw_sigmazz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
-  std::shared_ptr<float2DReg> modelRegDtw_sigmaxz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
+  // std::shared_ptr<float2DReg> modelRegDtw_vx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXGrid));
+  // std::shared_ptr<float2DReg> modelRegDtw_vz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegZGrid));
+  // std::shared_ptr<float2DReg> modelRegDtw_sigmaxx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
+  // std::shared_ptr<float2DReg> modelRegDtw_sigmazz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
+  // std::shared_ptr<float2DReg> modelRegDtw_sigmaxz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
 
   std::shared_ptr<float2DReg> dataRegDts_vx(new float2DReg(_fdParamElastic->_nts, _nReceiversRegXGrid));
   std::shared_ptr<float2DReg> dataRegDts_vz(new float2DReg(_fdParamElastic->_nts, _nReceiversRegZGrid));
@@ -145,19 +144,19 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
   modelRegDts_sigmaxz->scale(area_scale);
 
   /* Interpolate to fine time-sampling */
-  _timeInterp->forward(false, modelRegDts_vx, modelRegDtw_vx);
-  _timeInterp->forward(false, modelRegDts_vz, modelRegDtw_vz);
-  _timeInterp->forward(false, modelRegDts_sigmaxx, modelRegDtw_sigmaxx);
-  _timeInterp->forward(false, modelRegDts_sigmazz, modelRegDtw_sigmazz);
-  _timeInterp->forward(false, modelRegDts_sigmaxz, modelRegDtw_sigmaxz);
+  // _timeInterp->forward(false, modelRegDts_vx, modelRegDtw_vx);
+  // _timeInterp->forward(false, modelRegDts_vz, modelRegDtw_vz);
+  // _timeInterp->forward(false, modelRegDts_sigmaxx, modelRegDtw_sigmaxx);
+  // _timeInterp->forward(false, modelRegDts_sigmazz, modelRegDtw_sigmazz);
+  // _timeInterp->forward(false, modelRegDts_sigmaxz, modelRegDtw_sigmaxz);
 
 	// /* Propagate */
 	if (_saveWavefield == 0) {
-		propShotsElasticFwdGpu(modelRegDtw_vx->getVals(),
-													modelRegDtw_vz->getVals(),
-													modelRegDtw_sigmaxx->getVals(),
-													modelRegDtw_sigmazz->getVals(),
-													modelRegDtw_sigmaxz->getVals(),
+		propShotsElasticFwdGpu(modelRegDts_vx->getVals(),
+													modelRegDts_vz->getVals(),
+													modelRegDts_sigmaxx->getVals(),
+													modelRegDts_sigmazz->getVals(),
+													modelRegDts_sigmaxz->getVals(),
 													dataRegDts_vx->getVals(),
 													dataRegDts_vz->getVals(),
 													dataRegDts_sigmaxx->getVals(),
@@ -175,11 +174,11 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
 	} else {
 			//Saving wavefield with or w/o streams
 			if(_useStreams == 0){
-				propShotsElasticFwdGpuWavefield(modelRegDtw_vx->getVals(),
-															modelRegDtw_vz->getVals(),
-															modelRegDtw_sigmaxx->getVals(),
-															modelRegDtw_sigmazz->getVals(),
-															modelRegDtw_sigmaxz->getVals(),
+				propShotsElasticFwdGpuWavefield(modelRegDts_vx->getVals(),
+															modelRegDts_vz->getVals(),
+															modelRegDts_sigmaxx->getVals(),
+															modelRegDts_sigmazz->getVals(),
+															modelRegDts_sigmaxz->getVals(),
 															dataRegDts_vx->getVals(),
 															dataRegDts_vz->getVals(),
 															dataRegDts_sigmaxx->getVals(),
@@ -196,11 +195,11 @@ void nonlinearPropElasticGpu::forward(const bool add, const std::shared_ptr<floa
 															_wavefield->getVals(),
 															_iGpu, _iGpuId, _fdParamElastic->_surfaceCondition);
 			} else {
-				propShotsElasticFwdGpuWavefieldStreams(modelRegDtw_vx->getVals(),
-															modelRegDtw_vz->getVals(),
-															modelRegDtw_sigmaxx->getVals(),
-															modelRegDtw_sigmazz->getVals(),
-															modelRegDtw_sigmaxz->getVals(),
+				propShotsElasticFwdGpuWavefieldStreams(modelRegDts_vx->getVals(),
+															modelRegDts_vz->getVals(),
+															modelRegDts_sigmaxx->getVals(),
+															modelRegDts_sigmazz->getVals(),
+															modelRegDts_sigmaxz->getVals(),
 															dataRegDts_vx->getVals(),
 															dataRegDts_vz->getVals(),
 															dataRegDts_sigmaxx->getVals(),
@@ -260,11 +259,11 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 	std::shared_ptr<float2DReg> modelRegDts_sigmazz(new float2DReg(_fdParamElastic->_nts, _nSourcesRegCenterGrid));
 	std::shared_ptr<float2DReg> modelRegDts_sigmaxz(new float2DReg(_fdParamElastic->_nts, _nSourcesRegXZGrid));
 
-	std::shared_ptr<float2DReg> modelRegDtw_vx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXGrid));
-	std::shared_ptr<float2DReg> modelRegDtw_vz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegZGrid));
-	std::shared_ptr<float2DReg> modelRegDtw_sigmaxx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
-	std::shared_ptr<float2DReg> modelRegDtw_sigmazz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
-	std::shared_ptr<float2DReg> modelRegDtw_sigmaxz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
+	// std::shared_ptr<float2DReg> modelRegDtw_vx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXGrid));
+	// std::shared_ptr<float2DReg> modelRegDtw_vz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegZGrid));
+	// std::shared_ptr<float2DReg> modelRegDtw_sigmaxx(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
+	// std::shared_ptr<float2DReg> modelRegDtw_sigmazz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegCenterGrid));
+	// std::shared_ptr<float2DReg> modelRegDtw_sigmaxz(new float2DReg(_fdParamElastic->_ntw, _nSourcesRegXZGrid));
 
 	std::shared_ptr<float2DReg> dataRegDts_vx(new float2DReg(_fdParamElastic->_nts, _nReceiversRegXGrid));
 	std::shared_ptr<float2DReg> dataRegDts_vz(new float2DReg(_fdParamElastic->_nts, _nReceiversRegZGrid));
@@ -330,11 +329,11 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 
 	/* Propagate */
 	if (_saveWavefield == 0) {
-		propShotsElasticAdjGpu(modelRegDtw_vx->getVals(),
-													modelRegDtw_vz->getVals(),
-													modelRegDtw_sigmaxx->getVals(),
-													modelRegDtw_sigmazz->getVals(),
-													modelRegDtw_sigmaxz->getVals(),
+		propShotsElasticAdjGpu(modelRegDts_vx->getVals(),
+													modelRegDts_vz->getVals(),
+													modelRegDts_sigmaxx->getVals(),
+													modelRegDts_sigmazz->getVals(),
+													modelRegDts_sigmaxz->getVals(),
 													dataRegDts_vx->getVals(),
 													dataRegDts_vz->getVals(),
 													dataRegDts_sigmaxx->getVals(),
@@ -352,11 +351,11 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 	} else {
 		//Saving wavefield with or w/o streams
 		if(_useStreams == 0){
-			propShotsElasticAdjGpuWavefield(modelRegDtw_vx->getVals(),
-														modelRegDtw_vz->getVals(),
-														modelRegDtw_sigmaxx->getVals(),
-														modelRegDtw_sigmazz->getVals(),
-														modelRegDtw_sigmaxz->getVals(),
+			propShotsElasticAdjGpuWavefield(modelRegDts_vx->getVals(),
+														modelRegDts_vz->getVals(),
+														modelRegDts_sigmaxx->getVals(),
+														modelRegDts_sigmazz->getVals(),
+														modelRegDts_sigmaxz->getVals(),
 														dataRegDts_vx->getVals(),
 														dataRegDts_vz->getVals(),
 														dataRegDts_sigmaxx->getVals(),
@@ -373,11 +372,11 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 														_wavefield->getVals(),
 														_iGpu, _iGpuId);
 		} else {
-				propShotsElasticAdjGpuWavefieldStreams(modelRegDtw_vx->getVals(),
-															modelRegDtw_vz->getVals(),
-															modelRegDtw_sigmaxx->getVals(),
-															modelRegDtw_sigmazz->getVals(),
-															modelRegDtw_sigmaxz->getVals(),
+				propShotsElasticAdjGpuWavefieldStreams(modelRegDts_vx->getVals(),
+															modelRegDts_vz->getVals(),
+															modelRegDts_sigmaxx->getVals(),
+															modelRegDts_sigmazz->getVals(),
+															modelRegDts_sigmaxz->getVals(),
 															dataRegDts_vx->getVals(),
 															dataRegDts_vz->getVals(),
 															dataRegDts_sigmaxx->getVals(),
@@ -398,11 +397,11 @@ void nonlinearPropElasticGpu::adjoint(const bool add, std::shared_ptr<float3DReg
 
 	/* Interpolate to coarse time-sampling */
 
-	_timeInterp->adjoint(false, modelRegDts_vx, modelRegDtw_vx);
-	_timeInterp->adjoint(false, modelRegDts_vz, modelRegDtw_vz);
-	_timeInterp->adjoint(false, modelRegDts_sigmaxx, modelRegDtw_sigmaxx);
-	_timeInterp->adjoint(false, modelRegDts_sigmazz, modelRegDtw_sigmazz);
-	_timeInterp->adjoint(false, modelRegDts_sigmaxz, modelRegDtw_sigmaxz);
+	// _timeInterp->adjoint(false, modelRegDts_vx, modelRegDtw_vx);
+	// _timeInterp->adjoint(false, modelRegDts_vz, modelRegDtw_vz);
+	// _timeInterp->adjoint(false, modelRegDts_sigmaxx, modelRegDtw_sigmaxx);
+	// _timeInterp->adjoint(false, modelRegDts_sigmazz, modelRegDtw_sigmazz);
+	// _timeInterp->adjoint(false, modelRegDts_sigmaxz, modelRegDtw_sigmaxz);
 
 	/*Scaling by the inverse of the space discretization*/
 	float area_scale = 1.0/(_fdParamElastic->_dx * _fdParamElastic->_dz);
