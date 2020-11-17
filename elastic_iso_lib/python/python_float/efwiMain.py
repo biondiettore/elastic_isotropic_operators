@@ -357,7 +357,7 @@ if __name__ == '__main__':
 		H0_Op = None
 		if illumination_file != "noIllum":
 			print("--- Using illumination as initial Hessian inverse ---")
-			illumination=genericIO.defaultIO.getVector(illumination_file, ndims=2)
+			illumination=genericIO.defaultIO.getVector(illumination_file)
 			H0_Op = pyOp.DiagonalOp(illumination)
 		nlSolver = LBFGS(stop, H0=H0_Op, logger=inv_log)
 	# Steepest descent
