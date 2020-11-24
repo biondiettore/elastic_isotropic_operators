@@ -32,7 +32,7 @@ class ElasticDatComp(pyOperator.Operator):
         self.setDomainRange(domain,range)
         #Making the list lower case
         self.comp_list = [elem.lower() for elem in self.comp_list]
-        if not any(["vx" in self.comp_list,"vz" in self.comp_list,"sxx" in self.comp_list,"szz" in self.comp_list,"szz" in self.comp_list,"p" in self.comp_list]):
+        if not any(["vx" in self.comp_list,"vz" in self.comp_list,"sxx" in self.comp_list,"szz" in self.comp_list,"sxz" in self.comp_list,"p" in self.comp_list]):
             raise ValueError("ERROR! Provided unknown data components: %s"%(components))
         return
 
@@ -61,7 +61,7 @@ class ElasticDatComp(pyOperator.Operator):
         if("szz" in self.comp_list):
             idx = self.comp_list.index("szz")
             dataNd[:,idx,:,:] += modelNd[:,3,:,:]
-        #Checking if szz (normal stress) was requested to be sampled
+        #Checking if sxz (shear stress) was requested to be sampled
         if("sxz" in self.comp_list):
             idx = self.comp_list.index("sxz")
             dataNd[:,idx,:,:] += modelNd[:,4,:,:]
@@ -95,7 +95,7 @@ class ElasticDatComp(pyOperator.Operator):
         if("szz" in self.comp_list):
             idx = self.comp_list.index("szz")
             modelNd[:,3,:,:] += dataNd[:,idx,:,:]
-        #Checking if szz (normal stress) was requested to be sampled
+        #Checking if sxz (shear stress) was requested to be sampled
         if("sxz" in self.comp_list):
             idx = self.comp_list.index("sxz")
             modelNd[:,4,:,:] += dataNd[:,idx,:,:]
