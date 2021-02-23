@@ -1,6 +1,6 @@
 [submodule "elastic_iso_lib/external/ioLibs"]
 	path = elastic_iso_lib/external/ioLibs
-	url = http://cees-gitlab.stanford.edu/SEP-external/sep-iolibs
+	url = http://cees-gitlab.stanford.edu/SEP-external/sep-iolibs.git
 [submodule "elastic_iso_lib/external/pySolver"]
 	path = elastic_iso_lib/external/pySolver
 	url = http://cees-gitlab.stanford.edu/ettore88/python-solver.git
