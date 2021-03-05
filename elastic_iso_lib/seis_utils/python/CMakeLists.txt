@@ -1,7 +1,7 @@
 project(python-seis_utils)
 
 set(PythonMods elasticParamConvertModule.py dataCompModule.py)
-set(PythonMains elasticParamConvertMain.py dataCompMain.py)
+set(PythonMains elasticParamConvertMain.py dataCompMain.py padElasticFileGpuMain.py)
 
 set(PYTHON_DIR "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 install(FILES ${PythonMods}  PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ DESTINATION ${PYTHON_DIR})
