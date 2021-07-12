@@ -554,15 +554,15 @@ __global__ void ker_step_fwd_surface_top(double* dev_c_vx, double* dev_c_vz, dou
     dev_c_sigmazz[iGlobal_surf] = 0;
 
     // 2. make current sigmazz, sigmaxz odd about z=0 by changing values above z=0
-    // dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+1];
-    // dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+2];
-    // dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+3];
-    // dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+4];
-		//
-    // dev_c_sigmaxz[iGlobal_1] = -dev_c_sigmaxz[iGlobal_surf+4];
-    // dev_c_sigmaxz[iGlobal_2] = -dev_c_sigmaxz[iGlobal_surf+3];
-    // dev_c_sigmaxz[iGlobal_3] = -dev_c_sigmaxz[iGlobal_surf+2];
-    // dev_c_sigmaxz[iGlobal_surf] = -dev_c_sigmaxz[iGlobal_surf+1];
+    dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+1];
+    dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+2];
+    dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+3];
+    dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+4];
+		
+    dev_c_sigmaxz[iGlobal_1] = -dev_c_sigmaxz[iGlobal_surf+4];
+    dev_c_sigmaxz[iGlobal_2] = -dev_c_sigmaxz[iGlobal_surf+3];
+    dev_c_sigmaxz[iGlobal_3] = -dev_c_sigmaxz[iGlobal_surf+2];
+    dev_c_sigmaxz[iGlobal_surf] = -dev_c_sigmaxz[iGlobal_surf+1];
 
 
     // 3. set new vx at z=0 (DONE IN THE BODY KERNEL)
@@ -572,16 +572,16 @@ __global__ void ker_step_fwd_surface_top(double* dev_c_vx, double* dev_c_vz, dou
     // 5. set new sigmaxx at z=0 (DONE IN THE BODY KERNEL)
 
     // 6. set current vx and vz to 0.0 above free surface*/
-    // dev_c_vx[iGlobal_0] = 0.0;
-    // dev_c_vx[iGlobal_1] = 0.0;
-    // dev_c_vx[iGlobal_2] = 0.0;
-    // dev_c_vx[iGlobal_3] = 0.0;
-		//
-    // dev_c_vz[iGlobal_0] = 0.0;
-    // dev_c_vz[iGlobal_1] = 0.0;
-    // dev_c_vz[iGlobal_2] = 0.0;
-    // dev_c_vz[iGlobal_3] = 0.0;
-		// dev_c_vz[iGlobal_surf] = 0.0;
+    dev_c_vx[iGlobal_0] = 0.0;
+    dev_c_vx[iGlobal_1] = 0.0;
+    dev_c_vx[iGlobal_2] = 0.0;
+    dev_c_vx[iGlobal_3] = 0.0;
+		
+    dev_c_vz[iGlobal_0] = 0.0;
+    dev_c_vz[iGlobal_1] = 0.0;
+    dev_c_vz[iGlobal_2] = 0.0;
+    dev_c_vz[iGlobal_3] = 0.0;
+	dev_c_vz[iGlobal_surf] = 0.0;
 
 }
 
@@ -651,29 +651,46 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
      __syncthreads(); // Synchronise all threads within each block -- look new sync options
 
 		 //new vx
-		 if (izGlobal == 2*FAT){
-			 dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
-				 dev_rhoxDtw[iGlobal] * (																																				//DEBUG
-				 //first derivative in negative x direction of current sigmaxx   																//DEBUG
-					dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+      //DEBUG
-					dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+    //DEBUG
-					dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+    //DEBUG
-					dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal])+  //DEBUG
-			 	//first derivative in positive z direction of current sigmaxz
-				// dev_zCoeff[0]*(-shared_c_sigmaxz[ixLocal][izLocal])
-				  dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  //+ //DEBUG
-				  // dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+ //DEBUG
-				  // dev_zCoeff[2]*(shared_c_sigmaxz[ixLocal][izLocal+3]-shared_c_sigmaxz[ixLocal][izLocal-2])+ //DEBUG
-				  // dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])  //DEBUG
-				 );//DEBUG
-		 } else if (izGlobal > 2*FAT){ //DEBUG
+		 // if (izGlobal == 2*FAT){
+			//  dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
+			// 	 dev_rhoxDtw[iGlobal] * (																																				//DEBUG
+			// 	 //first derivative in negative x direction of current sigmaxx   																//DEBUG
+			// 		dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+      //DEBUG
+			// 		dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+    //DEBUG
+			// 		dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+    //DEBUG
+			// 		dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal])+  //DEBUG
+			//  	//first derivative in positive z direction of current sigmaxz
+			// 	// dev_zCoeff[0]*(-shared_c_sigmaxz[ixLocal][izLocal])
+			// 	  dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  //+ //DEBUG
+			// 	  // dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+ //DEBUG
+			// 	  // dev_zCoeff[2]*(shared_c_sigmaxz[ixLocal][izLocal+3]-shared_c_sigmaxz[ixLocal][izLocal-2])+ //DEBUG
+			// 	  // dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])  //DEBUG
+			// 	 );//DEBUG
+		 // } else if (izGlobal > 2*FAT){ //DEBUG
+			//  dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
+	  //      dev_rhoxDtw[iGlobal] * (
+	  //      //first derivative in negative x direction of current sigmaxx
+	  //       dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+
+	  //       dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+
+	  //       dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+
+	  //       dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal])+
+	  //      //first derivative in positive z direction of current sigmaxz
+	  //       dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  +
+	  //       dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+
+	  //       dev_zCoeff[2]*(shared_c_sigmaxz[ixLocal][izLocal+3]-shared_c_sigmaxz[ixLocal][izLocal-2])+
+	  //       dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])
+	  //      );
+		 // }
+
+     //new vx
+		 if (izGlobal >= 2*FAT){
 			 dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
 	       dev_rhoxDtw[iGlobal] * (
 	       //first derivative in negative x direction of current sigmaxx
 	        dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+
 	        dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+
 	        dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+
-	        dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal])+
+	        dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal]) +
 	       //first derivative in positive z direction of current sigmaxz
 	        dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  +
 	        dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+
@@ -681,23 +698,6 @@ __global__ void ker_step_fwd_surface_body(double* dev_o_vx, double* dev_o_vz, do
 	        dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])
 	       );
 		 }
-
-     //new vx
-		 // if (izGlobal >= 2*FAT){
-			//  dev_n_vx[iGlobal] = dev_o_vx[iGlobal] +
-	   //     dev_rhoxDtw[iGlobal] * (
-	   //     //first derivative in negative x direction of current sigmaxx
-	   //      dev_xCoeff[0]*(shared_c_sigmaxx[ixLocal][izLocal]-shared_c_sigmaxx[ixLocal-1][izLocal])+
-	   //      dev_xCoeff[1]*(shared_c_sigmaxx[ixLocal+1][izLocal]-shared_c_sigmaxx[ixLocal-2][izLocal])+
-	   //      dev_xCoeff[2]*(shared_c_sigmaxx[ixLocal+2][izLocal]-shared_c_sigmaxx[ixLocal-3][izLocal])+
-	   //      dev_xCoeff[3]*(shared_c_sigmaxx[ixLocal+3][izLocal]-shared_c_sigmaxx[ixLocal-4][izLocal]) +
-	   //     //first derivative in positive z direction of current sigmaxz
-	   //      dev_zCoeff[0]*(shared_c_sigmaxz[ixLocal][izLocal+1]-shared_c_sigmaxz[ixLocal][izLocal])  +
-	   //      dev_zCoeff[1]*(shared_c_sigmaxz[ixLocal][izLocal+2]-shared_c_sigmaxz[ixLocal][izLocal-1])+
-	   //      dev_zCoeff[2]*(shared_c_sigmaxz[ixLocal][izLocal+3]-shared_c_sigmaxz[ixLocal][izLocal-2])+
-	   //      dev_zCoeff[3]*(shared_c_sigmaxz[ixLocal][izLocal+4]-shared_c_sigmaxz[ixLocal][izLocal-3])
-	   //     );
-		 // }
 		 if (izGlobal > 2*FAT){
 			 //new vz
        dev_n_vz[iGlobal] = dev_o_vz[iGlobal] +
