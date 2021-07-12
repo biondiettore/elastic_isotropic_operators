@@ -137,8 +137,10 @@ if __name__ == '__main__':
 
 		sourceGeomFile = parObject.getString("sourceGeomFile","None")
 		if sourceGeomFile != "None":
-			modelTemp=genericIO.defaultIO.getVector(modelFile)
-			modelFloatLocal.getNdArray()[0,:,:,:]=modelTemp.getNdArray()
+			modelTemp = genericIO.defaultIO.getVector(modelFile)
+			modelTemp_nd = modelTemp.getNdArray()
+			modelTemp_nd.shape = (modelFloatLocal.getHyper().getAxis(3).n,modelFloatLocal.getHyper().getAxis(2).n,modelFloatLocal.getHyper().getAxis(1).n)
+			modelFloatLocal.getNdArray()[0,:,:,:]=modelTemp_nd
 		else:
 			#modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
 			modelTemp=genericIO.defaultIO.getVector(modelFile)
