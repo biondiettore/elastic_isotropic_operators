@@ -74,7 +74,6 @@ INPUT PARAMETERS:
 
 """
 
-
 import sys
 import genericIO
 import SepVector
@@ -101,224 +100,263 @@ import pyDaskOperator as DaskOp
 
 # Source component selection operator
 class ElasticSouComp(pyOp.Operator):
-	"""
+  """
 	   Operator for sampling elastic source components
 	"""
-	def __init__(self,components,range):
-		"""
+
+  def __init__(self, components, range):
+    """
 		   Constructor for resampling elastic source components
 		   components = [no default] - string; Comma-separated list of the output/sampled components (e.g., 'fx,fz,Mxx,Mzz,Mxz' or 'fx,fz'; the order matters!). Currently, supported: fx,fz,Mxx,Mzz,Mxz
 		   range     = [no default] - vector class; Original elastic source
 		"""
-		#Getting axes from domain vector
-		timeAxis = range.getHyper().getAxis(1)
-		SimAxis = range.getHyper().getAxis(2) # Spatial extent of the source
-		shotAxis = range.getHyper().getAxis(4)
-		#Getting number of output components
-		self.comp_list = components.split(",")
-		if any(elem > 1 for elem in Counter(self.comp_list).values()):
-			raise ValueError("ERROR! A component was provided multiple times! Check your input arguments")
-		#Creating component axis for output vector
-		compAxis=Hypercube.axis(n=len(self.comp_list),label="Component %s"%(components))
-		domain = SepVector.getSepVector(Hypercube.hypercube(axes=[timeAxis,SimAxis,compAxis,shotAxis]))
-		#Setting domain and range
-		self.setDomainRange(domain,range)
-		#Making the list lower case
-		self.comp_list = [elem.lower() for elem in self.comp_list]
-		if not any(["fx" in self.comp_list,"fz" in self.comp_list,"mxx" in self.comp_list,"mzz" in self.comp_list,"mxz" in self.comp_list]):
-			raise ValueError("ERROR! Provided unknown source components: %s"%(components))
+    #Getting axes from domain vector
+    timeAxis = range.getHyper().getAxis(1)
+    SimAxis = range.getHyper().getAxis(2)  # Spatial extent of the source
+    shotAxis = range.getHyper().getAxis(4)
+    #Getting number of output components
+    self.comp_list = components.split(",")
+    if any(elem > 1 for elem in Counter(self.comp_list).values()):
+      raise ValueError(
+          "ERROR! A component was provided multiple times! Check your input arguments"
+      )
+    #Creating component axis for output vector
+    compAxis = Hypercube.axis(n=len(self.comp_list),
+                              label="Component %s" % (components))
+    domain = SepVector.getSepVector(
+        Hypercube.hypercube(axes=[timeAxis, SimAxis, compAxis, shotAxis]))
+    #Setting domain and range
+    self.setDomainRange(domain, range)
+    #Making the list lower case
+    self.comp_list = [elem.lower() for elem in self.comp_list]
+    if not any([
+        "fx" in self.comp_list, "fz" in self.comp_list, "mxx" in self.comp_list,
+        "mzz" in self.comp_list, "mxz" in self.comp_list
+    ]):
+      raise ValueError("ERROR! Provided unknown source components: %s" %
+                       (components))
 
-		return
+    return
 
-
-	def forward(self,add,model,data):
-		"""
+  def forward(self, add, model, data):
+    """
 		   Forward operator: sampled source -> elastic source
 		"""
-		self.checkDomainRange(model,data)
-		if(not add): data.zero()
-		modelNd = model.getNdArray()
-		dataNd = data.getNdArray()
-		#Checking if fx was requested to be sampled
-		if("fx" in self.comp_list):
-			idx = self.comp_list.index("fx")
-			dataNd[:,0,:,:] += modelNd[:,idx,:,:]
-		#Checking if fz was requested to be sampled
-		if("fz" in self.comp_list):
-			idx = self.comp_list.index("fz")
-			dataNd[:,1,:,:] += modelNd[:,idx,:,:]
-		#Checking if Mxx (normal stress) was requested to be sampled
-		if("mxx" in self.comp_list):
-			idx = self.comp_list.index("mxx")
-			dataNd[:,2,:,:] += modelNd[:,idx,:,:]
-		#Checking if Mzz (normal stress) was requested to be sampled
-		if("mzz" in self.comp_list):
-			idx = self.comp_list.index("mzz")
-			dataNd[:,3,:,:] += modelNd[:,idx,:,:]
-		#Checking if Mzz (normal stress) was requested to be sampled
-		if("mxz" in self.comp_list):
-			idx = self.comp_list.index("mxz")
-			dataNd[:,4,:,:] += modelNd[:,idx,:,:]
-		return
+    self.checkDomainRange(model, data)
+    if (not add):
+      data.zero()
+    modelNd = model.getNdArray()
+    dataNd = data.getNdArray()
+    #Checking if fx was requested to be sampled
+    if ("fx" in self.comp_list):
+      idx = self.comp_list.index("fx")
+      dataNd[:, 0, :, :] += modelNd[:, idx, :, :]
+    #Checking if fz was requested to be sampled
+    if ("fz" in self.comp_list):
+      idx = self.comp_list.index("fz")
+      dataNd[:, 1, :, :] += modelNd[:, idx, :, :]
+    #Checking if Mxx (normal stress) was requested to be sampled
+    if ("mxx" in self.comp_list):
+      idx = self.comp_list.index("mxx")
+      dataNd[:, 2, :, :] += modelNd[:, idx, :, :]
+    #Checking if Mzz (normal stress) was requested to be sampled
+    if ("mzz" in self.comp_list):
+      idx = self.comp_list.index("mzz")
+      dataNd[:, 3, :, :] += modelNd[:, idx, :, :]
+    #Checking if Mzz (normal stress) was requested to be sampled
+    if ("mxz" in self.comp_list):
+      idx = self.comp_list.index("mxz")
+      dataNd[:, 4, :, :] += modelNd[:, idx, :, :]
+    return
 
-	def adjoint(self,add,model,data):
-		"""
+  def adjoint(self, add, model, data):
+    """
 		   Adjoint operator: elastic source -> sampled source
 		"""
-		self.checkDomainRange(model,data)
-		if(not add): model.zero()
-		modelNd = model.getNdArray()
-		dataNd = data.getNdArray()
-		#Checking if fx was requested to be sampled
-		if("fx" in self.comp_list):
-			idx = self.comp_list.index("fx")
-			modelNd[:,idx,:,:] += dataNd[:,0,:,:]
-		#Checking if fz was requested to be sampled
-		if("fz" in self.comp_list):
-			idx = self.comp_list.index("fz")
-			modelNd[:,idx,:,:] += dataNd[:,1,:,:]
-		#Checking if Mxx (normal stress) was requested to be sampled
-		if("mxx" in self.comp_list):
-			idx = self.comp_list.index("mxx")
-			modelNd[:,idx,:,:] += dataNd[:,2,:,:]
-		#Checking if Mzz (normal stress) was requested to be sampled
-		if("mzz" in self.comp_list):
-			idx = self.comp_list.index("mzz")
-			modelNd[:,idx,:,:] += dataNd[:,3,:,:]
-		#Checking if Mzz (normal stress) was requested to be sampled
-		if("mxz" in self.comp_list):
-			idx = self.comp_list.index("mxz")
-			modelNd[:,idx,:,:] += dataNd[:,4,:,:]
-		return
+    self.checkDomainRange(model, data)
+    if (not add):
+      model.zero()
+    modelNd = model.getNdArray()
+    dataNd = data.getNdArray()
+    #Checking if fx was requested to be sampled
+    if ("fx" in self.comp_list):
+      idx = self.comp_list.index("fx")
+      modelNd[:, idx, :, :] += dataNd[:, 0, :, :]
+    #Checking if fz was requested to be sampled
+    if ("fz" in self.comp_list):
+      idx = self.comp_list.index("fz")
+      modelNd[:, idx, :, :] += dataNd[:, 1, :, :]
+    #Checking if Mxx (normal stress) was requested to be sampled
+    if ("mxx" in self.comp_list):
+      idx = self.comp_list.index("mxx")
+      modelNd[:, idx, :, :] += dataNd[:, 2, :, :]
+    #Checking if Mzz (normal stress) was requested to be sampled
+    if ("mzz" in self.comp_list):
+      idx = self.comp_list.index("mzz")
+      modelNd[:, idx, :, :] += dataNd[:, 3, :, :]
+    #Checking if Mzz (normal stress) was requested to be sampled
+    if ("mxz" in self.comp_list):
+      idx = self.comp_list.index("mxz")
+      modelNd[:, idx, :, :] += dataNd[:, 4, :, :]
+    return
 
 
 if __name__ == '__main__':
-	#Printing documentation if no arguments were provided
-	if(len(sys.argv) == 1):
-		print(__doc__)
-		quit(0)
+  #Printing documentation if no arguments were provided
+  if (len(sys.argv) == 1):
+    print(__doc__)
+    quit(0)
 
-	#Getting parameter object
-	parObject=genericIO.io(params=sys.argv)
+  #Getting parameter object
+  parObject = genericIO.io(params=sys.argv)
 
-	# Checking if Dask was requested
-	client, nWrks = Elastic_iso_float_prop.create_client(parObject)
+  # Checking if Dask was requested
+  client, nWrks = Elastic_iso_float_prop.create_client(parObject)
 
-	# Initialize operator
-	modelFloat,dataFloat,elasticParamFloat,parObject1,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,modelFloatLocal = Elastic_iso_float_prop.nonlinearOpInitFloat(sys.argv,client)
+  # Initialize operator
+  modelFloat, dataFloat, elasticParamFloat, parObject1, sourcesVectorCenterGrid, sourcesVectorXGrid, sourcesVectorZGrid, sourcesVectorXZGrid, recVectorCenterGrid, recVectorXGrid, recVectorZGrid, recVectorXZGrid, modelFloatLocal = Elastic_iso_float_prop.nonlinearOpInitFloat(
+      sys.argv, client)
 
-	# Initialize parameters for inversion
-	stop,logFile,saveObj,saveRes,saveGrad,saveModel,prefix,bufferSize,iterSampling,restartFolder,flushMemory,info=inversionUtils.inversionInit(sys.argv)
-	inv_log = logger(logFile)
-	solver=parObject.getString("solver","LCG") #[LCG,LSQR]
+  # Initialize parameters for inversion
+  stop, logFile, saveObj, saveRes, saveGrad, saveModel, prefix, bufferSize, iterSampling, restartFolder, flushMemory, info = inversionUtils.inversionInit(
+      sys.argv)
+  inv_log = logger(logFile)
+  solver = parObject.getString("solver", "LCG")  #[LCG,LSQR]
 
-	print("-------------------------------------------------------------------")
-	print("------------------ Running Python Source Estimation ---------------")
-	print("-------------------------------------------------------------------\n")
+  print("-------------------------------------------------------------------")
+  print("------------------ Running Python Source Estimation ---------------")
+  print("-------------------------------------------------------------------\n")
 
-	########################## Operator/Vectors ################################
+  ########################## Operator/Vectors ################################
 
-	if(client):
-		#Instantiating Dask Operator
-		nlOp_args = [(modelFloat.vecDask[iwrk],dataFloat.vecDask[iwrk],elasticParamFloat[iwrk],parObject1[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
-		nonlinearElasticOp = DaskOp.DaskOperator(client,Elastic_iso_float_prop.nonlinearPropElasticShotsGpu,nlOp_args,[1]*nWrks)
-		#Adding spreading operator and concatenating with non-linear operator (using modelFloatLocal)
-		Sprd = DaskOp.DaskSpreadOp(client,modelFloatLocal,[1]*nWrks)
-		invOp = pyOp.ChainOperator(Sprd,nonlinearElasticOp)
-	else:
-		# Construct nonlinear operator object
-		nonlinearElasticOp=Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
-		invOp=nonlinearElasticOp
+  if (client):
+    #Instantiating Dask Operator
+    nlOp_args = [(modelFloat.vecDask[iwrk], dataFloat.vecDask[iwrk],
+                  elasticParamFloat[iwrk], parObject1[iwrk],
+                  sourcesVectorCenterGrid[iwrk], sourcesVectorXGrid[iwrk],
+                  sourcesVectorZGrid[iwrk], sourcesVectorXZGrid[iwrk],
+                  recVectorCenterGrid[iwrk], recVectorXGrid[iwrk],
+                  recVectorZGrid[iwrk], recVectorXZGrid[iwrk])
+                 for iwrk in range(nWrks)]
+    nonlinearElasticOp = DaskOp.DaskOperator(
+        client, Elastic_iso_float_prop.nonlinearPropElasticShotsGpu, nlOp_args,
+        [1] * nWrks)
+    #Adding spreading operator and concatenating with non-linear operator (using modelFloatLocal)
+    Sprd = DaskOp.DaskSpreadOp(client, modelFloatLocal, [1] * nWrks)
+    invOp = pyOp.ChainOperator(Sprd, nonlinearElasticOp)
+  else:
+    # Construct nonlinear operator object
+    nonlinearElasticOp = Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(
+        modelFloat, dataFloat, elasticParamFloat, parObject,
+        sourcesVectorCenterGrid, sourcesVectorXGrid, sourcesVectorZGrid,
+        sourcesVectorXZGrid, recVectorCenterGrid, recVectorXGrid,
+        recVectorZGrid, recVectorXZGrid)
+    invOp = nonlinearElasticOp
 
-	############################# Read data ####################################
+  ############################# Read data ####################################
 
-	dataFile=parObject.getString("data","noDataFile")
-	if (dataFile == "noDataFile"):
-		raise IOError("**** ERROR: User did not provide data file name ****\n")
+  dataFile = parObject.getString("data", "noDataFile")
+  if (dataFile == "noDataFile"):
+    raise IOError("**** ERROR: User did not provide data file name ****\n")
 
-	#Reading model
-	data=genericIO.defaultIO.getVector(dataFile,ndims=4)
+  #Reading model
+  data = genericIO.defaultIO.getVector(dataFile, ndims=4)
 
-	########################### Data components ################################
-	comp = parObject.getString("comp")
-	if(comp != "vx,vz,sxx,szz,sxz"):
-		if client:
-			sampOp_args = [(comp,nonlinearElasticOp.getRange().vecDask[iwrk]) for iwrk in range(nWrks)]
-			sampOp = DaskOp.DaskOperator(client,ElasticDatComp,sampOp_args,[1]*nWrks)
-			#Dask interface
-			if(client):
-				#Chunking the data and spreading them across workers if dask was requested
-				data = Elastic_iso_float_prop.chunkData(data,sampOp.getRange())
-		else:
-			sampOp = ElasticDatComp(comp,nonlinearElasticOp.getRange())
-			#Necessary to Fix strange checkSame error in pyVector
-			dataTmp = sampOp.getRange().clone()
-			dataTmp.getNdArray()[:] = data.getNdArray()
-			data = dataTmp
-		#modeling operator = S*F
-		invOp=pyOp.ChainOperator(invOp,sampOp)
-	else:
-		#Dask interface
-		if(client):
-			#Chunking the data and spreading them across workers if dask was requested
-			data = Elastic_iso_float_prop.chunkData(data,nonlinearElasticOp.getRange())
-		if(not dataFloat.checkSame(data)):
-			raise ValueError("ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file")
+  ########################### Data components ################################
+  comp = parObject.getString("comp")
+  if (comp != "vx,vz,sxx,szz,sxz"):
+    if client:
+      sampOp_args = [(comp, nonlinearElasticOp.getRange().vecDask[iwrk])
+                     for iwrk in range(nWrks)]
+      sampOp = DaskOp.DaskOperator(client, ElasticDatComp, sampOp_args,
+                                   [1] * nWrks)
+      #Dask interface
+      if (client):
+        #Chunking the data and spreading them across workers if dask was requested
+        data = Elastic_iso_float_prop.chunkData(data, sampOp.getRange())
+    else:
+      sampOp = ElasticDatComp(comp, nonlinearElasticOp.getRange())
+      #Necessary to Fix strange checkSame error in pyVector
+      dataTmp = sampOp.getRange().clone()
+      dataTmp.getNdArray()[:] = data.getNdArray()
+      data = dataTmp
+    #modeling operator = S*F
+    invOp = pyOp.ChainOperator(invOp, sampOp)
+  else:
+    #Dask interface
+    if (client):
+      #Chunking the data and spreading them across workers if dask was requested
+      data = Elastic_iso_float_prop.chunkData(data,
+                                              nonlinearElasticOp.getRange())
+    if (not dataFloat.checkSame(data)):
+      raise ValueError(
+          "ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file"
+      )
 
-	########################### Data Masking Op ################################
+  ########################### Data Masking Op ################################
 
-	dataMaskFile = parObject.getString("dataMask","noDataMask")
+  dataMaskFile = parObject.getString("dataMask", "noDataMask")
 
-	if dataMaskFile != "noDataMask":
-		print("----- Provided data mask -----")
-		dataMask=genericIO.defaultIO.getVector(dataMaskFile,ndims=4)
-		#Necessary to Fix strange checkSame error in pyVector
-		dataTmp = data.clone()
-		dataTmp.getNdArray()[:] = dataMask.getNdArray()
-		dataMask = dataTmp
-		if client:
-			dataMask = Elastic_iso_float_prop.chunkData(dataMask,data)
-		if not dataMask.checkSame(data):
-			raise ValueError("ERROR! Data mask file inconsistent with observed data vector")
-		dataMask = pyOp.DiagonalOp(dataMask)
-		#modeling operator = M*F
-		invOp=pyOp.ChainOperator(invOp,dataMask)
+  if dataMaskFile != "noDataMask":
+    print("----- Provided data mask -----")
+    dataMask = genericIO.defaultIO.getVector(dataMaskFile, ndims=4)
+    #Necessary to Fix strange checkSame error in pyVector
+    dataTmp = data.clone()
+    dataTmp.getNdArray()[:] = dataMask.getNdArray()
+    dataMask = dataTmp
+    if client:
+      dataMask = Elastic_iso_float_prop.chunkData(dataMask, data)
+    if not dataMask.checkSame(data):
+      raise ValueError(
+          "ERROR! Data mask file inconsistent with observed data vector")
+    dataMask = pyOp.DiagonalOp(dataMask)
+    #modeling operator = M*F
+    invOp = pyOp.ChainOperator(invOp, dataMask)
 
-	########################### Source components ##############################
+  ########################### Source components ##############################
 
-	compSou = parObject.getString("compSou")
-	if(compSou != "fx,fz,Mxx,Mzz,Mxz"):
-		sampSouOp = ElasticSouComp(compSou,invOp.getDomain())
-		invOp=pyOp.ChainOperator(sampSouOp,invOp)
-	else:
-		if(not modelFloatLocal.checkSame(modelInit)):
-			raise ValueError("ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file")
+  compSou = parObject.getString("compSou")
+  if (compSou != "fx,fz,Mxx,Mzz,Mxz"):
+    sampSouOp = ElasticSouComp(compSou, invOp.getDomain())
+    invOp = pyOp.ChainOperator(sampSouOp, invOp)
+  else:
+    if (not modelFloatLocal.checkSame(modelInit)):
+      raise ValueError(
+          "ERROR! The input data have different size of the expected inversion data! Check your arguments and paramater file"
+      )
 
-	# Read initial model
-	modelInitFile=parObject.getString("modelInit","None")
-	if (modelInitFile=="None"):
-		modelInit=invOp.getDomain().clone()
-		modelInit.scale(0.0)
-	else:
-		modelInit=genericIO.defaultIO.getVector(modelInitFile,ndims=4)
+  # Read initial model
+  modelInitFile = parObject.getString("modelInit", "None")
+  if (modelInitFile == "None"):
+    modelInit = invOp.getDomain().clone()
+    modelInit.scale(0.0)
+  else:
+    modelInit = genericIO.defaultIO.getVector(modelInitFile, ndims=4)
 
-	############################## Problem ######################################
+  ############################## Problem ######################################
 
-	invProb=Prblm.ProblemL2Linear(modelInit,data,invOp)
+  invProb = Prblm.ProblemL2Linear(modelInit, data, invOp)
 
-	############################## Solver ######################################
-	# Solver
-	if solver == "LCG":
-		Linsolver=LCG(stop,logger=inv_log)
-	elif solver == "LSQR":
-		Linsolver=LSQR(stop,logger=inv_log)
-	else:
-		raise ValueError("Unknown solver: %s"%(solver))
-	Linsolver.setDefaults(save_obj=saveObj,save_res=saveRes,save_grad=saveGrad,save_model=saveModel,prefix=prefix,iter_buffer_size=bufferSize,iter_sampling=iterSampling,flush_memory=flushMemory)
+  ############################## Solver ######################################
+  # Solver
+  if solver == "LCG":
+    Linsolver = LCG(stop, logger=inv_log)
+  elif solver == "LSQR":
+    Linsolver = LSQR(stop, logger=inv_log)
+  else:
+    raise ValueError("Unknown solver: %s" % (solver))
+  Linsolver.setDefaults(save_obj=saveObj,
+                        save_res=saveRes,
+                        save_grad=saveGrad,
+                        save_model=saveModel,
+                        prefix=prefix,
+                        iter_buffer_size=bufferSize,
+                        iter_sampling=iterSampling,
+                        flush_memory=flushMemory)
 
-	# Run solver
-	Linsolver.run(invProb,verbose=True)
+  # Run solver
+  Linsolver.run(invProb, verbose=True)
 
-	print("-------------------------------------------------------------------")
-	print("--------------------------- All done ------------------------------")
-	print("-------------------------------------------------------------------\n")
+  print("-------------------------------------------------------------------")
+  print("--------------------------- All done ------------------------------")
+  print("-------------------------------------------------------------------\n")

@@ -17,93 +17,111 @@ import pyOperator as Op
 # Template for linearized waveform inversion workflow
 if __name__ == '__main__':
 
-	# Bullshit stuff
-	io=genericIO.pyGenericIO.ioModes(sys.argv)
-	ioDef=io.getDefaultIO()
-	parObject=ioDef.getParamObj()
+  # Bullshit stuff
+  io = genericIO.pyGenericIO.ioModes(sys.argv)
+  ioDef = io.getDefaultIO()
+  parObject = ioDef.getParamObj()
 
-	# Interp operator init
-	zCoord,xCoord,centerHyper = SpaceInterpMultiFloat.space_interp_multi_init_source(sys.argv)
-	print(zCoord)
-	print(xCoord)
+  # Interp operator init
+  zCoord, xCoord, centerHyper = SpaceInterpMultiFloat.space_interp_multi_init_source(
+      sys.argv)
+  print(zCoord)
+  print(xCoord)
 
-	#interp operator instantiate
-	#check which source injection interp method
-	sourceInterpMethod = parObject.getString("sourceInterpMethod","linear")
-	sourceInterpNumFilters = parObject.getInt("sourceInterpNumFilters",4)
-	nt = parObject.getInt("nts")
-	spaceInterpMultiOp = SpaceInterpMultiFloat.space_interp_multi(zCoord,xCoord,centerHyper,nt,sourceInterpMethod,sourceInterpNumFilters)
+  #interp operator instantiate
+  #check which source injection interp method
+  sourceInterpMethod = parObject.getString("sourceInterpMethod", "linear")
+  sourceInterpNumFilters = parObject.getInt("sourceInterpNumFilters", 4)
+  nt = parObject.getInt("nts")
+  spaceInterpMultiOp = SpaceInterpMultiFloat.space_interp_multi(
+      zCoord, xCoord, centerHyper, nt, sourceInterpMethod,
+      sourceInterpNumFilters)
 
+  # pad truncate init
+  dt = parObject.getFloat("dts", 0.0)
+  nExp = parObject.getInt("nExp")
+  tAxis = Hypercube.axis(n=nt, o=0.0, d=dt)
+  wfldAxis = Hypercube.axis(n=5, o=0.0, d=1)
+  regSourceAxis = Hypercube.axis(n=spaceInterpMultiOp.getNDeviceReg(),
+                                 o=0.0,
+                                 d=1)
+  irregSourceAxis = Hypercube.axis(n=spaceInterpMultiOp.getNDeviceIrreg(),
+                                   o=0.0,
+                                   d=1)
+  regSourceHyper = Hypercube.hypercube(axes=[regSourceAxis, wfldAxis, tAxis])
+  irregSourceHyper = Hypercube.hypercube(
+      axes=[irregSourceAxis, wfldAxis, tAxis])
+  regWfldHyper = Hypercube.hypercube(
+      axes=[centerHyper.getAxis(1),
+            centerHyper.getAxis(2), wfldAxis, tAxis])
 
-	# pad truncate init
-	dt = parObject.getFloat("dts",0.0)
-	nExp = parObject.getInt("nExp")
-	tAxis=Hypercube.axis(n=nt,o=0.0,d=dt)
-	wfldAxis=Hypercube.axis(n=5,o=0.0,d=1)
-	regSourceAxis=Hypercube.axis(n=spaceInterpMultiOp.getNDeviceReg(),o=0.0,d=1)
-	irregSourceAxis=Hypercube.axis(n=spaceInterpMultiOp.getNDeviceIrreg(),o=0.0,d=1)
-	regSourceHyper=Hypercube.hypercube(axes=[regSourceAxis,wfldAxis,tAxis])
-	irregSourceHyper=Hypercube.hypercube(axes=[irregSourceAxis,wfldAxis,tAxis])
-	regWfldHyper=Hypercube.hypercube(axes=[centerHyper.getAxis(1),centerHyper.getAxis(2),wfldAxis,tAxis])
+  model = SepVector.getSepVector(irregSourceHyper, storage="dataFloat")
+  padTruncateDummyModel = SepVector.getSepVector(regSourceHyper,
+                                                 storage="dataFloat")
+  padTruncateDummyData = SepVector.getSepVector(regWfldHyper,
+                                                storage="dataFloat")
+  sourceGridPositions = spaceInterpMultiOp.getRegPosUniqueVector()
 
-	model = SepVector.getSepVector(irregSourceHyper,storage="dataFloat")
-	padTruncateDummyModel = SepVector.getSepVector(regSourceHyper,storage="dataFloat")
-	padTruncateDummyData = SepVector.getSepVector(regWfldHyper,storage="dataFloat")
-	sourceGridPositions = spaceInterpMultiOp.getRegPosUniqueVector()
+  padTruncateSourceOp = PadTruncateSourceFloat.pad_truncate_source(
+      padTruncateDummyModel, padTruncateDummyData, sourceGridPositions)
 
-	padTruncateSourceOp = PadTruncateSourceFloat.pad_truncate_source(padTruncateDummyModel,padTruncateDummyData,sourceGridPositions)
+  #stagger op
+  staggerDummyModel = SepVector.getSepVector(padTruncateDummyData.getHyper(),
+                                             storage="dataFloat")
+  data = SepVector.getSepVector(padTruncateDummyData.getHyper(),
+                                storage="dataFloat")
+  wavefieldStaggerOp = StaggerFloat.stagger_wfld(staggerDummyModel, data)
 
-	#stagger op
-	staggerDummyModel = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataFloat")
-	data = SepVector.getSepVector(padTruncateDummyData.getHyper(),storage="dataFloat")
-	wavefieldStaggerOp=StaggerFloat.stagger_wfld(staggerDummyModel,data)
+  #chain operators
+  spaceInterpMultiOp.setDomainRange(padTruncateDummyModel, model)
+  spaceInterpMultiOp = Op.Transpose(spaceInterpMultiOp)
+  PK_adj = Op.ChainOperator(spaceInterpMultiOp, padTruncateSourceOp)
+  SPK_adj = Op.ChainOperator(PK_adj, wavefieldStaggerOp)
 
-	#chain operators
-	spaceInterpMultiOp.setDomainRange(padTruncateDummyModel,model)
-	spaceInterpMultiOp = Op.Transpose(spaceInterpMultiOp)
-	PK_adj = Op.ChainOperator(spaceInterpMultiOp,padTruncateSourceOp)
-	SPK_adj = Op.ChainOperator(PK_adj,wavefieldStaggerOp)
+  #forward
+  if (parObject.getInt("adj") == 0):
+    #read in test source
+    waveletFile = parObject.getString("wavelet")
+    waveletFloat = genericIO.defaultIO.getVector(waveletFile)
+    waveletSMat = waveletFloat.getNdArray()
+    waveletSMatT = np.transpose(waveletFloat.getNdArray())
+    waveletDMat = model.getNdArray()
+    #loop over irreg grid sources and set each to wavelet
+    for iShot in range(irregSourceAxis.n):
+      waveletDMat[:, :, iShot] = waveletSMatT
 
-	#forward
-	if(parObject.getInt("adj")==0):
-		#read in test source
-		waveletFile=parObject.getString("wavelet")
-		waveletFloat=genericIO.defaultIO.getVector(waveletFile)
-		waveletSMat=waveletFloat.getNdArray()
-		waveletSMatT=np.transpose(waveletFloat.getNdArray())
-		waveletDMat=model.getNdArray()
-		#loop over irreg grid sources and set each to wavelet
-		for iShot in range(irregSourceAxis.n):
-			waveletDMat[:,:,iShot] = waveletSMatT
+    # #apply forward
+    SPK_adj.forward(0, model, data)
 
-		# #apply forward
-		SPK_adj.forward(0,model,data)
+    #write data to disk
+    dataFloat = SepVector.getSepVector(data.getHyper(), storage="dataFloat")
+    dataFloatNp = dataFloat.getNdArray()
+    dataFloatNp = data.getNdArray()
+    dataFloatNp[:] = dataFloatNp / (centerHyper.getAxis(1).d *
+                                    centerHyper.getAxis(2).d)
+    #dataFloatNp[:]=dataFloatNp
+    genericIO.defaultIO.writeVector(
+        parObject.getString("dataFile", "./test1.H"), dataFloat)
+  #adjoint
+  else:
+    #read in test wfld
+    wfldFile = parObject.getString("wfld")
+    wfldFloat = genericIO.defaultIO.getVector(wfldFile)
+    wfldSMat = wfldFloat.getNdArray()
+    wfldDMat = data.getNdArray()
+    wfldDMat[:] = wfldSMat
 
-		#write data to disk
-		dataFloat=SepVector.getSepVector(data.getHyper(),storage="dataFloat")
-		dataFloatNp=dataFloat.getNdArray()
-		dataFloatNp=data.getNdArray()
-		dataFloatNp[:]=dataFloatNp/(centerHyper.getAxis(1).d*centerHyper.getAxis(2).d)
-		#dataFloatNp[:]=dataFloatNp
-		genericIO.defaultIO.writeVector(parObject.getString("dataFile","./test1.H"),dataFloat)
-	#adjoint
-	else:
-		#read in test wfld
-		wfldFile=parObject.getString("wfld")
-		wfldFloat=genericIO.defaultIO.getVector(wfldFile)
-		wfldSMat=wfldFloat.getNdArray()
-		wfldDMat=data.getNdArray()
-		wfldDMat[:]=wfldSMat
+    # #apply forward
+    SPK_adj.adjoint(0, model, data)
 
-		# #apply forward
-		SPK_adj.adjoint(0,model,data)
-
-		#write output to disk
-		modelFloat=SepVector.getSepVector(model.getHyper(),storage="dataFloat")
-		modelFloatNp=modelFloat.getNdArray()
-		modelDoubleNp=model.getNdArray()
-		print(centerHyper.getAxis(1).d)
-		print(centerHyper.getAxis(2).d)
-		modelFloatNp[:]=modelDoubleNp*(centerHyper.getAxis(1).d*centerHyper.getAxis(2).d)
-		#modelFloatNp[:]=modelDoubleNp
-		genericIO.defaultIO.writeVector(parObject.getString("modelFile","./test1.H"),modelFloat)
+    #write output to disk
+    modelFloat = SepVector.getSepVector(model.getHyper(), storage="dataFloat")
+    modelFloatNp = modelFloat.getNdArray()
+    modelDoubleNp = model.getNdArray()
+    print(centerHyper.getAxis(1).d)
+    print(centerHyper.getAxis(2).d)
+    modelFloatNp[:] = modelDoubleNp * (centerHyper.getAxis(1).d *
+                                       centerHyper.getAxis(2).d)
+    #modelFloatNp[:]=modelDoubleNp
+    genericIO.defaultIO.writeVector(
+        parObject.getString("modelFile", "./test1.H"), modelFloat)

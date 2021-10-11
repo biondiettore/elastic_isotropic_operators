@@ -74,7 +74,6 @@ INPUT PARAMETERS:
 
 """
 
-
 import sys
 import genericIO
 import SepVector
@@ -88,126 +87,147 @@ import time
 import pyDaskOperator as DaskOp
 
 if __name__ == '__main__':
-	#Printing documentation if no arguments were provided
-	if(len(sys.argv) == 1):
-		print(__doc__)
-		quit(0)
+  #Printing documentation if no arguments were provided
+  if (len(sys.argv) == 1):
+    print(__doc__)
+    quit(0)
 
-	#Getting parameter object
-	parObject=genericIO.io(params=sys.argv)
+  #Getting parameter object
+  parObject = genericIO.io(params=sys.argv)
 
-	# Checking if Dask was requested
-	client, nWrks = Elastic_iso_float_prop.create_client(parObject)
+  # Checking if Dask was requested
+  client, nWrks = Elastic_iso_float_prop.create_client(parObject)
 
-	# Initialize operator
-	modelFloat,dataFloat,elasticParamFloat,parObject1,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid,modelFloatLocal = Elastic_iso_float_prop.nonlinearOpInitFloat(sys.argv,client)
+  # Initialize operator
+  modelFloat, dataFloat, elasticParamFloat, parObject1, sourcesVectorCenterGrid, sourcesVectorXGrid, sourcesVectorZGrid, sourcesVectorXZGrid, recVectorCenterGrid, recVectorXGrid, recVectorZGrid, recVectorXZGrid, modelFloatLocal = Elastic_iso_float_prop.nonlinearOpInitFloat(
+      sys.argv, client)
 
+  if (client):
+    #Instantiating Dask Operator
+    nlOp_args = [(modelFloat.vecDask[iwrk], dataFloat.vecDask[iwrk],
+                  elasticParamFloat[iwrk], parObject1[iwrk],
+                  sourcesVectorCenterGrid[iwrk], sourcesVectorXGrid[iwrk],
+                  sourcesVectorZGrid[iwrk], sourcesVectorXZGrid[iwrk],
+                  recVectorCenterGrid[iwrk], recVectorXGrid[iwrk],
+                  recVectorZGrid[iwrk], recVectorXZGrid[iwrk])
+                 for iwrk in range(nWrks)]
+    nonlinearElasticOp = DaskOp.DaskOperator(
+        client, Elastic_iso_float_prop.nonlinearPropElasticShotsGpu, nlOp_args,
+        [1] * nWrks)
+    #Adding spreading operator and concatenating with non-linear operator (using modelFloatLocal)
+    Sprd = DaskOp.DaskSpreadOp(client, modelFloatLocal, [1] * nWrks)
+    nonlinearElasticOp = pyOp.ChainOperator(Sprd, nonlinearElasticOp)
+  else:
+    # Construct nonlinear operator object
+    nonlinearElasticOp = Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(
+        modelFloat, dataFloat, elasticParamFloat, parObject,
+        sourcesVectorCenterGrid, sourcesVectorXGrid, sourcesVectorZGrid,
+        sourcesVectorXZGrid, recVectorCenterGrid, recVectorXGrid,
+        recVectorZGrid, recVectorXZGrid)
 
-	if(client):
-		#Instantiating Dask Operator
-		nlOp_args = [(modelFloat.vecDask[iwrk],dataFloat.vecDask[iwrk],elasticParamFloat[iwrk],parObject1[iwrk],sourcesVectorCenterGrid[iwrk],sourcesVectorXGrid[iwrk],sourcesVectorZGrid[iwrk],sourcesVectorXZGrid[iwrk],recVectorCenterGrid[iwrk],recVectorXGrid[iwrk],recVectorZGrid[iwrk],recVectorXZGrid[iwrk]) for iwrk in range(nWrks)]
-		nonlinearElasticOp = DaskOp.DaskOperator(client,Elastic_iso_float_prop.nonlinearPropElasticShotsGpu,nlOp_args,[1]*nWrks)
-		#Adding spreading operator and concatenating with non-linear operator (using modelFloatLocal)
-		Sprd = DaskOp.DaskSpreadOp(client,modelFloatLocal,[1]*nWrks)
-		nonlinearElasticOp = pyOp.ChainOperator(Sprd,nonlinearElasticOp)
-	else:
-		# Construct nonlinear operator object
-		nonlinearElasticOp=Elastic_iso_float_prop.nonlinearPropElasticShotsGpu(modelFloat,dataFloat,elasticParamFloat,parObject,sourcesVectorCenterGrid,sourcesVectorXGrid,sourcesVectorZGrid,sourcesVectorXZGrid,recVectorCenterGrid,recVectorXGrid,recVectorZGrid,recVectorXZGrid)
+  #Testing dot-product test of the operator
+  if (parObject.getInt("dpTest", 0) == 1):
+    nonlinearElasticOp.dotTest(True)
+    quit(0)
 
+  # Forward
+  if (parObject.getInt("adj", 0) == 0):
 
-	#Testing dot-product test of the operator
-	if (parObject.getInt("dpTest",0) == 1):
-		nonlinearElasticOp.dotTest(True)
-		quit(0)
+    print("-------------------------------------------------------------------")
+    print("------------------ Running Python nonlinear forward ---------------")
+    print(
+        "-------------------------------------------------------------------\n")
 
-	# Forward
-	if (parObject.getInt("adj",0) == 0):
+    # Check that model was provided
+    modelFile = parObject.getString("model", "noModelFile")
+    if (modelFile == "noModelFile"):
+      raise IOError("**** ERROR: User did not provide model file ****\n")
+    dataFile = parObject.getString("data", "noDataFile")
+    if (dataFile == "noDataFile"):
+      raise IOError("**** ERROR: User did not provide data file name ****\n")
 
-		print("-------------------------------------------------------------------")
-		print("------------------ Running Python nonlinear forward ---------------")
-		print("-------------------------------------------------------------------\n")
+    sourceGeomFile = parObject.getString("sourceGeomFile", "None")
+    if sourceGeomFile != "None":
+      modelTemp = genericIO.defaultIO.getVector(modelFile)
+      modelTemp_nd = modelTemp.getNdArray()
+      modelTemp_nd.shape = (modelFloatLocal.getHyper().getAxis(3).n,
+                            modelFloatLocal.getHyper().getAxis(2).n,
+                            modelFloatLocal.getHyper().getAxis(1).n)
+      modelFloatLocal.getNdArray()[0, :, :, :] = modelTemp_nd
+    else:
+      #modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
+      modelTemp = genericIO.defaultIO.getVector(modelFile)
+      modelFMat = modelFloatLocal.getNdArray()
+      modelTMat = modelTemp.getNdArray()
+      modelFMat[0, :, 0, :] = modelTMat
 
-		# Check that model was provided
-		modelFile=parObject.getString("model","noModelFile")
-		if (modelFile == "noModelFile"):
-			raise IOError("**** ERROR: User did not provide model file ****\n")
-		dataFile=parObject.getString("data","noDataFile")
-		if (dataFile == "noDataFile"):
-			raise IOError("**** ERROR: User did not provide data file name ****\n")
+    #check if we want to save wavefield
+    if (parObject.getInt("saveWavefield", 0) == 1):
+      wfldFile = parObject.getString("wfldFile", "noWfldFile")
+      if (wfldFile == "noWfldFile"):
+        raise IOError(
+            "**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****"
+        )
+      #run Nonlinear forward with wavefield saving
+      nonlinearElasticOp.forwardWavefield(False, modelFloatLocal, dataFloat)
+      #save wavefield to disk
+      wavefieldFloat = nonlinearElasticOp.getWavefield()
+      # genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
+      wavefieldFloat.writeVec(wfldFile)
+    else:
+      #run Nonlinear forward without wavefield saving
+      nonlinearElasticOp.forward(False, modelFloatLocal, dataFloat)
+    #write data to disk
+    dataFloat.writeVec(dataFile)
 
-		sourceGeomFile = parObject.getString("sourceGeomFile","None")
-		if sourceGeomFile != "None":
-			modelTemp = genericIO.defaultIO.getVector(modelFile)
-			modelTemp_nd = modelTemp.getNdArray()
-			modelTemp_nd.shape = (modelFloatLocal.getHyper().getAxis(3).n,modelFloatLocal.getHyper().getAxis(2).n,modelFloatLocal.getHyper().getAxis(1).n)
-			modelFloatLocal.getNdArray()[0,:,:,:]=modelTemp_nd
-		else:
-			#modelFloat=genericIO.defaultIO.getVector(modelFile,ndims=3)
-			modelTemp=genericIO.defaultIO.getVector(modelFile)
-			modelFMat=modelFloatLocal.getNdArray()
-			modelTMat=modelTemp.getNdArray()
-			modelFMat[0,:,0,:]=modelTMat
+    print("-------------------------------------------------------------------")
+    print("--------------------------- All done ------------------------------")
+    print(
+        "-------------------------------------------------------------------\n")
 
-		#check if we want to save wavefield
-		if (parObject.getInt("saveWavefield",0) == 1):
-			wfldFile=parObject.getString("wfldFile","noWfldFile")
-			if (wfldFile == "noWfldFile"):
-				raise IOError("**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****")
-			#run Nonlinear forward with wavefield saving
-			nonlinearElasticOp.forwardWavefield(False,modelFloatLocal,dataFloat)
-			#save wavefield to disk
-			wavefieldFloat = nonlinearElasticOp.getWavefield()
-			# genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
-			wavefieldFloat.writeVec(wfldFile)
-		else:
-			#run Nonlinear forward without wavefield saving
-			nonlinearElasticOp.forward(False,modelFloatLocal,dataFloat)
-		#write data to disk
-		dataFloat.writeVec(dataFile)
+  # Adjoint
+  else:
 
-		print("-------------------------------------------------------------------")
-		print("--------------------------- All done ------------------------------")
-		print("-------------------------------------------------------------------\n")
+    print("-------------------------------------------------------------------")
+    print("------------------ Running Python nonlinear adjoint ---------------")
+    print(
+        "-------------------------------------------------------------------\n")
 
-	# Adjoint
-	else:
+    # Check that model was provided
+    modelFile = parObject.getString("model", "noModelFile")
+    if (modelFile == "noModelFile"):
+      raise IOError("**** ERROR: User did not provide model file ****\n")
+    dataFile = parObject.getString("data", "noDataFile")
+    if (dataFile == "noDataFile"):
+      raise IOError("**** ERROR: User did not provide data file name ****\n")
 
-		print("-------------------------------------------------------------------")
-		print("------------------ Running Python nonlinear adjoint ---------------")
-		print("-------------------------------------------------------------------\n")
+    #Reading model
+    dataFloat = genericIO.defaultIO.getVector(dataFile, ndims=4)
+    if (client):
+      #Chunking the data and spreading them across workers if dask was requested
+      dataFloat = Elastic_iso_float_prop.chunkData(
+          dataFloat, nonlinearElasticOp.getRange())
 
+    #check if we want to save wavefield
+    if (parObject.getInt("saveWavefield", 0) == 1):
+      wfldFile = parObject.getString("wfldFile", "noWfldFile")
+      if (wfldFile == "noWfldFile"):
+        raise IOError(
+            "**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****"
+        )
+      #run Nonlinear adjoint with wavefield saving
+      nonlinearElasticOp.adjointWavefield(False, modelFloatLocal, dataFloat)
+      #save wavefield to disk
+      wavefieldFloat = nonlinearElasticOp.getWavefield()
+      # genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
+      wavefieldFloat.writeVec(wfldFile)
+    else:
+      #run Nonlinear adjoint without wavefield saving
+      nonlinearElasticOp.adjoint(False, modelFloatLocal, dataFloat)
+    #write data to disk
+    modelFloatLocal.writeVec(modelFile)
 
-		# Check that model was provided
-		modelFile=parObject.getString("model","noModelFile")
-		if (modelFile == "noModelFile"):
-			raise IOError("**** ERROR: User did not provide model file ****\n")
-		dataFile=parObject.getString("data","noDataFile")
-		if (dataFile == "noDataFile"):
-			raise IOError("**** ERROR: User did not provide data file name ****\n")
-
-		#Reading model
-		dataFloat=genericIO.defaultIO.getVector(dataFile,ndims=4)
-		if(client):
-			#Chunking the data and spreading them across workers if dask was requested
-			dataFloat = Elastic_iso_float_prop.chunkData(dataFloat,nonlinearElasticOp.getRange())
-
-		#check if we want to save wavefield
-		if (parObject.getInt("saveWavefield",0) == 1):
-			wfldFile=parObject.getString("wfldFile","noWfldFile")
-			if (wfldFile == "noWfldFile"):
-				raise IOError("**** ERROR: User specified saveWavefield=1 but did not provide wavefield file name (wfldFile)****")
-			#run Nonlinear adjoint with wavefield saving
-			nonlinearElasticOp.adjointWavefield(False,modelFloatLocal,dataFloat)
-			#save wavefield to disk
-			wavefieldFloat = nonlinearElasticOp.getWavefield()
-			# genericIO.defaultIO.writeVector(wfldFile,wavefieldFloat)
-			wavefieldFloat.writeVec(wfldFile)
-		else:
-			#run Nonlinear adjoint without wavefield saving
-			nonlinearElasticOp.adjoint(False,modelFloatLocal,dataFloat)
-		#write data to disk
-		modelFloatLocal.writeVec(modelFile)
-
-		print("-------------------------------------------------------------------")
-		print("--------------------------- All done ------------------------------")
-		print("-------------------------------------------------------------------\n")
+    print("-------------------------------------------------------------------")
+    print("--------------------------- All done ------------------------------")
+    print(
+        "-------------------------------------------------------------------\n")
