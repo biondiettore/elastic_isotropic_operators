@@ -72,8 +72,8 @@ make install -j16
 cd ..
 
 # Setting module file
-sed -i  's|path-to-EGSlib|'$PWD'|g' module/EGSlib
-sed -i  's|MAJOR.MINOR|'`python3 -V | colrm 1 7 | colrm 4`'|g' module/EGSlib
+sed -i  's|path-to-EGSlib|'$PWD'|g' module/EGS_ela2d
+sed -i  's|MAJOR.MINOR|'`python3 -V | colrm 1 7 | colrm 4`'|g' module/EGS_ela2d
 
 ###################################################################
 # Now edit the file EGSlib in the folder module                   #
@@ -85,14 +85,14 @@ sed -i  's|MAJOR.MINOR|'`python3 -V | colrm 1 7 | colrm 4`'|g' module/EGSlib
 touch $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 echo "module use ${PWD}/module" >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
-echo "module load EGSlib"  >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+echo "module load EGS_ela2d"  >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 
 conda deactivate
 conda activate EGS
 
 touch $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
 echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
-echo "module unload EGSlib"  >> $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
+echo "module unload EGS_ela2d"  >> $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
 
 conda activate EGS
 ```

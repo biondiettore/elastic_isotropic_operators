@@ -1,23 +1,22 @@
 #%Module1.0#####################################################################
 ##
-## EGS propagation and inversion library
-## Authors: Guillaume Barnier, Ettore Biondi, and Stuart Farris
+## EGS propagation and inversion library for elastic eave equation
+## Authors: Ettore Biondi, Stuart Farris, and Guillaume Barnier
 ##  V1
 ##
 proc ModulesHelp { } {
         global version
 
-        puts stderr "\tThis module add EGSlib to your environment"
+        puts stderr "\tThis module add EGS_ela2d to your environment"
 }
 
 module-whatis "(Category_______) Seismic software"
-module-whatis "(Name___________) EGSlib"
+module-whatis "(Name___________) EGS_ela2d"
 module-whatis "(Version________) 1.0"
 module-whatis "(Website________) "
-module-whatis "(Authorship_____) Guillaume Barnier, Ettore Biondi, and Stuart Farris"
+module-whatis "(Authorship_____) Ettore Biondi, Stuart Farris, and Guillaume Barnier"
 module-whatis "(Compiler_______) gcc 7.1 and nvcc 10.1"
 module-whatis "(Dependencies___) CUDA"
-
 
 set libfolder path-to-EGSlib/local
 prepend-path PATH $libfolder/bin
