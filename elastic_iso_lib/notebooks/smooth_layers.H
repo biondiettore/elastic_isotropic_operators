@@ -1,0 +1,145 @@
+Input from a tty
+
+Vel:   ettore@jarvis   Mon Aug 12 16:52:22 2019
+		sets next: in="/net/vision/scr1/ettore/vp_tmp.H@"
+		Read  from param: #n1=101
+		Read  from param: #n2=201
+		Read  from param: #n3=1
+		Read  from param: #big=0
+		Read  from param: #dir=0
+		Read  from param: #transp=0
+		Read  from param: #slow=0
+		Read  from param: #d1=10
+		Read  from param: #d2=10
+		Read  from param: #d3=10
+		Read  from param: #o1=0
+		Read  from param: #o2=0
+		Read  from param: #o3=0
+		n1=101
+		n2=201
+		n3=1
+		d1=10
+		d2=10
+		d3=10
+		o1=0
+		o2=0
+		o3=0
+		Read  from param: #xa1=0
+		Read  from param: #xb1=2000
+		Read  from param: #xa2=0
+		Read  from param: #xb2=2000
+		Read  from param: #xa3=0
+		Read  from param: #xb3=2000
+		Read  from param: #xa4=0
+		Read  from param: #xb4=2000
+		Read  from param: #xa5=0
+		Read  from param: #xb5=2000
+		Read  from param: #xa6=0
+		Read  from param: #xb6=2000
+		Read  from param: #xa7=0
+		Read  from param: #xb7=2000
+		Read  from param: #xa8=0
+		Read  from param: #xb8=2000
+		Read  from param: #z1=400
+		Read  from param: #z2=600
+		Read  from param: #z3=1010
+		Read  from param: #z4=1010
+		Read  from param: #z5=1010
+		Read  from param: #z6=1010
+		Read  from param: #z7=1010
+		Read  from param: #z8=1010
+		Read  from param: #xasmo=0
+		Read  from param: #xbsmo=2000
+		Read  from param: #z1smo=1010
+		Read  from param: #z2smo=1010
+		esize=4
+		Read  from param: #const1=1
+		Read  from param: #const2=1
+		Read  from param: #const3=0
+		Read  from param: #const4=0
+		Read  from param: #const5=0
+		Read  from param: #const6=0
+		Read  from param: #const7=0
+		Read  from param: #const8=0
+		Read  from param: #alfa1=0
+		Read  from param: #alfa2=0
+		Read  from param: #alfa3=0
+		Read  from param: #alfa4=0
+		Read  from param: #alfa5=0
+		Read  from param: #alfa6=0
+		Read  from param: #alfa7=0
+		Read  from param: #alfa8=0
+		Read  from param: #vc=1800
+		Read  from param: #vr1=2000
+		Read  from param: #vr2=2200
+		Read  from param: #vr3=1800
+		Read  from param: #vr4=1800
+		Read  from param: #vr4=1800
+		Read  from param: #vr5=1800
+		Read  from param: #vr6=1800
+		Read  from param: #hgrad=0
+		Read  from param: #vr7=1800
+		Read  from param: #vr8=1800
+		Read  from param: #xan=0
+		Read  from param: #zan=0
+		Read  from param: #ranx=-1
+		Read  from param: #ranz=-1
+		Read  from param: #exan=1
+		Read  from param: #dvan=0
+		Read  from param: #widthan=1
+		Read  from param: #rankx=-1
+		Read  from param: #rankz=-1
+		Read  from param: #dvank=0
+		Read  from param: #exank=1
+		Read  from param: #smooth1=2000
+		Read  from param: #smooth2=2200
+		Read  from param: #smooth3=1800
+		Read  from param: #smooth4=1800
+		Read  from param: #smooth5=1800
+		Read  from param: #smooth6=1800
+		Read  from param: #smooth7=1800
+		Read  from param: #smooth8=1800
+		Read  from param: #v1smo=1800
+		Read  from param: #v2smo=1800
+		Read  from param: #exsmo=1
+		Read  from param: #alfasmo=0
+		Read  from param: #dzepsi=0
+		Read  from param: #sin_period=100
+		Read  from param: #sin_amp=100
+		Read  from param: #sin_z=-0
+		Read  from param: #sin_x=-0
+		Read  from param: #sin_z_x0=0
+		Read  from param: #sin_vel_up=0
+		Read  from param: #sin_vel_down=0
+		data_format="xdr_float"
+
+
+
+Cat3d:   ettore@jarvis   Mon Aug 12 16:52:23 2019
+		sets next: in="/net/vision/scr1/ettore/Cat3d@ij47zS"
+		axis=3
+		file1="vp_tmp.H"
+		file2="vs_tmp.H"
+		file3="rho_tmp.H"
+		junkME=0
+	n2=201  o2=0.000000  d2=10.000000   label2="Undefined"   unit2="Undefined"
+	n3=3  o3=0.000000  d3=10.000000   label3="Undefined"   unit3="Undefined"
+		gff="-1"
+		hff="-1"
+hff=-1 gff=-1  n4=1  n5=1  n6=1  n7=1  n8=1  n9=1 
+	n1=101  o1=0.000000  d1=10.000000   label1="Undefined"   unit1="Undefined"
+		hff="-1"
+		gff="-1"
+		esize=4
+		data_format="xdr_float"
+
+
+
+Smooth:   ettore@jarvis   Mon Aug 12 16:52:28 2019
+		sets next: in="/net/vision/scr1/ettore/Smooth@0tc2tk"
+	Data smoothed with tridiagonal solver leaky().
+		Data smoothed with: rect1=10
+		Data smoothed with: rect2=10
+		Data smoothed with: rect3=1
+		data_format="xdr_float"
+in=./smooth_layers.H@
