@@ -554,10 +554,10 @@ __global__ void ker_step_fwd_surface_top(double* dev_c_vx, double* dev_c_vz, dou
     dev_c_sigmazz[iGlobal_surf] = 0;
 
     // 2. make current sigmazz, sigmaxz odd about z=0 by changing values above z=0
-    dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+1];
-    dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+2];
-    dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+3];
-    dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+4];
+    dev_c_sigmazz[iGlobal_3] = -dev_c_sigmazz[iGlobal_surf+1];
+    dev_c_sigmazz[iGlobal_2] = -dev_c_sigmazz[iGlobal_surf+2];
+    dev_c_sigmazz[iGlobal_1] = -dev_c_sigmazz[iGlobal_surf+3];
+    dev_c_sigmazz[iGlobal_0] = -dev_c_sigmazz[iGlobal_surf+4];
 		
     dev_c_sigmaxz[iGlobal_1] = -dev_c_sigmaxz[iGlobal_surf+4];
     dev_c_sigmaxz[iGlobal_2] = -dev_c_sigmaxz[iGlobal_surf+3];
