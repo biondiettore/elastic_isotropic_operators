@@ -309,9 +309,7 @@ if __name__ == '__main__':
   #Born operator pointer for inversion
   BornElasticOpInv = BornElasticOp
 
-  # Conventional FWI non-linear operator (with mask if requested)
-  if maskGradientOp is not None:
-    BornElasticOpInv = pyOp.ChainOperator(maskGradientOp, BornElasticOp)
+  # Conventional FWI non-linear operator
   if client:
     fwiInvOp = pyOp.NonLinearOperator(nonlinearElasticOp, BornElasticOpInv,
                                       BornElasticOpDask.set_background)
@@ -333,6 +331,10 @@ if __name__ == '__main__':
     #Chaining non-linear operators if not using Lame,Mu,Density parameterization
     #f(g(m)) where f is the non-linear modeling operator and g is the non-linear change of variables
     fwiInvOp = pyOp.CombNonlinearOp(convOpNl, fwiInvOp)
+
+
+  if maskGradientOp is not None:
+    fwiInvOp.lin_op = pyOp.ChainOperator(maskGradientOp, fwiInvOp.lin_op)
 
   ########################### Data components ################################
   comp = parObject.getString("comp")
